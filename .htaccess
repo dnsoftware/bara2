@@ -1,0 +1,7 @@
+AddDefaultCharset utf-8
+
+ErrorDocument 401 http://dup.ru
+ErrorDocument 403 http://dup.ru
+ErrorDocument 404 http://dup.ru
+ErrorDocument 500 http://dup.ru
+
