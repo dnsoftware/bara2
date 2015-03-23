@@ -18,6 +18,11 @@
                     echo CHtml::dropDownList('params[type_id]', $model->type_id, $props_type_array, array('style'=>'width:140px;'));
                     ?>
                 </td>
+                <td style="background-color: #adffc8; width: 180px;">
+                    <?
+                    echo CHtml::dropDownList('params[sort_props_sprav]', $model->sort_props_sprav, RubriksProps::$sort_sprav, array('style'=>'width:140px;'));
+                    ?>
+                </td>
                 <td style="background-color: #adffc8; width: 300px; text-align: center;">
                     <input type="submit" value="Сохранить">
 

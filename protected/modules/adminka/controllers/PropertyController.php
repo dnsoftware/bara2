@@ -93,35 +93,6 @@ class PropertyController extends Controller
     }
 
 
-    public function actionAjax_get_props_sprav()
-    {
-        $rp_id = intval($_POST['rp_id']);
-        $model_rubriks_props = RubriksProps::model()->findByPk($rp_id);
-
-        $props_type_array = PropTypes::getPropsType();
-
-        $prop_types_params = PropTypesParams::model()->findAll(
-            array(
-                'select'=>'*',
-                'condition'=>'type_id = "'.$model_rubriks_props->type_id.'"',
-                'order'=>'pt_id',
-                //'limit'=>'10'
-            )
-        );
-
-    //deb::dump($prop_types_params);
-
-        echo "<!--ok-->";
-        $this->renderPartial('_get_props_sprav', array('model_rubriks_props'=>$model_rubriks_props,
-            'props_type_array'=>$props_type_array));
-
-        foreach ($prop_types_params as $pkey=>$pval)
-        {
-            PProptypes::displayPropsSprav($rp_id, $pval);
-        }
-
-//deb::dump($model_rubriks_props);
-    }
 
 	// Uncomment the following methods and override them if needed
 	/*

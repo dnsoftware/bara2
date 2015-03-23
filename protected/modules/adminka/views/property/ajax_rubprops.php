@@ -21,6 +21,12 @@
                 ?>
             </td>
             <td>
+                sort_props_sprav<br>
+                <?
+                echo CHtml::dropDownList('rubrikprops[sort_props_sprav]', '', RubriksProps::$sort_sprav);
+                ?>
+            </td>
+            <td>
                 <input type="submit" value="Добавить">
             </td>
         </tr>

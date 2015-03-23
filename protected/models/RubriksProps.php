@@ -20,6 +20,12 @@ class RubriksProps extends CActiveRecord
                                  'selector'=>'один из выпадающего списка'
                                 ];
 
+    public static $sort_sprav = [''=>'-- тип сортировки свойств --',
+        'asc'=>'по возрастанию',
+        'desc'=>'по убыванию',
+        'sort_number'=>'по полю сортировки'
+    ];
+
 	/**
 	 * @return string the associated database table name
 	 */
@@ -36,7 +42,7 @@ class RubriksProps extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('r_id, selector, name, type_id', 'required'),
+			array('r_id, selector, name, type_id, sort_props_sprav', 'required'),
             array('selector', 'unique'),
 			array('r_id, hierarhy_tag, hierarhy_level, display_sort, use_in_filter', 'numerical', 'integerOnly'=>true),
 			// The following rule is used by search().

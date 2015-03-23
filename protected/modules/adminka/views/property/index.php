@@ -138,7 +138,7 @@ foreach ($rub_array as $rkey=>$rval)
 
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/property/ajax_get_props_sprav',
+            url: '/index.php?r=adminka/propssprav/ajax_get_props_sprav',
             data: 'rp_id='+rp_id,
             success: function(ret) {
                 if(ret.indexOf('<!--ok-->') + 1)

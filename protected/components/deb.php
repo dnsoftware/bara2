@@ -18,4 +18,12 @@ class deb extends CVarDumper {
     public static function dump($var,$depth=10,$highlight=true){
         echo self::dumpAsString($var,$depth,$highlight);
     }
+
+    public static function model_errors($errors){
+        foreach ($errors as $ekey=>$eval)
+        {
+            echo $eval[0]."<br/>";
+        };
+    }
+
 }

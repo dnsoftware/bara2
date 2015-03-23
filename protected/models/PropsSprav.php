@@ -11,6 +11,8 @@
  */
 class PropsSprav extends CActiveRecord
 {
+    public $maxsort = 0;
+
 	/**
 	 * @return string the associated database table name
 	 */
@@ -19,7 +21,40 @@ class PropsSprav extends CActiveRecord
 		return '{{props_sprav}}';
 	}
 
-	/**
+
+    public static function getPropsSprav($model_rubriks_props, $prop_types_params_row)
+    {
+        $sort_sql = '';
+        switch($model_rubriks_props->sort_props_sprav)
+        {
+            case "asc":
+                $sort_sql = 'value ASC';
+            break;
+
+            case "desc":
+                $sort_sql = 'value DESC';
+            break;
+
+            case "sort_number":
+                $sort_sql = 'sort_number ASC';
+            break;
+        }
+        $props_spav_records = PropsSprav::model()->findAll(
+            array(
+                'select'=>'*',
+                'condition'=>'rp_id = '.$model_rubriks_props->rp_id.' AND selector = "'.$prop_types_params_row->selector.'"',
+                'order'=>$sort_sql,
+                //'limit'=>'10'
+            )
+        );
+
+        return $props_spav_records;
+
+    }
+
+
+
+    /**
 	 * @return array validation rules for model attributes.
 	 */
 	public function rules()
@@ -27,12 +62,12 @@ class PropsSprav extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('prop_id, selector, value', 'required'),
-			array('prop_id', 'numerical', 'integerOnly'=>true),
+			array('rp_id, selector, value', 'required'),
+			array('rp_id, sort_number', 'numerical', 'integerOnly'=>true),
 			array('selector, value', 'length', 'max'=>256),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('ps_id, prop_id, selector, value', 'safe', 'on'=>'search'),
+			array('ps_id, selector, value', 'safe', 'on'=>'search'),
 		);
 	}
 
