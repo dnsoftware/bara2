@@ -19,6 +19,12 @@ class PropTypesParams extends CActiveRecord
         'many'=>'несколько элементов',
     ];
 
+    public static $ptype_spr = [''=>'-- тип данных --',
+        'int'=>'целое',
+        'float'=>'дробное',
+        'string'=>'строка'
+    ];
+
     /**
 	 * @return string the associated database table name
 	 */

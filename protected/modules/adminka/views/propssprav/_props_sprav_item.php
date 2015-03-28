@@ -21,6 +21,7 @@
 
         <input type="hidden" name="field[rp_id]" value="<?= $rp_id;?>">
         <input type="hidden" readonly name="field[selector]" value="<?= $prop_types_params_row->selector;?>">
+        <input type="hidden" name="field[type_id]" value="<?= $prop_types_params_row->type_id;?>">
 
         <table style="margin: 1px; width: 690px;">
             <tr>

@@ -38,7 +38,7 @@
                 <td>
                     ptype<br>
                     <?
-                    echo CHtml::dropDownList('params[ptype]', '', RubriksProps::$vibor_type, array('style'=>'width:120px;'));
+                    echo CHtml::dropDownList('params[ptype]', '', PropTypesParams::$ptype_spr, array('style'=>'width:120px;'));
                     ?>
                 </td>
                 <td>

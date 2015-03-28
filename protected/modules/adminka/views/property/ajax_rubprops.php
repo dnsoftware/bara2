@@ -17,17 +17,51 @@
             <td>
                 type_id<br>
                 <?
-                echo CHtml::dropDownList('rubrikprops[type_id]', '', PropTypes::getPropsType());
+                echo CHtml::dropDownList('rubrikprops[type_id]', '', PropTypes::getPropsType(),
+                                            array('style'=>'width: 130px;'));
+                ?>
+            </td>
+            <td>
+                vibor_type<br>
+                <?
+                echo CHtml::dropDownList('rubrikprops[vibor_type]', '', RubriksProps::$vibor_type,
+                    array('style'=>'width: 130px;'));
                 ?>
             </td>
             <td>
                 sort_props_sprav<br>
                 <?
-                echo CHtml::dropDownList('rubrikprops[sort_props_sprav]', '', RubriksProps::$sort_sprav);
+                echo CHtml::dropDownList('rubrikprops[sort_props_sprav]', '', RubriksProps::$sort_sprav,
+                    array('style'=>'width: 130px;'));
                 ?>
             </td>
-            <td>
+            <td rowspan="2">
                 <input type="submit" value="Добавить">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                hierarhy_tag<br>
+                <input type="checkbox" name="rubrikprops[hierarhy_tag]" value="1">
+            </td>
+
+            <td>
+                hierarhy_level<br>
+                <input type="text" name="rubrikprops[hierarhy_level]" value="0">
+            </td>
+
+            <td>
+                display_sort<br>
+                <input type="text" name="rubrikprops[display_sort]" value="0">
+            </td>
+
+            <td>
+                use_in_filter<br>
+                <input type="checkbox" name="rubrikprops[use_in_filter]" value="1">
+            </td>
+
+            <td>
+
             </td>
         </tr>
         </table>
@@ -41,7 +75,8 @@
 <?
 foreach ($model_items as $mkey=>$mval)
 {
-    $this->renderPartial('_rubprops_item', array('model'=>$mval, 'props_type_array'=>$props_type_array));
+    $this->renderPartial('_rubprops_item',
+            array('model'=>$mval, 'props_type_array'=>$props_type_array, 'potential_parents'=>$potential_parents));
 
 }
 ?>

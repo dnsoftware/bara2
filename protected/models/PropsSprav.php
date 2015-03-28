@@ -21,24 +21,31 @@ class PropsSprav extends CActiveRecord
 		return '{{props_sprav}}';
 	}
 
-
-    public static function getPropsSprav($model_rubriks_props, $prop_types_params_row)
+    public static function getSortSql($sort_key)
     {
         $sort_sql = '';
-        switch($model_rubriks_props->sort_props_sprav)
+        switch($sort_key)
         {
             case "asc":
                 $sort_sql = 'value ASC';
-            break;
+                break;
 
             case "desc":
                 $sort_sql = 'value DESC';
-            break;
+                break;
 
             case "sort_number":
                 $sort_sql = 'sort_number ASC';
-            break;
+                break;
         }
+
+        return $sort_sql;
+    }
+
+    public static function getPropsSprav($model_rubriks_props, $prop_types_params_row)
+    {
+        $sort_sql = self::getSortSql($model_rubriks_props->sort_props_sprav);
+
         $props_spav_records = PropsSprav::model()->findAll(
             array(
                 'select'=>'*',
@@ -62,7 +69,7 @@ class PropsSprav extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('rp_id, selector, value', 'required'),
+			array('rp_id, type_id, selector, value', 'required'),
 			array('rp_id, sort_number', 'numerical', 'integerOnly'=>true),
 			array('selector, value', 'length', 'max'=>256),
 			// The following rule is used by search().

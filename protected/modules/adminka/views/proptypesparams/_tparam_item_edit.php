@@ -15,7 +15,7 @@
                 </td>
                 <td style="background-color: #adffc8; width: 140px;">
                     <?
-                    echo CHtml::dropDownList('params[ptype]', $model->ptype, RubriksProps::$vibor_type, array('style'=>'width:140px;'));
+                    echo CHtml::dropDownList('params[ptype]', $model->ptype, PropTypesParams::$ptype_spr, array('style'=>'width:140px;'));
                     ?>
                 </td>
                 <td style="background-color: #adffc8; width: 140px;">

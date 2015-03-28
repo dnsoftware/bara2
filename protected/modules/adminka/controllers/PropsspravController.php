@@ -10,12 +10,21 @@ class PropsspravController extends Controller
     public function actionAjax_get_props_sprav()
     {
         $rp_id = intval($_POST['rp_id']);
+//deb::dump($rp_id);
         $model_rubriks_props = RubriksProps::model()->findByPk($rp_id);
 
         $props_type_array = PropTypes::getPropsType();
+        $hierarhy_array = RubriksProps::getPotentialParents($model_rubriks_props->r_id, $rp_id);
+        unset($hierarhy_array[0]);
+        $hierarhy_chain = RubriksProps::getParentHierarchyChain($model_rubriks_props->r_id, $rp_id);
+
+        //deb::dump($hierarhy_chain);
+
+        $range_spr = RubriksProps::getSimpleRangeSpr($hierarhy_chain[0]);
 
         $this->renderPartial('_get_props_sprav', array('model_rubriks_props'=>$model_rubriks_props,
-            'props_type_array'=>$props_type_array));
+            'props_type_array'=>$props_type_array, 'range_spr'=>$range_spr, 'child_rp_id'=>$hierarhy_chain[$hierarhy_chain[0]],
+            'hierarhy_chain'=>$hierarhy_chain));
 
         $prop_types_params = PropTypesParams::model()->findAll(
             array(
@@ -35,11 +44,30 @@ class PropsspravController extends Controller
                 array('rp_id'=>$rp_id, 'prop_types_params_row'=>$pval, 'props_spav_records'=>$props_spav_records));
         }
 
+        //deb::dump(RubriksProps::getPotentialParents($rp_id));
 
         echo "<!--ok-->";
 
     }
 
+    public function actionAjax_get_range_spr_select()
+    {
+        $rp_id = intval($_POST['rp_id']);
+        //$child_rp_id = intval($_POST['child_rp_id']);
+        $ps_id = intval($_POST['ps_id']);
+//deb::dump($_POST);
+        $model_rubriks_props = RubriksProps::model()->findByPk($rp_id);
+        $hierarhy_chain = RubriksProps::getParentHierarchyChain($model_rubriks_props->r_id, $rp_id);
+//deb::dump($hierarhy_chain);
+        $child_rp_id = $hierarhy_chain[$rp_id];
+//deb::dump($rp_id);
+        $range_spr = RubriksProps::getSimpleRangeSpr($rp_id);
+
+        echo "<!--ok-->";
+        $this->renderPartial('_get_range_spr_select', array('range_spr'=>$range_spr, 'rp_id'=>$rp_id,
+            'child_rp_id'=>$child_rp_id));
+        //deb::dump($_POST);
+    }
 
     public function actionAjax_addrow()
     {
@@ -55,11 +83,10 @@ class PropsspravController extends Controller
         );
         $model->sort_number = $max_sort->maxsort + 1;
 
-        $rubriks_props_model = RubriksProps::model()->findByPk($model->rp_id);
         $prop_types_params_model = PropTypesParams::model()->find(
             array(
                 'select'=>'*',
-                'condition'=>'type_id = "'.$rubriks_props_model->type_id . '" AND selector = "'.$model->selector . '"',
+                'condition'=>'type_id = "'.$model->type_id . '" AND selector = "'.$model->selector . '"',
             )
 
         );
