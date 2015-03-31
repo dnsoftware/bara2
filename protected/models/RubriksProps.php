@@ -85,29 +85,32 @@ class RubriksProps extends CActiveRecord
 
     }
 
+    // $r_id - код рубрики в таблице rubriks
+    // $rp_id - код текущего выбранного свойства
     public static function getParentHierarchyChain($r_id, $rp_id)
     {
-/*
-        $model_props = self::model()->findAll(array(
-            'select'=>'*',
-            'condition'=>'r_id = '.$r_id,
-            'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
-            //'limit'=>'10'
-        ));
-*/
+        $rubriks_props_row = RubriksProps::model()->findByPk($rp_id);
+        //deb::dump($rubriks_props_row);
+        $hierarhy_array = array();
+        while ($rubriks_props_row->parent_id != 0)
+        {
+            array_unshift($hierarhy_array, $rubriks_props_row->rp_id);
 
+            $rubriks_props_row = RubriksProps::model()->find(array(
+                'select'=>'*',
+                'condition'=>'rp_id = '.$rubriks_props_row->parent_id,
+            ));
+        }
+        array_unshift($hierarhy_array, $rubriks_props_row->rp_id);
 
-        $hierarhy_array = self::getPotentialParents($r_id, $rp_id);
-        unset($hierarhy_array[0]);
-deb::dump($hierarhy_array);
-        $hierarhy_chain = array();
         $i=0;
         $prevkey = 0;
         foreach($hierarhy_array as $hkey=>$hval)
         {
-            $hierarhy_chain[$prevkey] = $hkey;
-            $prevkey = $hkey;
+            $hierarhy_chain[$prevkey] = $hval;
+            $prevkey = $hval;
         }
+        //deb::dump($hierarhy_chain);
 
         return $hierarhy_chain;
     }

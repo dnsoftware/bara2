@@ -59,6 +59,23 @@ class PropsSprav extends CActiveRecord
 
     }
 
+    public static function getPropsSpravWithRelation($parent_ps_id, $child_ps_id)
+    {
+        $sql='SELECT * FROM {{user}}';
+        $props_spav_records = $connection->createCommand($sql)->queryAll();
+/*
+        $props_spav_records = PropsSprav::model()->findAll(
+            array(
+                'select'=>'*',
+                'condition'=>'rp_id = '.$model_rubriks_props->rp_id.' AND selector = "'.$prop_types_params_row->selector.'"',
+                'order'=>$sort_sql,
+                //'limit'=>'10'
+            )
+        );
+*/
+        return $props_spav_records;
+
+    }
 
 
     /**
@@ -85,9 +102,11 @@ class PropsSprav extends CActiveRecord
 	{
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
-		return array(
-		);
-	}
+        return array(
+            'props_relations'=>array(self::HAS_MANY,'PropsRelations','parent_ps_id','joinType'=>'INNER JOIN'),
+            'childs'=>array(self::HAS_MANY,'PropsSprav',array('child_ps_id'=>'ps_id'),'through'=>'props_relations','joinType'=>'INNER JOIN'),
+        );
+    }
 
 	/**
 	 * @return array customized attribute labels (name=>label)
