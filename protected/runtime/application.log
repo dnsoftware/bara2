@@ -2485,3 +2485,58 @@ Stack trace:
 #7 D:\OpenServer\domains\don.dn\yii\framework\yiic.php(33): CConsoleApplication->run()
 #8 D:\OpenServer\domains\don.dn\protected\yiic.php(7): require_once()
 
+2015/04/14 16:19:10 [trace] [system.CModule] Loading "log" application component
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:10 [trace] [system.CModule] Loading "request" application component
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:10 [trace] [system.CModule] Loading "urlManager" application component
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:10 [trace] [system.CModule] Loading "widgetFactory" application component
+in D:\OpenServer\domains\baraholka2.dn\protected\views\layouts\column1.php (2)
+in D:\OpenServer\domains\baraholka2.dn\protected\controllers\AdvertController.php (7)
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:10 [trace] [system.CModule] Loading "clientScript" application component
+in D:\OpenServer\domains\baraholka2.dn\protected\views\layouts\main.php (19)
+in D:\OpenServer\domains\baraholka2.dn\protected\views\layouts\column1.php (6)
+in D:\OpenServer\domains\baraholka2.dn\protected\controllers\AdvertController.php (7)
+2015/04/14 16:19:10 [trace] [system.CModule] Loading "user" application component
+in D:\OpenServer\domains\baraholka2.dn\protected\views\layouts\main.php (41)
+in D:\OpenServer\domains\baraholka2.dn\protected\views\layouts\column1.php (6)
+in D:\OpenServer\domains\baraholka2.dn\protected\controllers\AdvertController.php (7)
+2015/04/14 16:19:10 [trace] [system.CModule] Loading "session" application component
+in D:\OpenServer\domains\baraholka2.dn\protected\views\layouts\main.php (41)
+in D:\OpenServer\domains\baraholka2.dn\protected\views\layouts\column1.php (6)
+in D:\OpenServer\domains\baraholka2.dn\protected\controllers\AdvertController.php (7)
+2015/04/14 16:19:10 [trace] [system.CModule] Loading "assetManager" application component
+in D:\OpenServer\domains\baraholka2.dn\protected\controllers\AdvertController.php (7)
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:13 [trace] [system.CModule] Loading "log" application component
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:13 [trace] [system.CModule] Loading "request" application component
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:13 [trace] [system.CModule] Loading "urlManager" application component
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:13 [trace] [system.db.ar.CActiveRecord] RubriksProps.find()
+in D:\OpenServer\domains\baraholka2.dn\protected\controllers\AdvertController.php (19)
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:13 [trace] [system.CModule] Loading "db" application component
+in D:\OpenServer\domains\baraholka2.dn\protected\controllers\AdvertController.php (19)
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:13 [trace] [system.db.CDbConnection] Opening DB connection
+in D:\OpenServer\domains\baraholka2.dn\protected\controllers\AdvertController.php (19)
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:13 [trace] [system.db.CDbCommand] Querying SQL: SHOW FULL COLUMNS FROM `tbl_rubriks_props`
+in D:\OpenServer\domains\baraholka2.dn\protected\controllers\AdvertController.php (19)
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:13 [profile] [system.db.CDbCommand.query] begin:system.db.CDbCommand.query(SHOW FULL COLUMNS FROM `tbl_rubriks_props`)
+2015/04/14 16:19:13 [profile] [system.db.CDbCommand.query] end:system.db.CDbCommand.query(SHOW FULL COLUMNS FROM `tbl_rubriks_props`)
+2015/04/14 16:19:13 [trace] [system.db.CDbCommand] Querying SQL: SHOW CREATE TABLE `tbl_rubriks_props`
+in D:\OpenServer\domains\baraholka2.dn\protected\controllers\AdvertController.php (19)
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:13 [profile] [system.db.CDbCommand.query] begin:system.db.CDbCommand.query(SHOW CREATE TABLE `tbl_rubriks_props`)
+2015/04/14 16:19:13 [profile] [system.db.CDbCommand.query] end:system.db.CDbCommand.query(SHOW CREATE TABLE `tbl_rubriks_props`)
+2015/04/14 16:19:13 [trace] [system.db.CDbCommand] Querying SQL: SELECT * FROM `tbl_rubriks_props` `t` WHERE selector = :selector LIMIT 1. Bound with :selector='auto_marka'
+in D:\OpenServer\domains\baraholka2.dn\protected\controllers\AdvertController.php (19)
+in D:\OpenServer\domains\baraholka2.dn\index.php (13)
+2015/04/14 16:19:13 [profile] [system.db.CDbCommand.query] begin:system.db.CDbCommand.query(SELECT * FROM `tbl_rubriks_props` `t` WHERE selector = :selector LIMIT 1. Bound with :selector='auto_marka')
+2015/04/14 16:19:13 [profile] [system.db.CDbCommand.query] end:system.db.CDbCommand.query(SELECT * FROM `tbl_rubriks_props` `t` WHERE selector = :selector LIMIT 1. Bound with :selector='auto_marka')

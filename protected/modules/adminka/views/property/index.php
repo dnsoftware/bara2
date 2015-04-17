@@ -54,7 +54,7 @@ foreach ($rub_array as $rkey=>$rval)
 <div style="position: absolute; left: 200px; top:140px; width: 800px; height: auto;
                 background-color: #ddd; border: #555 solid 1px; display: none;" id="div_props_sprav" >
 
-    <div style="float: right; margin: 2px;" onclick="$('#div_props_sprav').css('display', 'none');">X</div>
+    <div style="float: right; margin: 2px; cursor: pointer;" onclick="$('#div_props_sprav').css('display', 'none');">X</div>
     <br clear="all">
 
     <div id="div_props_sprav_content" style="margin: 5px;">

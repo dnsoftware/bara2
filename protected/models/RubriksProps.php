@@ -17,7 +17,10 @@ class RubriksProps extends CActiveRecord
     public static $vibor_type = [''=>'-- тип выбора --',
                                  'radio'=>'radiobutton',
                                  'checkbox'=>'checkbox',
-                                 'selector'=>'selector'
+                                 'selector'=>'selector',
+                                 'listitem'=>'ссылка из списка',
+                                 'autoload'=>'поле с автоподгрузкой',
+                                 'autoload_with_listitem'=>'автоподгрузка + список',
                                 ];
 
     public static $sort_sprav = [''=>'-- тип сортировки свойств --',
@@ -25,6 +28,11 @@ class RubriksProps extends CActiveRecord
         'desc'=>'по убыванию',
         'sort_number'=>'по полю сортировки'
     ];
+
+    // Шаблон возможных опций настройки формы подачи объявления
+    public static $addform_options = array(
+
+    );
 
 	/**
 	 * @return string the associated database table name

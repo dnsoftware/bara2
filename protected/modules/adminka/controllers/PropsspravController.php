@@ -20,9 +20,9 @@ class PropsspravController extends Controller
         $hierarhy_chain = RubriksProps::getParentHierarchyChain($model_rubriks_props->r_id, $rp_id);
         $hierarhy_chain_reverse = array_flip($hierarhy_chain);
 
-        deb::dump($hierarhy_chain_reverse);
+    //deb::dump($hierarhy_chain_reverse);
         $parent2_rp_id = $hierarhy_chain_reverse[$hierarhy_chain_reverse[$rp_id]];
-        deb::dump($parent2_rp_id);
+    //deb::dump($parent2_rp_id);
         if ($parent2_rp_id === null)     // Связи нет, таблица связей не выводится, значение -1
         {
             $parent2_rp_id = -1;
@@ -146,9 +146,139 @@ class PropsspravController extends Controller
 
     public function actionAjax_gettable_relation()
     {
-        echo "<!--ok-->";
-        deb::dump($_POST);
+        $current_ps_id = intval($_POST['current_ps_id']);
+        $parent2_rp_id = intval($_POST['parent2_rp_id']);
+        $current_rp_id = intval($_POST['current_rp_id']);
+
+        if ($parent2_rp_id < 0)
+        {
+            echo "Связь сама с собой невозможна //ajax";
+        }
+
+        $props_spav_records = array();
+        if ($parent2_rp_id == 0)
+        {
+            $model_rubriks_props = RubriksProps::model()->findByPk($current_rp_id);
+            $hierarhy_chain = RubriksProps::getParentHierarchyChain($model_rubriks_props->r_id, $current_rp_id);
+            $hierarhy_chain_revert = array_flip($hierarhy_chain);
+
+            $model_rubriks_props_parent = RubriksProps::model()->findByPk($hierarhy_chain_revert[$current_rp_id]);
+            $sort_sql = PropsSprav::getSortSql($model_rubriks_props_parent->sort_props_sprav);
+
+            $props_spav_records = PropsSprav::model()->findAll(
+                array(
+                    'select'=>'*',
+                    'condition'=>'rp_id = '.$model_rubriks_props_parent->rp_id.' AND selector = "item"',
+                    'order'=>$sort_sql,
+                    //'limit'=>'10'
+                )
+            );
+        }
+
+        if ($parent2_rp_id > 0)
+        {
+            if ($current_ps_id <= 0)
+            {
+                echo "Заполните цепочку зависимостей! //ajax";
+            }
+            else
+            {
+                $prop = PropsSprav::model()->findByPk($current_ps_id);
+                $props_spav_records = $prop->childs;
+                //deb::dump($props_spav_records);
+            }
+
+        }
+
+        // Получение всех свойств из справочника выбранной рубрики
+        $model_rubriks_props = RubriksProps::model()->findByPk($current_rp_id);
+        $sort_sql = PropsSprav::getSortSql($model_rubriks_props->sort_props_sprav);
+
+        $props_selected_spav_records = PropsSprav::model()->findAll(
+            array(
+                'select'=>'*',
+                'condition'=>'rp_id = '.$model_rubriks_props->rp_id.' AND selector = "item"',
+                'order'=>$sort_sql,
+                //'limit'=>'10'
+            )
+        );
+
+        if (count($props_spav_records) > 0 && count($props_selected_spav_records) > 0)
+        {
+            $rel_array = array();
+            foreach ($props_spav_records as $pkey=>$pval)
+            {
+                $childs_array = PropsRelations::model()->findAll(
+                    array(
+                        'select'=>'*',
+                        'condition'=>'parent_ps_id = '.$pval->ps_id,
+                    )
+                );
+                if (count($childs_array) > 0)
+                {
+                    foreach ($childs_array as $ckey=>$cval)
+                    {
+                        $rel_array[$pval->ps_id][$cval->child_ps_id] = 1;
+                    }
+                }
+            }
+//deb::dump($rel_array);
+            echo "<!--ok-->";
+            $this->renderPartial('_gettable_relation',
+                                array('props_spav_records'=>$props_spav_records,
+                                    'props_selected_spav_records'=>$props_selected_spav_records,
+                                    'rel_array'=>$rel_array, 'current_rp_id'=>$current_rp_id));
+        }
+        else
+        {
+            echo "В одном или обоих справочниках нет элементов!";
+        }
+
+        //deb::dump($props_spav_records);
     }
+
+    public function actionAjax_gettable_relation_setrelate()
+    {
+        $parent_ps_id = intval($_POST['parent_ps_id']);
+        $child_ps_id = intval($_POST['child_ps_id']);
+        $linkrow = PropsRelations::model()->find(
+            array(
+                'select'=>'*',
+                'condition'=>'parent_ps_id = "'.$parent_ps_id.'" AND child_ps_id = "'.$child_ps_id.'" ',
+            )
+        );
+
+        if (isset($linkrow))
+        {
+            if($linkrow->delete())
+            {
+                echo "<!--no-->";
+            }
+            else
+            {
+                echo "Ошибка при удалении!";
+            }
+        }
+        else
+        {
+            $linkrow = new PropsRelations();
+            $linkrow->parent_ps_id = $parent_ps_id;
+            $linkrow->child_ps_id = $child_ps_id;
+            if ($linkrow->save())
+            {
+                echo "<!--yes-->";
+            }
+            else
+            {
+                echo "Ошибка при добавлении";
+            }
+
+        }
+
+        echo "<!--ok-->";
+    }
+
+
 
     public function actionAjax_addrow()
     {

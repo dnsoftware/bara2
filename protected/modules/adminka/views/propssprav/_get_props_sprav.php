@@ -223,13 +223,14 @@
 <span style="cursor: pointer;" onclick="work_props_sprav(<?= $model_rubriks_props->rp_id;?>);">Обновить</span>&nbsp;
 </div>
 <br>
+<br>
 
 <div style="float: right;">
     <form id="frm_gettable_relation"  method="post" action="/index.php?r=adminka/propssprav/ajax_gettable_relation"
            onsubmit="gettable_relation(); return false;">
-        <input style="width: 50px;" type="text" id="current_ps_id" name="current_ps_id" value="<?= $current_ps_id;?>">
-        <input style="width: 50px;" type="text" id="parent2_rp_id" name="parent2_rp_id" value="<?= $parent2_rp_id;?>">
-        <input style="width: 50px;" type="text" id="current_rp_id" name="current_rp_id" value="<?= $rp_id;?>">
+        <input readonly style="width: 20px; background-color: #dedede;" type="text" id="current_ps_id" name="current_ps_id" value="<?= $current_ps_id;?>">
+        <input readonly style="width: 20px; background-color: #dedede;" type="text" id="parent2_rp_id" name="parent2_rp_id" value="<?= $parent2_rp_id;?>">
+        <input readonly style="width: 20px; background-color: #dedede;" type="text" id="current_rp_id" name="current_rp_id" value="<?= $rp_id;?>">
 
         <input type="submit" value="Связи">
     </form>

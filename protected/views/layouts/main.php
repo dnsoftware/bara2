@@ -21,6 +21,15 @@ header("Content-type: text/html; charset=utf-8");
 	<link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl; ?>/css/main.css" />
 	<link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl; ?>/css/form.css" />
 
+    <? Yii::app()->getClientScript()->registerCssFile(
+        Yii::app()->assetManager->publish(
+            Yii::getPathOfAlias('system').'/web/js/source/jui/css/base/jquery-ui.css'
+        ));
+    ?>
+
+    <!--<link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl; ?>/yii/framework/web/js/source/jui/css/base/jquery-ui.css" />
+    -->
+
 	<title><?php echo CHtml::encode($this->pageTitle); ?></title>
 </head>
 
@@ -35,7 +44,7 @@ header("Content-type: text/html; charset=utf-8");
 		<?php $this->widget('zii.widgets.CMenu',array(
 			'items'=>array(
 				array('label'=>'Главная', 'url'=>array('/site/index')),
-				//array('label'=>'About', 'url'=>array('/site/page', 'view'=>'about')),
+				array('label'=>'Подать', 'url'=>array('/advert/addadvert')),
 				//array('label'=>'Contact', 'url'=>array('/site/contact')),
 
 				array('label'=>'Вход', 'url'=>array('/user/login'), 'visible'=>Yii::app()->user->isGuest),
@@ -67,3 +76,6 @@ header("Content-type: text/html; charset=utf-8");
 
 </body>
 </html>
+
+<div id="ajax_debug">
+</div>
