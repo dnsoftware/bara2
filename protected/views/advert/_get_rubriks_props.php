@@ -4,13 +4,23 @@
 
 
 <script>
-    function get_props_list(field_id, parent_field_id)
+    // field_id - id поля формы (поле selector из таблицы rubriks_props)
+    // parent_field_id - id поля формы родителя (поле selector из таблицы rubriks_props), '' - если родителя нет
+    function get_props_list_autoload(field_id, parent_field_id)
     {
+//        console.log(props_hierarhy[parent_field_id]);
         $('#'+field_id).autocomplete({
             source: function(request, response){
-                //console.log(request);
+
+                parent_ps_id = 0;
+                if (props_hierarhy[parent_field_id] !== undefined)
+                {
+                    parent_ps_id = $('#'+props_hierarhy[parent_field_id]['field_value_id']).val();
+                    //alert(parent_ps_id);
+                }
+
                 $.ajax({
-                    url: "/index.php?r=advert/getpropslist",
+                    url: "/index.php?r=advert/getpropslist_autocomplete",
                     method: "post",
                     dataType: "json",
                     // параметры запроса, передаваемые на сервер (последний - подстрока для поиска):
@@ -18,7 +28,7 @@
                         field_id: field_id,
                         field_value: request.term,
                         parent_field_id: parent_field_id,
-                        parent_ps_id: $('#'+parent_field_id+'-id').val()
+                        parent_ps_id: parent_ps_id
                     },
                     // обработка успешного выполнения запроса
                     success: function(data){
@@ -50,11 +60,87 @@
                 $('#'+$(this).attr('id')+'-span').html(ui.item.label);
                 $('#'+$(this).attr('id')+'-span').css('display', 'inline');
 
+                //console.log(props_hierarhy[$(this).attr('id')]['childs_selector']);
+                //alert($(this).attr('id'));
+
+                if (props_hierarhy[$(this).attr('id')]['childs_selector'] !== undefined)
+                {
+                    $.each (props_hierarhy[$(this).attr('id')]['childs_selector'], function (index, value) {
+                        //console.log(index+' = '+$('#'+index).attr('id'));
+                        get_props_list_functions['f'+props_hierarhy[index]['vibor_type']](index, props_hierarhy[index]['parent_selector']);
+                    });
+                }
+
 
                 return false;
             },
 
             minLength: 1
+        });
+    }
+
+    function get_props_list_autoload_with_listitem(field_id, parent_field_id)
+    {
+        get_props_list_autoload(field_id, parent_field_id);
+    }
+
+
+        // field_id - id поля формы (поле selector из таблицы rubriks_props)
+    // parent_field_id - id поля формы родителя (поле selector из таблицы rubriks_props), '' - если родителя нет
+    function get_props_list_selector(field_id, parent_field_id)
+    {
+        parent_ps_id = 0;
+        if (props_hierarhy[parent_field_id] !== undefined)
+        {
+            parent_ps_id = $('#'+props_hierarhy[parent_field_id]['field_value_id']).val();
+        }
+
+        $.ajax({
+            url: "/index.php?r=advert/getpropslist_selector",
+            method: "post",
+            //dataType: "json",
+            // параметры запроса, передаваемые на сервер (последний - подстрока для поиска):
+            data:{
+                field_id: field_id,
+                parent_field_id: parent_field_id,
+                parent_ps_id: parent_ps_id
+            },
+            // обработка успешного выполнения запроса
+            success: function(data){
+                //alert(data);
+
+                $('#div_'+field_id).html(data);
+            }
+
+
+        });
+
+    }
+
+    function get_props_list_listitem(field_id, parent_field_id)
+    {
+        parent_ps_id = 0;
+        if (props_hierarhy[parent_field_id] !== undefined)
+        {
+            parent_ps_id = $('#'+props_hierarhy[parent_field_id]['field_value_id']).val();
+        }
+
+        $.ajax({
+            url: "/index.php?r=advert/getpropslist_listitem",
+            method: "post",
+            //dataType: "json",
+            // параметры запроса, передаваемые на сервер (последний - подстрока для поиска):
+            data:{
+                field_id: field_id,
+                parent_field_id: parent_field_id,
+                parent_ps_id: parent_ps_id
+            },
+            // обработка успешного выполнения запроса
+            success: function(data){
+                //alert(data);
+
+                $('#div_'+field_id+'_list').html(data);
+            }
         });
     }
 

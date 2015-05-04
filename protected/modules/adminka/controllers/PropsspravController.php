@@ -97,7 +97,7 @@ class PropsspravController extends Controller
         else
         {
             $prop = PropsSprav::model()->findByPk($ps_id);
-            $range_spr = $prop->childs;
+            $range_spr = $prop->childs(array('condition'=>'rp_id = :rp_id', 'params'=>array(':rp_id'=>$parent_rp_id)));
 
             $rubriks_props_row = RubriksProps::model()->findByPk($prop->rp_id);
 
@@ -123,7 +123,7 @@ class PropsspravController extends Controller
             'select'=>'*',
             'condition'=>'type_id = "simple_range" AND selector = "item"',
         ));
-//deb::dump($model_rubriks_props);
+//deb::dump($ps_id);
         $props_spav_records = array();
         if ($ps_id == 0)
         {
@@ -133,9 +133,8 @@ class PropsspravController extends Controller
         else
         {
             $prop = PropsSprav::model()->findByPk($ps_id);
-            $props_spav_records = $prop->childs;
-//deb::dump($childs);
-            //$props_spav_records = RubriksProps::model()->with('props_relations')->findAll();
+            $props_spav_records = $prop->childs(array('condition'=>'rp_id = :rp_id', 'params'=>array(':rp_id'=>$rp_id)));
+//deb::dump($prop);
         }
 
         $this->renderPartial('_props_sprav_item_type_rows', array('pt_id'=>$prop_types_params_row->pt_id,

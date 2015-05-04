@@ -35,6 +35,8 @@ class AdvertController extends Controller
         $props_hierarhy = array();
         foreach ($model_items as $mkey=>$mval)
         {
+            $props_hierarhy[$mval->selector]['vibor_type'] = $mval->vibor_type;
+
             if ($mval->parent_id <= 0)
             {
                 $props_hierarhy[$mval->selector]['parent_selector'] = '';
@@ -48,35 +50,107 @@ class AdvertController extends Controller
 
         //deb::dump($props_hierarhy);
 
-
         foreach ($model_items as $mkey=>$mval)
         {
     ?>
-         <div id="div_<?= $mval->selector;?>">
-            <input type="text" name="<?= $mval->selector;?>" id="<?= $mval->selector;?>">
-            <span class="addnot-field-selected" id="<?= $mval->selector;?>-span" inputfield="<?= $mval->selector;?>"></span>
-            <input style="width: 20px; background-color: #ddd;" readonly type="text" name="<?= $mval->selector;?>-id" id="<?= $mval->selector;?>-id">
+         <div id="div_<?= $mval->selector;?>" style="margin: 5px;padding: 3px; border: #dddddd solid 1px;">
+             <div style="color: #00aa00"><?= $mval->selector;?></div>
+         <?
+         echo $mval->vibor_type."<br>";
+         switch($mval->vibor_type)
+         {
+             case "autoload_with_listitem":
+         ?>
+             <input type="text" name="<?= $mval->selector;?>" id="<?= $mval->selector;?>">
+             <span class="addnot-field-selected" id="<?= $mval->selector;?>-span" inputfield="<?= $mval->selector;?>"></span>
+             <input style="width: 30px; background-color: #ddd;" readonly type="text" name="<?= $mval->selector;?>-id" id="<?= $mval->selector;?>-id">
+         <?
+             // id поля формы <input> в которое заносится выбранное значение
+             $props_hierarhy[$mval->selector]['field_value_id'] = $mval->selector."-id";
+
+             break;
+
+             case "selector":
+                 $props_hierarhy[$mval->selector]['field_value_id'] = $mval->selector;
+             break;
+
+             case "listitem":
+             ?>
+                 <span class="addnot-field-selected" id="<?= $mval->selector;?>-span" inputfield="<?= $mval->selector;?>"></span>
+                 <input style="width: 30px; background-color: #ddd;" readonly type="text" name="<?= $mval->selector;?>" id="<?= $mval->selector;?>">
+
+                 <div id="div_<?= $mval->selector;?>_list">
+                 </div>
+             <?
+                 $props_hierarhy[$mval->selector]['field_value_id'] = $mval->selector;
+             break;
+         }
+         ?>
          </div>
-    <?
+        <?
         }
 
         ?>
-        <script>
-        var props_hierarhy = [];
 
-        props_hierarhy = <?= json_encode($props_hierarhy); ?>;
-        //console.log(props_hierarhy['auto_model']);
+        <script>
+            var props_hierarhy = [];
+            props_hierarhy = <?= json_encode($props_hierarhy); ?>;
+            //console.log(props_hierarhy);
         </script>
 
         <?
+//deb::dump($props_hierarhy);
         $this->renderPartial('_get_rubriks_props');
         ?>
 
         <script>
 
-        get_props_list('auto_marka', '');
-        get_props_list('auto_model', 'auto_marka');
+            var get_props_list_functions = {
+            <?
+            foreach (RubriksProps::$vibor_type as $vkey=>$vval)
+            {
+            ?>
+                f<?= $vkey;?>: function(field_id, parent_field_id) {
+                    get_props_list_<?= $vkey;?>(field_id, parent_field_id);
+                },
+            <?
+            }
+            ?>
+            };
 
+        <?
+        foreach ($model_items as $mkey=>$mval)
+        {
+            $field_id = $mval->selector;
+            $parent_field_id = '';
+            if($mval->parent_id > 0)
+            {
+                $parent_field_id = $model_items_array[$mval->parent_id]->selector;
+            }
+
+
+            /*
+            // убрать switch, т.к. вызов всех функций формируется автоматом
+            switch($mval->vibor_type)
+            {
+                case "autoload_with_listitem":
+                ?>
+                    get_props_list_<?= $mval->vibor_type;?>('<?= $field_id;?>', '<?= $parent_field_id;?>');
+                <?
+                break;
+
+                case "selector":
+                ?>
+                    get_props_list_<?= $mval->vibor_type;?>('<?= $field_id;?>', '<?= $parent_field_id;?>');
+                <?
+                break;
+            }
+            */
+            ?>
+            get_props_list_<?= $mval->vibor_type;?>('<?= $field_id;?>', '<?= $parent_field_id;?>');
+            <?
+        }
+        ?>
 
         $('.addnot-field-selected').click(
         function()
@@ -92,7 +166,7 @@ class AdvertController extends Controller
     }
 
 
-    public function actionGetpropslist()
+    public function actionGetpropslist_autocomplete()
     {
 
         $model_rubriks_props = RubriksProps::model()->find(
@@ -101,7 +175,7 @@ class AdvertController extends Controller
                 'params'=>array(':selector'=>$_POST['field_id']),
             )
         );
-        $props_list = PropsSprav::getPropsList($model_rubriks_props, intval($_POST['parent_ps_id']), $_POST['field_value']);
+        $props_list = PropsSprav::getPropsListAutocomplete($model_rubriks_props, intval($_POST['parent_ps_id']), $_POST['field_value']);
 //deb::dump($props_list);
         $return_array = array();
         $return_array['status'] = 'ok';
@@ -121,8 +195,80 @@ class AdvertController extends Controller
     }
 
 
+    public function actionGetpropslist_selector()
+    {
+        $field_id = $_POST['field_id'];
+        $parent_field_id = $_POST['parent_field_id'];
+        $parent_ps_id = intval($_POST['parent_ps_id']);
+//тут остановился, переделать get_props_list_selector
+
+        $model_rubriks_props = RubriksProps::model()->find(
+            array(
+                'condition'=>'selector = :selector',
+                'params'=>array(':selector'=>$field_id),
+            )
+        );
+
+        $prop_types_params_row = PropTypesParams::model()->find(array(
+            'select'=>'*',
+            'condition'=>'type_id = "'.$model_rubriks_props->type_id.'" AND selector = "item"',
+        ));
+
+        ?>
+        <select name="<?= $field_id;?>" id="<?= $field_id;?>">
+            <option value=""></option>
+        <?
+
+        $props_sprav = PropsSprav::getPropsListSelector($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
+
+        if (count($props_sprav) > 0)
+        {
+            foreach ($props_sprav as $pkey=>$pval)
+            {
+                ?>
+                <option value="<?= $pval->ps_id;?>"><?= $pval->value;?></option>
+            <?
+            }
+        }
+
+        ?>
+        </select>
+        <?
+
+    }
 
 
+    public function actionGetpropslist_listitem()
+    {
+        $field_id = $_POST['field_id'];
+        $parent_field_id = $_POST['parent_field_id'];
+        $parent_ps_id = intval($_POST['parent_ps_id']);
+
+        $model_rubriks_props = RubriksProps::model()->find(
+            array(
+                'condition'=>'selector = :selector',
+                'params'=>array(':selector'=>$field_id),
+            )
+        );
+
+        $prop_types_params_row = PropTypesParams::model()->find(array(
+            'select'=>'*',
+            'condition'=>'type_id = "'.$model_rubriks_props->type_id.'" AND selector = "item"',
+        ));
+
+        $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
+
+        if (count($props_sprav) > 0)
+        {
+            foreach ($props_sprav as $pkey=>$pval)
+            {
+                ?>
+                <span><?= $pval->value;?></span>
+            <?
+            }
+        }
+
+    }
 
 
 

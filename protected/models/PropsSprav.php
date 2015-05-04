@@ -59,7 +59,7 @@ class PropsSprav extends CActiveRecord
 
     }
 
-    public static function getPropsList($model_rubriks_props, $parent_ps_id, $search_str)
+    public static function getPropsListAutocomplete($model_rubriks_props, $parent_ps_id, $search_str)
     {
         $rp_id = $model_rubriks_props->rp_id;
         $sort_sql = self::getSortSql($model_rubriks_props->sort_props_sprav);
@@ -80,8 +80,8 @@ class PropsSprav extends CActiveRecord
         else
         {
             $prop = PropsSprav::model()->findByPk($parent_ps_id);
-            $props_sprav_records = $prop->childs(array('condition'=>'value LIKE :search_str',
-                                                        'params'=>array(':search_str'=>'%'.$search_str.'%')
+            $props_sprav_records = $prop->childs(array('condition'=>'rp_id = :rp_id AND value LIKE :search_str',
+                                                        'params'=>array(':rp_id'=>$rp_id, ':search_str'=>'%'.$search_str.'%')
                                                        )
                                                 );
         }
@@ -89,6 +89,75 @@ class PropsSprav extends CActiveRecord
         return $props_sprav_records;
 
     }
+
+    public static function getPropsListSelector($model_rubriks_props, $prop_types_params_row, $parent_ps_id)
+    {
+        $rp_id = $model_rubriks_props->rp_id;
+        $sort_sql = self::getSortSql($model_rubriks_props->sort_props_sprav);
+
+        if ($parent_ps_id <= 0)
+        {
+            $props_sprav_records = self::model()->findAll(
+                array(
+                    'select'=>'*',
+                    'condition'=>'rp_id = :rp_id AND selector = :selector',
+                    'params'=>array(':rp_id'=>$rp_id, ':selector'=>$prop_types_params_row->selector),
+                    'order'=>$sort_sql,
+                    //'limit'=>'10'
+                )
+            );
+            //deb::dump($props_spav_records);
+        }
+        else
+        {
+
+            $prop = PropsSprav::model()->findByPk($parent_ps_id);
+            $props_sprav_records = $prop->childs(array('condition'=>'rp_id = :rp_id', 'params'=>array(':rp_id'=>$rp_id)));
+        }
+
+        return $props_sprav_records;
+
+    }
+
+    public static function getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id)
+    {
+        //deb::dump($model_rubriks_props);
+        $rp_id = $model_rubriks_props->rp_id;
+        $sort_sql = self::getSortSql($model_rubriks_props->sort_props_sprav);
+
+        if ($parent_ps_id <= 0)
+        {
+            $props_sprav_records = self::model()->findAll(
+                array(
+                    'select'=>'*',
+                    'condition'=>'rp_id = :rp_id AND selector = :selector',
+                    'params'=>array(':rp_id'=>$rp_id, ':selector'=>$prop_types_params_row->selector),
+                    'order'=>$sort_sql,
+                    //'limit'=>'10'
+                )
+            );
+        }
+        else
+        {
+
+            $prop = PropsSprav::model()->findByPk($parent_ps_id);
+            $props_sprav_records = $prop->childs(array('condition'=>'rp_id = :rp_id', 'params'=>array(':rp_id'=>$rp_id)));
+
+            //deb::dump($prop);
+            //deb::dump($props_sprav_records);
+
+            /*
+            $props_sprav_records = $prop->childs(array('condition'=>'value LIKE :search_str',
+                    'params'=>array(':search_str'=>'%'.$search_str.'%')
+                )
+            );
+            */
+        }
+
+        return $props_sprav_records;
+
+    }
+
 
     /**
 	 * @return array validation rules for model attributes.
