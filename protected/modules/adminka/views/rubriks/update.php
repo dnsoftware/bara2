@@ -18,4 +18,4 @@ $this->menu=array(
 
 <h1>Update Rubriks <?php echo $model->r_id; ?></h1>
 
-<?php $this->renderPartial('_form', array('model'=>$model)); ?>
+<?php $this->renderPartial('_form', array('model'=>$model, 'types'=>$types, 'empty_type'=>$empty_type, 'parent_list'=>$parent_list, 'types_records'=>$types_records)); ?>

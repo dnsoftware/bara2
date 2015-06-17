@@ -1,10 +1,22 @@
+<style>
+    .form input, .form select, .rubprops_item input, .rubprops_item select
+    {
+        font-size: 11px;
+    }
+    .form td, .rubprops_item td
+    {
+        margin: 0px; padding-top: 0px;padding-bottom: 0px; font-size: 11px;
+    }
+
+</style>
+
 <div class="form">
 
     <form id="rubriks_props_form" method="post" action="/index.php?r=adminka/property/ajax_addrubprops">
 
         <input type="hidden" name="rubrikprops[r_id]" value="<?= $r_id;?>">
 
-        <table style="margin: 1px; width: 690px;">
+        <table style="margin: 1px; width: 690px; font-size: 11px;">
         <tr>
             <td>
                 selector<br>
@@ -64,6 +76,31 @@
 
             </td>
         </tr>
+        <tr>
+            <td>
+                ptype<br>
+                <?
+                echo CHtml::dropDownList('rubrikprops[ptype]', '', PropTypesParams::$ptype_spr,
+                    array('style'=>'width: 130px;'));
+                ?>
+            </td>
+
+            <td>
+                Обязательное поле?<br>
+                <input type="checkbox" name="rubrikprops[require_prop_tag]" value="1">
+            </td>
+
+            <td>
+            </td>
+
+            <td>
+            </td>
+
+            <td>
+
+            </td>
+        </tr>
+
         </table>
 
 

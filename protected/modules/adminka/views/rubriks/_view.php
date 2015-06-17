@@ -17,5 +17,9 @@
 	<?php echo CHtml::encode($data->name); ?>
 	<br />
 
+	<b><?php echo CHtml::encode($data->getAttributeLabel('sort_num')); ?>:</b>
+	<?php echo CHtml::encode($data->sort_num); ?>
+	<br />
+
 
 </div>

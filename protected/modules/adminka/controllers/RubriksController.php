@@ -71,11 +71,29 @@ class RubriksController extends Controller
 		{
 			$model->attributes=$_POST['Rubriks'];
 			if($model->save())
-				$this->redirect(array('view','id'=>$model->r_id));
+            {
+                if(is_array($_POST['NoticeTypeRelations']['notice_type_id']) > 0)
+                {
+                    foreach ($_POST['NoticeTypeRelations']['notice_type_id'] as $nval)
+                    {
+                        $ntr_model = new NoticeTypeRelations();
+                        $ntr_model->r_id = $model->r_id;
+                        $ntr_model->notice_type_id = $nval;
+                        $ntr_model->save();
+                    }
+                }
+
+                $this->redirect(array('view','id'=>$model->r_id));
+            }
 		}
 
-		$this->render('create',array(
+        $parent_list = Rubriks::get_parentlist();
+        $empty_type = new NoticeTypeRelations;
+
+        $this->render('create',array(
 			'model'=>$model,
+            'parent_list'=>$parent_list,
+            'empty_type'=>$empty_type
 		));
 	}
 
@@ -95,11 +113,68 @@ class RubriksController extends Controller
 		{
 			$model->attributes=$_POST['Rubriks'];
 			if($model->save())
-				$this->redirect(array('view','id'=>$model->r_id));
+            {
+                NoticeTypeRelations::model()->deleteAll('r_id='.$id);
+                if(is_array($_POST['NoticeTypeRelations']['notice_type_id']) > 0)
+                {
+                    //deb::dump($_POST);
+                    //die();
+                    foreach ($_POST['NoticeTypeRelations']['notice_type_id'] as $nval)
+                    {
+                        $ntr_model = new NoticeTypeRelations();
+                        $ntr_model->r_id = $id;
+                        $ntr_model->notice_type_id = $nval;
+
+                        $ntr_model->image_field_tag = 0;
+                        if(isset($_POST['NoticeTypeRelations']['image_field_tag'][$nval]))
+                        {
+                            $ntr_model->image_field_tag = 1;
+                        }
+
+                        $ntr_model->notice_fields_exception = '';
+                        if(is_array($_POST['NoticeTypeRelations']['notice_fields_exception'][$nval])
+                            && count($_POST['NoticeTypeRelations']['notice_fields_exception'][$nval]) > 0 )
+                        {
+                            $ntr_model->notice_fields_exception = implode(";",$_POST['NoticeTypeRelations']['notice_fields_exception'][$nval]);
+                        }
+
+                        if($ntr_model->save())
+                        {
+
+                        }
+                        else{
+                            deb::dump($ntr_model->getErrors());
+                            die();
+                        }
+                    }
+                }
+                $this->redirect(array('view','id'=>$model->r_id));
+            }
 		}
 
+        $empty_type = new NoticeTypeRelations;
+        $types = NoticeTypeRelations::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'r_id = '.$id
+        ));
+        $types_array = array();
+        $types_records = array();
+        if(count($types)>0)
+        {
+            foreach($types as $tval)
+            {
+                $tval->notice_fields_exception = explode(";", $tval->notice_fields_exception);
+                $types_array[] = $tval->notice_type_id;
+                $types_records[$tval->notice_type_id] = $tval;
+            }
+        }
+        $empty_type->notice_type_id = $types_array;
+
+        $parent_list = Rubriks::get_parentlist();
+
 		$this->render('update',array(
-			'model'=>$model,
+			'model'=>$model, 'types'=>$types, 'empty_type'=>$empty_type, 'parent_list'=>$parent_list,
+            'types_records'=>$types_records
 		));
 	}
 
@@ -123,8 +198,30 @@ class RubriksController extends Controller
 	public function actionIndex()
 	{
 		$dataProvider=new CActiveDataProvider('Rubriks');
+
+        $rubriks_parent = Rubriks::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'parent_id = 0',
+            'order'=>'sort_num ASC',
+        ));
+        $rubriks_child = Rubriks::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'parent_id > 0',
+            'order'=>'sort_num ASC',
+        ));
+        $rub_array = array();
+        foreach ($rubriks_parent as $rkey=>$rval)
+        {
+            $rub_array[$rval->r_id]['parent'] = $rval;
+        }
+        foreach ($rubriks_child as $rkey=>$rval)
+        {
+            $rub_array[$rval->parent_id]['childs'][$rval->r_id] = $rval;
+        }
+//        deb::dump($rub_array);
+
 		$this->render('index',array(
-			'dataProvider'=>$dataProvider,
+			'rub_array'=>$rub_array,
 		));
 	}
 

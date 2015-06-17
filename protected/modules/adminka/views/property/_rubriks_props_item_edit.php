@@ -70,6 +70,32 @@
 
                 </td>
             </tr>
+            <tr>
+                <td style="background-color: #adffc8; width: 120px;">
+                    <?
+                    echo CHtml::dropDownList('params[ptype]', $model->ptype, PropTypesParams::$ptype_spr, array('style'=>'width:140px;'));
+                    ?>
+                </td>
+                <td style="background-color: #adffc8; width: 120px;">
+                    <?
+                    $checked = "";
+                    if ($model->require_prop_tag)
+                    {
+                        $checked = " checked ";
+                    }
+                    ?>
+                    <input style="width: 115px;" <?= $checked;?> type="checkbox" name="params[require_prop_tag]" value="1">
+                </td>
+                <td style="background-color: #adffc8; width: 180px;">
+                </td>
+                <td style="background-color: #adffc8; width: 180px;">
+                </td>
+                <td style="background-color: #adffc8; width: 180px;">
+                </td>
+                <td style="background-color: #adffc8; width: 300px; text-align: center;" rowspan="2">
+                </td>
+            </tr>
+
         </table>
 
     </form>

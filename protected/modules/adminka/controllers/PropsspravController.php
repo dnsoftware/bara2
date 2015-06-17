@@ -145,9 +145,9 @@ class PropsspravController extends Controller
 
     public function actionAjax_gettable_relation()
     {
-        $current_ps_id = intval($_POST['current_ps_id']);
-        $parent2_rp_id = intval($_POST['parent2_rp_id']);
-        $current_rp_id = intval($_POST['current_rp_id']);
+        $current_ps_id = intval($_POST['current_ps_id']);   // код выбранного св-ва из справочника
+        $parent2_rp_id = intval($_POST['parent2_rp_id']);   // код свойства родителя родителя
+        $current_rp_id = intval($_POST['current_rp_id']);   // код свойства на котором кликнули
 
         if ($parent2_rp_id < 0)
         {
@@ -182,8 +182,12 @@ class PropsspravController extends Controller
             }
             else
             {
+                $model_rubriks_props = RubriksProps::model()->findByPk($current_rp_id);
+                $parent_rp_id = $model_rubriks_props->parent_id;
+
                 $prop = PropsSprav::model()->findByPk($current_ps_id);
-                $props_spav_records = $prop->childs;
+                $props_spav_records = $prop->childs(array('condition'=>'rp_id = :rp_id', 'params'=>array(':rp_id'=>$parent_rp_id)));
+                //deb::dump($prop);
                 //deb::dump($props_spav_records);
             }
 

@@ -23,7 +23,7 @@ $this->breadcrumbs=array(
 
 </style>
 
-<select id="select_subrub" class="selrub" onchange="">
+<select id="r_id" class="selrub" onchange="">
     <option>--- выберите подрубрику ---</option>
 <?
 foreach ($rub_array as $rkey=>$rval)
@@ -41,7 +41,7 @@ foreach ($rub_array as $rkey=>$rval)
 ?>
 </select>
 
-<span style="cursor: pointer; text-decoration: underline;" onclick="$('#select_subrub').change();">Обновить</span>
+<span style="cursor: pointer; text-decoration: underline;" onclick="$('#r_id').change();">Обновить</span>
 
 <div style="color: #f00; display: none;" id="div_errors">
 

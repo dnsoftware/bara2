@@ -79,7 +79,9 @@ class PropertyController extends Controller
 
         $model->hierarhy_tag = 0;
         $model->use_in_filter = 0;
+        $model->require_prop_tag = 0;
         $model->attributes = $_POST['params'];
+
         if (!$model->save())
         {
             foreach ($model->errors as $ekey=>$eval)

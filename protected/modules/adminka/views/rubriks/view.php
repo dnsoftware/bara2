@@ -24,5 +24,6 @@ $this->menu=array(
 		'r_id',
 		'parent_id',
 		'name',
+		'sort_num',
 	),
 )); ?>

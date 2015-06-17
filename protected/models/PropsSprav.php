@@ -97,16 +97,23 @@ class PropsSprav extends CActiveRecord
 
         if ($parent_ps_id <= 0)
         {
-            $props_sprav_records = self::model()->findAll(
-                array(
-                    'select'=>'*',
-                    'condition'=>'rp_id = :rp_id AND selector = :selector',
-                    'params'=>array(':rp_id'=>$rp_id, ':selector'=>$prop_types_params_row->selector),
-                    'order'=>$sort_sql,
-                    //'limit'=>'10'
-                )
-            );
-            //deb::dump($props_spav_records);
+            if($model_rubriks_props->parent_id == 0)
+            {
+                $props_sprav_records = self::model()->findAll(
+                    array(
+                        'select'=>'*',
+                        'condition'=>'rp_id = :rp_id AND selector = :selector',
+                        'params'=>array(':rp_id'=>$rp_id, ':selector'=>$prop_types_params_row->selector),
+                        'order'=>$sort_sql,
+                        //'limit'=>'10'
+                    )
+                );
+            }
+            else
+            {
+                $props_sprav_records = null;
+            }
+
         }
         else
         {
@@ -127,15 +134,22 @@ class PropsSprav extends CActiveRecord
 
         if ($parent_ps_id <= 0)
         {
-            $props_sprav_records = self::model()->findAll(
-                array(
-                    'select'=>'*',
-                    'condition'=>'rp_id = :rp_id AND selector = :selector',
-                    'params'=>array(':rp_id'=>$rp_id, ':selector'=>$prop_types_params_row->selector),
-                    'order'=>$sort_sql,
-                    //'limit'=>'10'
-                )
-            );
+            if($model_rubriks_props->parent_id == 0)
+            {
+                $props_sprav_records = self::model()->findAll(
+                    array(
+                        'select'=>'*',
+                        'condition'=>'rp_id = :rp_id AND selector = :selector',
+                        'params'=>array(':rp_id'=>$rp_id, ':selector'=>$prop_types_params_row->selector),
+                        'order'=>$sort_sql,
+                        //'limit'=>'10'
+                    )
+                );
+            }
+            else
+            {
+                $props_sprav_records = null;
+            }
         }
         else
         {
@@ -157,6 +171,26 @@ class PropsSprav extends CActiveRecord
         return $props_sprav_records;
 
     }
+
+
+    // Получение данных по массиву кодов справочника
+    public static function getDataByIds($props_ids)
+    {
+        $props_str = implode(", ", $props_ids);
+        $props = self::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'ps_id IN ('.$props_str.')'
+        ));
+
+        $props_data = array();
+        foreach ($props as $pkey=>$pval)
+        {
+            $props_data[$pval->ps_id] = $pval;
+        }
+
+        return $props_data;
+    }
+
 
 
     /**

@@ -14,7 +14,25 @@ $this->menu=array(
 
 <h1>Rubriks</h1>
 
-<?php $this->widget('zii.widgets.CListView', array(
-	'dataProvider'=>$dataProvider,
-	'itemView'=>'_view',
-)); ?>
+<?php
+//deb::dump($rub_array);
+foreach ($rub_array as $rval)
+{
+?>
+<div style="margin-left:10px;">
+    <?= $rval['parent']->name;?>
+    <?
+    foreach ($rval['childs'] as $cval)
+    {
+    ?>
+    <div style="margin-left:30px;">
+        <?= $cval->name;?>
+    </div>
+    <?
+    }
+    ?>
+</div>
+<?
+}
+
+?>

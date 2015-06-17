@@ -50,6 +50,8 @@ class PropTypesParams extends CActiveRecord
 		);
 	}
 
+
+
 	/**
 	 * @return array relational rules.
 	 */

@@ -15,4 +15,4 @@ $this->menu=array(
 
 <h1>Create Rubriks</h1>
 
-<?php $this->renderPartial('_form', array('model'=>$model)); ?>
+<?php $this->renderPartial('_form', array('model'=>$model, 'types'=>$types, 'parent_list'=>$parent_list, 'empty_type'=>$empty_type, 'types_records'=>$types_records)); ?>

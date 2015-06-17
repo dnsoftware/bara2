@@ -1,12 +1,12 @@
 <div class="rubprops_item" id="rubprops_item_<?= $model->rp_id;?>">
     <table style="margin-bottom: 10px; width: 890px;" id="row_rubprops_<?= $model->rp_id;?>">
         <tr style="background-color: #fff;">
-            <td style="background-color: #adffc8; width: 140px;"><?= $model->selector;?></td>
-            <td style="background-color: #adffc8; width: 140px;"><?= $model->name;?></td>
+            <td style="background-color: #adffc8; width: 140px; font-weight: bold;"><?= $model->selector;?></td>
+            <td style="background-color: #adffc8; width: 140px; font-weight: bold;"><?= $model->name;?></td>
             <td style="background-color: #adffc8;  width: 180px;"><?= $props_type_array[$model->type_id];?></td>
             <td style="background-color: #adffc8;  width: 180px;"><?= RubriksProps::$vibor_type[$model->vibor_type];?></td>
             <td style="background-color: #adffc8;  width: 180px;"><?= RubriksProps::$sort_sprav[$model->sort_props_sprav];?></td>
-            <td style="background-color: #ffe39f;  width: 300px; text-align: center;" rowspan="2">
+            <td style="background-color: #ffe39f;  width: 300px; text-align: center;" rowspan="3">
                 <span class="pointer" onclick="edit_rubriks_props_row(<?= $model->rp_id;?>);">Редактировать</span>
                 &nbsp;&nbsp;|&nbsp;&nbsp;
                 <span class="pointer" onclick="work_props_sprav(<?= $model->rp_id;?>);">Справочник свойств</span>
@@ -41,5 +41,24 @@
                 <?= $potential_parents[$model->parent_id];?>
             </td>
         </tr>
+        <tr>
+            <td style="background-color: #adffc8;">
+                <?= PropTypesParams::$ptype_spr[$model->ptype];?>
+            </td>
+
+            <td style="background-color: #adffc8;">
+                <?= Yii::app()->params['yesno'][$model->require_prop_tag];?>
+            </td>
+
+            <td style="background-color: #adffc8;">
+            </td>
+
+            <td style="background-color: #adffc8;">
+            </td>
+
+            <td style="background-color: #adffc8;">
+            </td>
+        </tr>
+
     </table>
 </div>

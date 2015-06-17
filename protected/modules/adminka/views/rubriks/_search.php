@@ -26,6 +26,11 @@
 		<?php echo $form->textField($model,'name',array('size'=>60,'maxlength'=>256)); ?>
 	</div>
 
+	<div class="row">
+		<?php echo $form->label($model,'sort_num'); ?>
+		<?php echo $form->textField($model,'sort_num'); ?>
+	</div>
+
 	<div class="row buttons">
 		<?php echo CHtml::submitButton('Search'); ?>
 	</div>

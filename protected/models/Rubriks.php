@@ -10,7 +10,13 @@
  */
 class Rubriks extends CActiveRecord
 {
-	/**
+    // Список полей, которые могут быть исключены из формы добавления/редактирования объявления
+    public static $notice_add_fields_exception = array(
+        'video_youtube'=>'Ссылка на ролик с Youtube',
+        'client_phone'=>'Телефон клиента'
+    );
+
+    /**
 	 * @return string the associated database table name
 	 */
 	public function tableName()
@@ -26,7 +32,7 @@ class Rubriks extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('parent_id, name', 'required'),
+			array('parent_id, name, sort_num', 'required'),
 			array('parent_id', 'numerical', 'integerOnly'=>true),
 			array('name', 'length', 'max'=>256),
 			// The following rule is used by search().
@@ -58,6 +64,33 @@ class Rubriks extends CActiveRecord
         }
 
         return $rub_array;
+    }
+
+    public static function get_parentlist()
+    {
+        $rubs = self::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'parent_id=0',
+            'order' => 'parent_id, name'
+        ));
+
+        $rub_array = [];
+        foreach ($rubs as $rkey => $rval)
+        {
+            if ($rval->parent_id==0)
+            {
+                $rub_array[$rval->r_id] = $rval;
+            }
+
+        }
+
+        $parent_list = array(''=>'-выберите родительскую рубрику-');
+        foreach ($rub_array as $pkey=>$pval)
+        {
+            $parent_list[$pkey] = $pval['name'];
+        }
+
+        return $parent_list;
     }
 
 	/**

@@ -15,12 +15,14 @@
 class RubriksProps extends CActiveRecord
 {
     public static $vibor_type = [''=>'-- тип выбора --',
-                                 'radio'=>'radiobutton',
+                                 'string'=>'строка (ручной ввод)',
+                                 'radio'=>'radio',
                                  'checkbox'=>'checkbox',
                                  'selector'=>'selector',
                                  'listitem'=>'ссылка из списка',
                                  'autoload'=>'поле с автоподгрузкой',
                                  'autoload_with_listitem'=>'автоподгрузка + список',
+                                 'photoblock'=>'блок фотографий',
                                 ];
 
     public static $sort_sprav = [''=>'-- тип сортировки свойств --',
@@ -50,10 +52,10 @@ class RubriksProps extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('r_id, selector, name, type_id, vibor_type, sort_props_sprav', 'required'),
+			array('r_id, selector, name, type_id, vibor_type, sort_props_sprav, ptype', 'required'),
             array('selector', 'unique'),
             array('r_id', 'numerical', 'min'=>1),
-			array('hierarhy_tag, hierarhy_level, display_sort, use_in_filter, parent_id', 'numerical', 'integerOnly'=>true),
+			array('hierarhy_tag, hierarhy_level, display_sort, use_in_filter, parent_id, require_prop_tag', 'numerical', 'integerOnly'=>true),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('rp_id, r_id, hierarhy_tag, hierarhy_level, display_sort, use_in_filter', 'safe', 'on'=>'search'),
@@ -144,7 +146,85 @@ class RubriksProps extends CActiveRecord
         return $range_spr;
     }
 
-	/**
+
+    // Получение массива обязательных к заполнению свойств
+    public static function getRequireProps($r_id)
+    {
+        $require_props = self::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'r_id = '.$r_id.' AND require_prop_tag = 1 ',
+            'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
+            //'limit'=>'10'
+        ));
+
+        $require_props_array = array();
+        foreach($require_props as $val)
+        {
+            $require_props_array[$val->selector] = $val;
+        }
+
+        return $require_props_array;
+    }
+
+    // Получение массива всех свойств данной рубрики - индекс selector
+    public static function getAllProps($r_id)
+    {
+        $all_props = self::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'r_id = '.$r_id,
+            'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
+            //'limit'=>'10'
+        ));
+
+        $all_props_array = array();
+        foreach($all_props as $val)
+        {
+            $all_props_array[$val->selector] = $val;
+        }
+
+        return $all_props_array;
+    }
+
+    // Получение массива всех свойств данной рубрики индекс - rp_id
+    public static function getAllPropsRp_id($r_id)
+    {
+        $all_props = self::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'r_id = '.$r_id,
+            'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
+            //'limit'=>'10'
+        ));
+
+        $all_props_array = array();
+        foreach($all_props as $val)
+        {
+            $all_props_array[$val->rp_id] = $val;
+        }
+
+        return $all_props_array;
+    }
+
+    // Получение массива всех свойств данной рубрики, сгруппированных по vibor_type
+    public static function getPropsByViborType($r_id)
+    {
+        $all_props = self::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'r_id = '.$r_id,
+            'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
+            //'limit'=>'10'
+        ));
+
+        $props_array = array();
+        foreach($all_props as $val)
+        {
+            $props_array[$val->vibor_type][$val->selector] = $val;
+        }
+
+        return $props_array;
+    }
+
+
+    /**
 	 * @return array relational rules.
 	 */
 	public function relations()
