@@ -237,6 +237,7 @@ $uploadmainfile = $this->getMainblockValue($model, 'uploadmainfile')
                     $imageclass = "mainfileborder";
                 }
             ?>
+Мегаботва
             <div class="ajax-file-upload-statusbar" id="oldload_<?= md5($uval);?>" style="width: 500px;">
 
                 <div class="ajax-file-upload-image">
