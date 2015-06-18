@@ -13,7 +13,7 @@ class AdvertController extends Controller
         }
 
         $model = new Notice();
-//deb::dump($model->n_id);
+
         $mainblock = array();
         if(isset(Yii::app()->session['mainblock']))
         {
@@ -122,6 +122,11 @@ class AdvertController extends Controller
             $n_id = intval($_POST['n_id']);
         }
 
+        if(!$model_notice = Notice::model()->findByPk($n_id))
+        {
+            $model_notice = new Notice();
+        }
+
         $model_items = RubriksProps::model()->findAll(array(
             'select'=>'*',
             'condition'=>'r_id = '.$r_id,
@@ -155,7 +160,7 @@ class AdvertController extends Controller
             }
         }
 
-        //deb::dump($props_hierarhy);
+        deb::dump($props_hierarhy);
 
         foreach ($model_items as $mkey=>$mval)
         {
@@ -236,8 +241,163 @@ class AdvertController extends Controller
              break;
 
              case "photoblock":
+                 //deb::dump($model);
              ?>
-                dsfdfsfsd
+
+         <input type="text" id="<?= $mval->selector;?>" value="Заглушка" style="display: block;">
+
+         <input type="text" name="mainblock[uploadfiles]" id="uploadfiles" readonly value="<?= $this->getMainblockValue($model_notice, 'uploadfiles');?>" style="width: 900px; display: block">
+         <?
+         $uploadmainfile = $this->getMainblockValue($model_notice, 'uploadmainfile')
+         ?>
+         <input type="text" name="mainblock[uploadmainfile]" id="uploadmainfile" readonly value="<?= $uploadmainfile;?>" style="width: 200px; display: block">
+
+             <div class="form-row">
+
+                 <div style="">
+                     <div id="fileuploader">Upload</div>
+                 </div>
+
+                 <div id="fileuploader_list" style="">
+                     <?
+                     $uploadfiles_array = Notice::getImageArray($this->getMainblockValue($model_notice, 'uploadfiles'), $this->getMainblockValue($model_notice, 'uploadmainfile'));
+
+                     if(count($uploadfiles_array) > 0)
+                     {
+                         foreach($uploadfiles_array as $ukey=>$uval)
+                         {
+                             $imageclass = "otherfileborder";
+                             if($uval == $uploadmainfile)
+                             {
+                                 $imageclass = "mainfileborder";
+                             }
+                             ?>
+
+                             <div class="ajax-file-upload-statusbar" id="oldload_<?= md5($uval);?>" style="width: 500px;">
+
+                                 <div class="ajax-file-upload-image">
+                                     <img src="/tmp/<?= $uval;?>" md5id="<?= md5($uval);?>" class="<?= $imageclass;?>" fileload_id="<?= $uval;?>" style="height: 80px; width: auto;" height="80" width="0">
+                                 </div>
+                                 <div class="ajax-file-upload-filename">
+                                     <? //тут название файла ?>
+                                 </div>
+                                 <div class="ajax-file-upload-progress" style="">
+                                     <div style="width: 100%;" class="ajax-file-upload-bar ajax-file-upload-<?= md5($uval);?>"></div>
+                                 </div>
+                                 <div class="ajax-file-upload-red ajax-file-upload-abort ajax-file-upload-<?= md5($uval);?>" style="display: none;">Abort</div>
+
+                                 <div class="ajax-file-upload-red ajax-file-upload-cancel ajax-file-upload-<?= md5($uval);?>" style="display: none;">Cancel</div>
+
+                                 <div class="ajax-file-upload-green" style="display: none;">Done</div>
+
+                                 <div class="ajax-file-upload-green" style="display: none;">Download</div>
+
+                                 <div class="ajax-file-upload-red old_load_delete" delfile="<?= $uval;?>" style="">Delete</div>
+
+                             </div>
+                         <?
+                         }
+                     }
+                     ?>
+
+                 </div>
+
+             </div>
+
+             <script>
+
+                 $('.otherfileborder, .mainfileborder').click(
+                     function()
+                     {
+                         $('.mainfileborder').attr('class', 'otherfileborder');
+                         $(this).attr('class', 'mainfileborder');
+                         $('#uploadmainfile').val($(this).attr('fileload_id'));
+                     }
+                 );
+
+
+                 // Удаление подстроки с именем удаленного файла и вычисление нового заглавного изображения
+                 function changeFileListAfterDelete(deleted_file)
+                 {
+                     //alert(deleted_file);
+                     filelist = $('#uploadfiles').val().replace(deleted_file+';', '');
+                     $('#uploadfiles').val(filelist);
+                     nextmain = $('.otherfileborder').first();
+                     if($('.otherfileborder').length == 0)
+                     {
+                         nextmain = $('.mainfileborder').first();
+                     }
+                     nextmain.attr('class', 'mainfileborder');
+                     $('#uploadmainfile').val(nextmain.attr('fileload_id'));
+                 }
+
+                 $("#fileuploader").uploadFile({
+                     url:"<?= Yii::app()->request->baseUrl;?>/index.php?r=advert/upload",
+                     fileName:"myfile",
+                     multiple:true,
+                     showDelete:true,
+                     showDone: false,
+                     returnType:"json",
+                     allowedTypes:"jpg,png,gif,jpeg",
+                     maxFileCount:5,
+                     showFileCounter: false,
+                     onSuccess:function(files,data,xhr)
+                     {
+                         //files: list of files
+                         //data: response from server
+                         //xhr : jquer xhr object
+                         //alert(files[0]);
+                         $('#uploadfiles').val($('#uploadfiles').val()+data[0]+';');
+                         image = $('[md5id = '+ $.md5(files[0])+']');
+                         image.attr('fileload_id', data[0]);
+                         if($('#uploadmainfile').val().length < 2)
+                         {
+                             $('#uploadmainfile').val(data[0]);
+                             image.attr('class', 'mainfileborder');
+                         }
+                         image.click(
+                             function()
+                             {
+                                 $('.mainfileborder').attr('class', 'otherfileborder');
+                                 $(this).attr('class', 'mainfileborder');
+                                 $('#uploadmainfile').val($(this).attr('fileload_id'));
+                             }
+                         );
+                     },
+
+                     deleteCallback: function (data, pd) {
+                         //console.log(data);
+
+                         for (var i = 0; i < data.length; i++) {
+                             $.post("<?= Yii::app()->request->baseUrl;?>/index.php?r=advert/uploaddelete", {op: "delete",name: data[i]},
+                                 function (resp,textStatus, jqXHR) {
+                                     changeFileListAfterDelete(data[0]);
+                                 });
+                         }
+                         pd.statusbar.hide(); //You choice.
+
+                     }
+                 });
+
+
+                 $('.old_load_delete').click(function ()
+                 {
+                     delfile = $(this).attr('delfile');
+                     delfile_id = $.md5($(this).attr('delfile'));
+
+                     $.ajax({
+                         type: 'POST',
+                         url: '/index.php?r=/advert/uploaddelete',
+                         data: 'op=delete&name='+delfile,
+                         success: function(msg){
+                             $('#oldload_'+delfile_id).remove();
+                             changeFileListAfterDelete(delfile);
+                         }
+                     });
+                 });
+
+
+             </script>
              <?
              break;
          }

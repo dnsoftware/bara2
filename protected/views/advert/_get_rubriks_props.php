@@ -274,4 +274,9 @@
         });
     }
 
+    function get_props_list_photoblock(/*Заглушка*/)
+    {
+
+    }
+
 </script>

@@ -169,7 +169,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 
 
 <div class="form-row">
-    <label id="lbl-notice_type_id" class="add-form-label"><?= Notice::model()->getAttributeLabel('notice_type_id');?>:</label>
+    ----------------Удалить<label id="lbl-notice_type_id" class="add-form-label"><?= Notice::model()->getAttributeLabel('notice_type_id');?>:</label>
     <div class="add-input-block">
 <?
 //$notice_type_id = $this->getMainblockValue($model, 'notice_type_id');
@@ -209,160 +209,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 
 
 
-<input type="text" name="mainblock[uploadfiles]" id="uploadfiles" readonly value="<?= $this->getMainblockValue($model, 'uploadfiles');?>" style="width: 900px; display: none">
-<?
-$uploadmainfile = $this->getMainblockValue($model, 'uploadmainfile')
-?>
-<input type="text" name="mainblock[uploadmainfile]" id="uploadmainfile" readonly value="<?= $uploadmainfile;?>" style="width: 200px; display: none">
 
-<div class="form-row">
-
-    <label id="lbl-image" class="add-form-label">Фото:</label>
-
-    <div style="margin-left: 188px;">
-    <div id="fileuploader">Upload</div>
-    </div>
-
-    <div id="fileuploader_list" style="margin-left: 188px;">
-        <?
-        $uploadfiles_array = Notice::getImageArray($this->getMainblockValue($model, 'uploadfiles'), $this->getMainblockValue($model, 'uploadmainfile'));
-
-        if(count($uploadfiles_array) > 0)
-        {
-            foreach($uploadfiles_array as $ukey=>$uval)
-            {
-                $imageclass = "otherfileborder";
-                if($uval == $uploadmainfile)
-                {
-                    $imageclass = "mainfileborder";
-                }
-            ?>
-Мегаботва
-            <div class="ajax-file-upload-statusbar" id="oldload_<?= md5($uval);?>" style="width: 500px;">
-
-                <div class="ajax-file-upload-image">
-                    <img src="/tmp/<?= $uval;?>" md5id="<?= md5($uval);?>" class="<?= $imageclass;?>" fileload_id="<?= $uval;?>" style="height: 80px; width: auto;" height="80" width="0">
-                </div>
-                <div class="ajax-file-upload-filename">
-                    <? //тут название файла ?>
-                </div>
-                <div class="ajax-file-upload-progress" style="">
-                    <div style="width: 100%;" class="ajax-file-upload-bar ajax-file-upload-<?= md5($uval);?>"></div>
-                </div>
-                <div class="ajax-file-upload-red ajax-file-upload-abort ajax-file-upload-<?= md5($uval);?>" style="display: none;">Abort</div>
-
-                <div class="ajax-file-upload-red ajax-file-upload-cancel ajax-file-upload-<?= md5($uval);?>" style="display: none;">Cancel</div>
-
-                <div class="ajax-file-upload-green" style="display: none;">Done</div>
-
-                <div class="ajax-file-upload-green" style="display: none;">Download</div>
-
-                <div class="ajax-file-upload-red old_load_delete" delfile="<?= $uval;?>" style="">Delete</div>
-
-            </div>
-            <?
-            }
-        }
-        ?>
-
-    </div>
-
-</div>
-
-<script>
-
-    $('.otherfileborder, .mainfileborder').click(
-        function()
-        {
-            $('.mainfileborder').attr('class', 'otherfileborder');
-            $(this).attr('class', 'mainfileborder');
-            $('#uploadmainfile').val($(this).attr('fileload_id'));
-        }
-    );
-
-
-    // Удаление подстроки с именем удаленного файла и вычисление нового заглавного изображения
-    function changeFileListAfterDelete(deleted_file)
-    {
-        //alert(deleted_file);
-        filelist = $('#uploadfiles').val().replace(deleted_file+';', '');
-        $('#uploadfiles').val(filelist);
-        nextmain = $('.otherfileborder').first();
-        if($('.otherfileborder').length == 0)
-        {
-            nextmain = $('.mainfileborder').first();
-        }
-        nextmain.attr('class', 'mainfileborder');
-        $('#uploadmainfile').val(nextmain.attr('fileload_id'));
-    }
-
-    $("#fileuploader").uploadFile({
-        url:"<?= Yii::app()->request->baseUrl;?>/index.php?r=advert/upload",
-        fileName:"myfile",
-        multiple:true,
-        showDelete:true,
-        showDone: false,
-        returnType:"json",
-        allowedTypes:"jpg,png,gif,jpeg",
-        maxFileCount:5,
-        showFileCounter: false,
-        onSuccess:function(files,data,xhr)
-        {
-            //files: list of files
-            //data: response from server
-            //xhr : jquer xhr object
-            //alert(files[0]);
-            $('#uploadfiles').val($('#uploadfiles').val()+data[0]+';');
-            image = $('[md5id = '+ $.md5(files[0])+']');
-            image.attr('fileload_id', data[0]);
-            if($('#uploadmainfile').val().length < 2)
-            {
-                $('#uploadmainfile').val(data[0]);
-                image.attr('class', 'mainfileborder');
-            }
-            image.click(
-                function()
-                {
-                    $('.mainfileborder').attr('class', 'otherfileborder');
-                    $(this).attr('class', 'mainfileborder');
-                    $('#uploadmainfile').val($(this).attr('fileload_id'));
-                }
-            );
-        },
-
-        deleteCallback: function (data, pd) {
-            //console.log(data);
-
-            for (var i = 0; i < data.length; i++) {
-                $.post("<?= Yii::app()->request->baseUrl;?>/index.php?r=advert/uploaddelete", {op: "delete",name: data[i]},
-                    function (resp,textStatus, jqXHR) {
-                        changeFileListAfterDelete(data[0]);
-                    });
-            }
-            pd.statusbar.hide(); //You choice.
-
-        }
-    });
-
-
-    $('.old_load_delete').click(function ()
-    {
-        delfile = $(this).attr('delfile');
-        delfile_id = $.md5($(this).attr('delfile'));
-
-        $.ajax({
-            type: 'POST',
-            url: '/index.php?r=/advert/uploaddelete',
-            data: 'op=delete&name='+delfile,
-            success: function(msg){
-                $('#oldload_'+delfile_id).remove();
-                changeFileListAfterDelete(delfile);
-            }
-        });
-    });
-
-
-</script>
 
 <div class="form-row">
 
@@ -553,11 +400,9 @@ function ChangeRelateProps(jobj, n_id)
     if (props_hierarhy[jobj.attr('id')]['childs_selector'] !== undefined)
     {
         CascadeNullRelatePropsSession($('#r_id').val(), jobj.attr('id'));
-
         CascadeNullRelateProps(jobj, n_id);
 
         $.each (props_hierarhy[jobj.attr('id')]['childs_selector'], function (index, value) {
-//console.log(jobj.attr('id'));
             parent_ps_id = 0;
             if (props_hierarhy[jobj.attr('id')] !== undefined)
             {
@@ -576,16 +421,26 @@ function CascadeNullRelateProps(jobj, n_id)
 {
     if (props_hierarhy[jobj.attr('id')]['childs_selector'] !== undefined)
     {
+        //console.log(jobj.attr('id'));
         $.each (props_hierarhy[jobj.attr('id')]['childs_selector'], function (index, value, n_id) {
+
             //console.log(index+' = '+$('#'+index).attr('id'));
-            //alert('f'+props_hierarhy[index]['vibor_type']);
+            //alert(props_hierarhy[index]['vibor_type']);
 
-            $('#div_'+index).css('display', 'none');
-
-            $('#'+index+'-display').val('');
-            $('#'+index).val('');
-            $('#'+index+'-span').html('');
-            $('#div_'+index+'_list').html('');
+            if(props_hierarhy[index]['vibor_type'] != 'photoblock')
+            {
+                $('#div_'+index).css('display', 'none');
+                $('#'+index+'-display').val('');
+                $('#'+index).val('');
+                $('#'+index+'-span').html('');
+                $('#div_'+index+'_list').html('');
+            }
+            else
+            {
+                $('#uploadfiles').val('');
+                $('#uploadmainfile').val('');
+                $('#fileuploader_list').html('');
+            }
 
             CascadeNullRelateProps($('#'+index), n_id);
             //get_props_list_functions['f'+props_hierarhy[index]['vibor_type']]('', '');
