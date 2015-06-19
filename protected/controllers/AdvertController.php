@@ -244,8 +244,6 @@ class AdvertController extends Controller
                  //deb::dump($model);
              ?>
                 <div id="div_<?= $mval->selector;?>_photoblock"></div>
-
-
              <?
              break;
          }
