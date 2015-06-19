@@ -476,6 +476,25 @@ function CascadeNullRelatePropsSession(r_id, parent_field_id)
     });
 }
 
+
+// Если установлено значение свойства родителя, значит показываем блоки со свойствами потомками
+function DisplayChildsPropsBlock(parent_id)
+{
+    if (props_hierarhy[parent_id]['childs_selector'] !== undefined)
+    {
+        $.each (props_hierarhy[parent_id]['childs_selector'], function (index, value) {
+            $('#div_'+index).css('display', 'block');
+        });
+    }
+}
+
+// Визуализация блоков в зависимости от значения соотв. свойств + визуализация связанных потомков
+function DisplayAfterLoad(field_id)
+{
+    $('#div_'+field_id).css('display', 'block');
+    DisplayChildsPropsBlock(field_id);
+}
+
 function addformsubmit()
 {
     var form_data = $('#addform').serialize();

@@ -437,6 +437,11 @@ class AdvertController extends Controller
 
 
         <script>
+        if($('#<?= $field_id;?>').val() != '')
+        {
+            DisplayAfterLoad('<?= $field_id;?>');
+        }
+
         // При смене значения - обновляем данные зависимых свойств
         $('#<?= $field_id;?>').change(
         function()
@@ -486,6 +491,11 @@ class AdvertController extends Controller
 
         ?>
         <script>
+            if($('#<?= $field_id;?>').val() != '')
+            {
+                DisplayAfterLoad('<?= $field_id;?>');
+            }
+
             $('#<?= $field_id;?>-display').css('display', 'block');
             $('#div_<?= $field_id;?>_list').css('display', 'block');
             if($('#<?= $field_id;?>').val()>0)
@@ -546,7 +556,7 @@ class AdvertController extends Controller
             {
                 //deb::dump($pval);
             ?>
-                <input style="" type="checkbox" name="addfield[<?= $model_rubriks_props->selector;?>][<?= $pval->ps_id;?>]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" <?= $this->getCheckedAttr($pval->ps_id, $checked_array);?>> <?= $pval->value;?>
+                <input style="" class="<?= $model_rubriks_props->selector;?>" type="checkbox" name="addfield[<?= $model_rubriks_props->selector;?>][<?= $pval->ps_id;?>]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" <?= $this->getCheckedAttr($pval->ps_id, $checked_array);?>> <?= $pval->value;?>
             <?
             }
         }
@@ -554,7 +564,20 @@ class AdvertController extends Controller
         ?>
 
         <script>
+            checkboxes = $('.<?= $model_rubriks_props->selector;?>');
+            checked_tag = 0;
+            $.each(checkboxes, function(mkey, mval)
+            {
+                if($(mval).attr('checked') !== undefined)
+                {
+                    checked_tag = 1;
+                }
+            });
 
+            if(checked_tag == 1)
+            {
+                DisplayAfterLoad('<?= $field_id;?>');
+            }
         </script>
     <?
 
@@ -590,7 +613,7 @@ class AdvertController extends Controller
             foreach ($props_sprav as $pkey=>$pval)
             {
             ?>
-                <?= $pval->value;?> <input style="" <?= $this->getRadioCheckedAttr($value, $pval->ps_id);?> type="radio" name="addfield[<?= $model_rubriks_props->selector;?>]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" value="<?= $pval->ps_id;?>">
+                <?= $pval->value;?> <input style="" <?= $this->getRadioCheckedAttr($value, $pval->ps_id);?> type="radio" class="<?= $model_rubriks_props->selector;?>" name="addfield[<?= $model_rubriks_props->selector;?>]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" value="<?= $pval->ps_id;?>">
             <?
             }
         }
@@ -598,6 +621,20 @@ class AdvertController extends Controller
         ?>
 
         <script>
+            radios = $('.<?= $model_rubriks_props->selector;?>');
+            checked_tag = 0;
+            $.each(radios, function(mkey, mval)
+            {
+                if($(mval).attr('checked') !== undefined)
+                {
+                    checked_tag = 1;
+                }
+            });
+
+            if(checked_tag == 1)
+            {
+                DisplayAfterLoad('<?= $field_id;?>');
+            }
 
         </script>
     <?
@@ -647,7 +684,7 @@ class AdvertController extends Controller
                     $value_hand = $value['hand_input_value'];
                 }
                 ?>
-                <?= $pval->value;?> <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $model_rubriks_props->selector;?>][ps_id]" id="<?= $model_rubriks_props->selector;?>" value="<?= $pval->ps_id;?>">
+                <?= $pval->value;?> <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $model_rubriks_props->selector;?>][ps_id]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" value="<?= $pval->ps_id;?>">
 
                 <input style="" type="text" name="addfield[<?= $model_rubriks_props->selector;?>][hand_input_value]" id="<?= $model_rubriks_props->selector;?>" value="<?= htmlspecialchars($value_hand, ENT_COMPAT);?>">
 
@@ -658,6 +695,10 @@ class AdvertController extends Controller
         ?>
 
         <script>
+            if($('#<?= $model_rubriks_props->selector;?>').val() != '')
+            {
+                DisplayAfterLoad('<?= $field_id;?>');
+            }
 
         </script>
     <?
@@ -743,11 +784,17 @@ class AdvertController extends Controller
 
             </div>
 
-            <span style="cursor: pointer;" onclick="deletePhotofileFromStr('583f9422e2e0661c85e1fb15b866c488328776109.jpg');">ТЕСТ</span>
 
         </div>
 
         <script>
+            /*
+            if($('#<?= $fielad_id;?>').val() != '')
+            {
+                //alert($('#<?= $fielad_id;?>').val());
+                //DisplayAfterLoad('<?= $field_id;?>');
+            }
+            */
 
             $('.otherfileborder, .mainfileborder').click(
                 function()
