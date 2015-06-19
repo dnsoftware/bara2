@@ -168,6 +168,9 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 </div>
 
 
+<?
+/*
+?>
 <div class="form-row">
     ----------------Удалить<label id="lbl-notice_type_id" class="add-form-label"><?= Notice::model()->getAttributeLabel('notice_type_id');?>:</label>
     <div class="add-input-block">
@@ -186,7 +189,9 @@ $r_id = $this->getMainblockValue($model, 'r_id')
         <div class="input-error-msg"></div>
     </div>
 </div>
-
+<?
+*/
+?>
 <?
  /*
 ?>
@@ -377,6 +382,7 @@ $('.selrub').change(function (fromwhere)
         }
     });
 
+    /*
     $.ajax({
         type: 'POST',
         url: '/index.php?r=/advert/get_notice_types',
@@ -385,6 +391,7 @@ $('.selrub').change(function (fromwhere)
             $('#notice_type_id').html(msg);
         }
     });
+    */
 
 });
 

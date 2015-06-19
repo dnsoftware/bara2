@@ -274,9 +274,26 @@
         });
     }
 
-    function get_props_list_photoblock(/*Заглушка*/)
+    function get_props_list_photoblock(field_id, parent_field_id, n_id, parent_ps_id)
     {
+        $.ajax({
+            url: "/index.php?r=advert/getpropslist_photoblock",
+            method: "post",
+            //dataType: "json",
+            // параметры запроса, передаваемые на сервер (последний - подстрока для поиска):
+            data:{
+                field_id: field_id,
+                parent_field_id: parent_field_id,
+                parent_ps_id: parent_ps_id,
+                n_id: n_id
+            },
+            // обработка успешного выполнения запроса
+            success: function(data){
+                //alert(data);
 
+                $('#div_'+field_id+'_photoblock').html(data);
+            }
+        });
     }
 
 </script>

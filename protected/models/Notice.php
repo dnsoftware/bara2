@@ -68,7 +68,7 @@ class Notice extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('u_id, r_id, t_id, reg_id, c_id, date_add, date_lastedit, expire_period, date_expire, client_name, client_email, client_phone, notice_type_id, title, notice_text, active_tag, verify_tag, checksum,  views_count, moder_counted_tag, cost, cost_valuta',  'required'),
+			array('u_id, r_id, t_id, reg_id, c_id, date_add, date_lastedit, expire_period, date_expire, client_name, client_email, client_phone, title, notice_text, active_tag, verify_tag, checksum,  views_count, moder_counted_tag, cost, cost_valuta',  'required'),
 			array('u_id, r_id, t_id, reg_id, c_id, expire_period, active_tag, verify_tag, deactive_moder_id, moder_tag, moder_id, views_count, deleted_tag, otkaz_id, moder_counted_tag', 'numerical', 'integerOnly'=>true),
 			array('date_add, date_lastedit, date_expire, date_deactive, date_moder, date_delete, date_sort', 'length', 'max'=>14),
 			array('client_name, client_email, client_phone, phone_search, title, reject_reason', 'length', 'max'=>256),
@@ -81,28 +81,42 @@ class Notice extends CActiveRecord
 	}
 
 
-    public static function getImageArray($uploadfiles, $uploadmainfile)
+    public static function getImageArray($upload_data)
     {
-        $uploadfiles_array = array();
-        $uploadfiles = trim($uploadfiles);
-        if(strlen($uploadfiles)>4)
+        $temp = array();
+        $uploadfiles = trim($upload_data);
+        if(strlen($uploadfiles)>10)
         {
-            $uploadfiles = substr($uploadfiles, 0, (strlen($uploadfiles)-1));
             $temp = explode(";", $uploadfiles);
-            $uploadfiles_array[0] = $uploadmainfile;
-
-            foreach ($temp as $tkey=>$tval)
-            {
-                if($tval != $uploadmainfile)
-                {
-                    $uploadfiles_array[] = $tval;
-                }
-            }
+            unset($temp[count($temp)-1]);
         }
 
-        return $uploadfiles_array;
+        return $temp;
     }
 
+    /*
+        public static function getImageArray($uploadfiles, $uploadmainfile)
+        {
+            $uploadfiles_array = array();
+            $uploadfiles = trim($uploadfiles);
+            if(strlen($uploadfiles)>4)
+            {
+                $uploadfiles = substr($uploadfiles, 0, (strlen($uploadfiles)-1));
+                $temp = explode(";", $uploadfiles);
+                $uploadfiles_array[0] = $uploadmainfile;
+
+                foreach ($temp as $tkey=>$tval)
+                {
+                    if($tval != $uploadmainfile)
+                    {
+                        $uploadfiles_array[] = $tval;
+                    }
+                }
+            }
+
+            return $uploadfiles_array;
+        }
+    */
 
 	/**
 	 * @return array relational rules.
