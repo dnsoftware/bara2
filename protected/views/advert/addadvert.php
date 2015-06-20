@@ -404,16 +404,19 @@ if($('#r_id').val() != '')
 // При смене значения - обновляем данные зависимых свойств
 function ChangeRelateProps(jobj, n_id)
 {
-    if (props_hierarhy[jobj.attr('id')]['childs_selector'] !== undefined)
+    field_id = jobj.attr('prop_id');
+//console.log(field_id);
+    if (props_hierarhy[field_id]['childs_selector'] !== undefined)
     {
-        CascadeNullRelatePropsSession($('#r_id').val(), jobj.attr('id'));
+        CascadeNullRelatePropsSession($('#r_id').val(), field_id);
         CascadeNullRelateProps(jobj, n_id);
 
-        $.each (props_hierarhy[jobj.attr('id')]['childs_selector'], function (index, value) {
+        $.each (props_hierarhy[field_id]['childs_selector'], function (index, value) {
             parent_ps_id = 0;
-            if (props_hierarhy[jobj.attr('id')] !== undefined)
+            if (props_hierarhy[field_id] !== undefined)
             {
-                parent_ps_id = $('#'+props_hierarhy[jobj.attr('id')]['field_value_id']).val();
+                // тут возможно надо будет переделать для checkbox и radio
+                parent_ps_id = $('[prop_id='+props_hierarhy[field_id]['field_value_id']).val();
             }
 
             get_props_list_functions['f'+props_hierarhy[index]['vibor_type']](index, props_hierarhy[index]['parent_selector'], n_id, parent_ps_id);
@@ -426,11 +429,15 @@ function ChangeRelateProps(jobj, n_id)
 // Каскадное обнуление зависимых свойств
 function CascadeNullRelateProps(jobj, n_id)
 {
-    if (props_hierarhy[jobj.attr('id')]['childs_selector'] !== undefined)
+    field_id = jobj.attr('prop_id');
+//console.log(field_id);
+    if (props_hierarhy[field_id] !== undefined && props_hierarhy[field_id]['childs_selector'] !== undefined)
     {
-        $.each (props_hierarhy[jobj.attr('id')]['childs_selector'], function (index, value, n_id) {
+        $.each (props_hierarhy[field_id]['childs_selector'], function (index, value, n_id) {
 
             //console.log(index+' = '+$('#'+index).attr('id'));
+
+            $('#div_'+index).css('display', 'none');
 
             if(props_hierarhy[index]['vibor_type'] == 'photoblock')
             {
@@ -448,16 +455,13 @@ function CascadeNullRelateProps(jobj, n_id)
             }
             else
             {
-                $('#div_'+index).css('display', 'none');
                 $('#'+index+'-display').val('');
                 $('#'+index).val('');
                 $('#'+index+'-span').html('');
                 $('#div_'+index+'_list').html('');
             }
 
-            console.log(index);
-            CascadeNullRelateProps($('#'+index), n_id);
-            //get_props_list_functions['f'+props_hierarhy[index]['vibor_type']]('', '');
+            CascadeNullRelateProps($('[prop_id = '+index+']'), n_id);
         });
 
     }

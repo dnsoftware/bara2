@@ -754,7 +754,7 @@ class AdvertController extends Controller
 
 
         ?>
-        <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>]" id="<?= $field_id;?>" prop_id="<?= $model_rubriks_props->selector;?>" value="<?= $fieldvalue;?>" style="display: block; width: 1000px;">
+        <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>" value="<?= $fieldvalue;?>" style="display: block; width: 1000px;">
 
         <div class="form-row">
 
