@@ -87,6 +87,14 @@
                     <input style="width: 115px;" <?= $checked;?> type="checkbox" name="params[require_prop_tag]" value="1">
                 </td>
                 <td style="background-color: #adffc8; width: 180px;">
+                    <?
+                    $checked = "";
+                    if ($model->hide_if_no_elems_tag)
+                    {
+                        $checked = " checked ";
+                    }
+                    ?>
+                    <input style="width: 115px;" <?= $checked;?> type="checkbox" name="params[hide_if_no_elems_tag]" value="1">
                 </td>
                 <td style="background-color: #adffc8; width: 180px;">
                 </td>

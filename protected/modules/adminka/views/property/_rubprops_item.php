@@ -51,6 +51,7 @@
             </td>
 
             <td style="background-color: #adffc8;">
+                <?= Yii::app()->params['yesno'][$model->hide_if_no_elems_tag];?>
             </td>
 
             <td style="background-color: #adffc8;">

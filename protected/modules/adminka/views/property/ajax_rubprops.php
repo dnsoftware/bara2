@@ -91,6 +91,8 @@
             </td>
 
             <td>
+                Скрывать, если нет ни одного зависимого?<br>
+                <input type="checkbox" name="rubrikprops[hide_if_no_elems_tag]" value="1">
             </td>
 
             <td>

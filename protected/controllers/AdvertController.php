@@ -13,7 +13,7 @@ class AdvertController extends Controller
         }
 
         $model = new Notice();
-
+//deb::dump(Yii::app()->session['addfield']);
         $mainblock = array();
         if(isset(Yii::app()->session['mainblock']))
         {
@@ -195,7 +195,7 @@ class AdvertController extends Controller
                  ?>
                  <input type="text" name="<?= $mval->selector;?>-display" id="<?= $mval->selector;?>-display" inputfield="<?= $mval->selector;?>">
                  <span class="addnot-field-selected" id="<?= $mval->selector;?>-span" inputfield="<?= $mval->selector;?>"></span>
-                 <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $mval->selector;?>]" id="<?= $mval->selector;?>" value="<?= $this->getAddfieldValue($n_id, $mval->selector);?>">
+                 <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $mval->selector;?>]" id="<?= $mval->selector;?>"  prop_id="<?= $mval->selector;?>" value="<?= $this->getAddfieldValue($n_id, $mval->selector);?>">
 
                  <?
                  // id поля формы <input> в которое заносится выбранное значение
@@ -215,7 +215,7 @@ class AdvertController extends Controller
              case "listitem":
                  ?>
                  <span class="addnot-field-selected" id="<?= $mval->selector;?>-span" inputfield="<?= $mval->selector;?>"></span>
-                <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $mval->selector;?>]" id="<?= $mval->selector;?>" value="<?= $this->getAddfieldValue($n_id, $mval->selector);?>">
+                <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $mval->selector;?>]" id="<?= $mval->selector;?>" prop_id="<?= $mval->selector;?>" value="<?= $this->getAddfieldValue($n_id, $mval->selector);?>">
 
                  <div id="div_<?= $mval->selector;?>_list"></div>
                  <?
@@ -408,7 +408,7 @@ class AdvertController extends Controller
         <td>
 
         <div class="input-error-prop" id="input-error-prop-<?= $field_id;?>">
-        <select class="input-proplist-selector" name="addfield[<?= $field_id;?>]" id="<?= $field_id;?>">
+        <select class="input-proplist-selector" name="addfield[<?= $field_id;?>]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>">
             <option <?= $this->getSelectedAttr($currvalue, "");?> value=""></option>
         <?
 
@@ -554,7 +554,7 @@ class AdvertController extends Controller
             {
                 //deb::dump($pval);
             ?>
-                <input style="" class="<?= $model_rubriks_props->selector;?>" type="checkbox" name="addfield[<?= $model_rubriks_props->selector;?>][<?= $pval->ps_id;?>]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" <?= $this->getCheckedAttr($pval->ps_id, $checked_array);?>> <?= $pval->value;?>
+                <input style="" class="<?= $model_rubriks_props->selector;?>" type="checkbox" name="addfield[<?= $model_rubriks_props->selector;?>][<?= $pval->ps_id;?>]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" prop_id="<?= $model_rubriks_props->selector;?>" <?= $this->getCheckedAttr($pval->ps_id, $checked_array);?>> <?= $pval->value;?>
             <?
             }
         }
@@ -611,7 +611,7 @@ class AdvertController extends Controller
             foreach ($props_sprav as $pkey=>$pval)
             {
             ?>
-                <?= $pval->value;?> <input style="" <?= $this->getRadioCheckedAttr($value, $pval->ps_id);?> type="radio" class="<?= $model_rubriks_props->selector;?>" name="addfield[<?= $model_rubriks_props->selector;?>]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" value="<?= $pval->ps_id;?>">
+                <?= $pval->value;?> <input style="" <?= $this->getRadioCheckedAttr($value, $pval->ps_id);?> type="radio" class="<?= $model_rubriks_props->selector;?>" name="addfield[<?= $model_rubriks_props->selector;?>]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" prop_id="<?= $model_rubriks_props->selector;?>" value="<?= $pval->ps_id;?>">
             <?
             }
         }
@@ -684,7 +684,7 @@ class AdvertController extends Controller
                 ?>
                 <?= $pval->value;?> <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $model_rubriks_props->selector;?>][ps_id]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" value="<?= $pval->ps_id;?>">
 
-                <input style="" type="text" name="addfield[<?= $model_rubriks_props->selector;?>][hand_input_value]" id="<?= $model_rubriks_props->selector;?>" value="<?= htmlspecialchars($value_hand, ENT_COMPAT);?>">
+                <input style="" type="text" name="addfield[<?= $model_rubriks_props->selector;?>][hand_input_value]" id="<?= $model_rubriks_props->selector;?>" prop_id="<?= $model_rubriks_props->selector;?>" value="<?= htmlspecialchars($value_hand, ENT_COMPAT);?>">
 
             <?
             }
@@ -710,6 +710,8 @@ class AdvertController extends Controller
         //echo $field_id;
         $parent_field_id = $_POST['parent_field_id'];
         $parent_ps_id = intval($_POST['parent_ps_id']);
+//deb::dump($parent_field_id);
+//deb::dump($parent_ps_id);
 
         $n_id = 0;
         if(isset($_POST['n_id']))
@@ -728,10 +730,31 @@ class AdvertController extends Controller
         $uploadfiles_array = Notice::getImageArray($fieldvalue);
         $uploadmainfile = $uploadfiles_array[0];
 
-        //deb::dump($uploadfiles_array);
+        /*************** Блок сокрытия блока если нет ни одного зависимого элемента... ****************/
+    deb::dump($parent_field_id);
+        if($parent_field_id != '')   // Если блок зависим от родителя
+        {
+            $prop = PropsSprav::model()->findByPk($parent_ps_id);
+    deb::dump($prop);
+            if($prop != null)   // Если родитель выбран
+            {
+                $props_sprav_records = $prop->childs(array('condition'=>'rp_id = :rp_id',
+                    'params'=>array(':rp_id'=>$prop->rp_id)));
+    deb::dump($props_sprav_records);
+                if(count($props_sprav_records) == 0 )    // если нет зависимых элементов
+                {
+                ?>
+                    <script>
+                        //$('#div_<?= $field_id;?>').css('display', 'none');
+                    </script>
+                <?
+                }
+            }
+        }
+
 
         ?>
-        <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>]" id="<?= $field_id;?>" value="<?= $fieldvalue;?>" style="display: block; width: 1000px;">
+        <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>]" id="<?= $field_id;?>" prop_id="<?= $model_rubriks_props->selector;?>" value="<?= $fieldvalue;?>" style="display: block; width: 1000px;">
 
         <div class="form-row">
 
@@ -786,13 +809,15 @@ class AdvertController extends Controller
         </div>
 
         <script>
-            /*
-            if($('#<?= $fielad_id;?>').val() != '')
+
+            field_id = '<?= $field_id;?>';
+
+            if($('#<?= $field_id;?>').val() != '')
             {
-                //alert($('#<?= $fielad_id;?>').val());
-                //DisplayAfterLoad('<?= $field_id;?>');
+                //alert($('#<?= $field_id;?>').val());
+                DisplayAfterLoad('<?= $field_id;?>');
             }
-            */
+
 
             $('.otherfileborder, .mainfileborder').click(
                 function()
@@ -857,7 +882,10 @@ class AdvertController extends Controller
                     nextmain = $('.mainfileborder').first();
                 }
                 nextmain.attr('class', 'mainfileborder');
-                setMainfileInInput(nextmain.attr('fileload_id'));
+                if(nextmain.attr('fileload_id') !== undefined)
+                {
+                    setMainfileInInput(nextmain.attr('fileload_id'));
+                }
             }
 
             $("#fileuploader").uploadFile({
@@ -900,7 +928,7 @@ class AdvertController extends Controller
                     //console.log(data);
 
                     for (var i = 0; i < data.length; i++) {
-                        $.post("<?= Yii::app()->request->baseUrl;?>/index.php?r=advert/uploaddelete", {op: "delete",name: data[i]},
+                        $.post("<?= Yii::app()->request->baseUrl;?>/index.php?r=advert/uploaddelete", {op: "delete",name: data[i], field_id: field_id},
                             function (resp,textStatus, jqXHR) {
                                 changeFileListAfterDelete(data[0]);
                             });
@@ -919,13 +947,14 @@ class AdvertController extends Controller
                 $.ajax({
                     type: 'POST',
                     url: '/index.php?r=/advert/uploaddelete',
-                    data: 'op=delete&name='+delfile,
+                    data: 'op=delete&name='+delfile+'&field_id='+field_id,
                     success: function(msg){
                         $('#oldload_'+delfile_id).remove();
                         changeFileListAfterDelete(delfile);
                     }
                 });
             });
+
 
 
         </script>
@@ -969,18 +998,14 @@ class AdvertController extends Controller
     public function actionUploadDelete()
     {
         $output_dir = $_SERVER['DOCUMENT_ROOT']."/tmp/";
+        $field_id = $_POST['field_id'];
         $delfile = str_replace('../', '', $_POST['name']);
         unlink($output_dir.$delfile);
 
-        $temp = Yii::app()->session['mainblock'];
-        $temp['uploadfiles'] = str_replace($delfile.';', '', $temp['uploadfiles']);
-        if($delfile == $temp['uploadmainfile'])
-        {
-            $temp['uploadmainfile'] = '';
-        }
+        $temp = Yii::app()->session['addfield'];
+        $temp[$field_id] = str_replace($delfile.';', '', $temp[$field_id]);
 
-        Yii::app()->session['mainblock'] = $temp;
-
+        Yii::app()->session['addfield'] = $temp;
 
         echo json_encode($delfile);
     }

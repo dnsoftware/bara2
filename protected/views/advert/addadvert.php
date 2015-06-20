@@ -428,13 +428,25 @@ function CascadeNullRelateProps(jobj, n_id)
 {
     if (props_hierarhy[jobj.attr('id')]['childs_selector'] !== undefined)
     {
-        //console.log(jobj.attr('id'));
         $.each (props_hierarhy[jobj.attr('id')]['childs_selector'], function (index, value, n_id) {
 
             //console.log(index+' = '+$('#'+index).attr('id'));
-            //alert(props_hierarhy[index]['vibor_type']);
 
-            if(props_hierarhy[index]['vibor_type'] != 'photoblock')
+            if(props_hierarhy[index]['vibor_type'] == 'photoblock')
+            {
+                $('#uploadfiles').val('');
+                $('#uploadmainfile').val('');
+                $('#fileuploader_list').html('');
+            }
+            else if (props_hierarhy[index]['vibor_type'] == 'checkbox')
+            {
+                // Доработать при необходимости
+            }
+            else if (props_hierarhy[index]['vibor_type'] == 'radio')
+            {
+                // Доработать при необходимости
+            }
+            else
             {
                 $('#div_'+index).css('display', 'none');
                 $('#'+index+'-display').val('');
@@ -442,13 +454,8 @@ function CascadeNullRelateProps(jobj, n_id)
                 $('#'+index+'-span').html('');
                 $('#div_'+index+'_list').html('');
             }
-            else
-            {
-                $('#uploadfiles').val('');
-                $('#uploadmainfile').val('');
-                $('#fileuploader_list').html('');
-            }
 
+            console.log(index);
             CascadeNullRelateProps($('#'+index), n_id);
             //get_props_list_functions['f'+props_hierarhy[index]['vibor_type']]('', '');
         });
@@ -529,7 +536,7 @@ function addformsubmit()
 
                 $.each(msg['errors_props'], function(mkey, mval)
                 {
-//                console.log($('#input-error-'+mkey));
+                    $('#div_'+mkey).css('display', 'block');
                     $('#input-error-prop-'+mkey).css('border', '#f00 solid 2px');
                     $('#input-error-prop-'+mkey+' + .input-error-prop-msg').html(mval);
                     //console.log(mkey);
@@ -556,11 +563,11 @@ function addformsubmit()
     });
 }
 
-
-
-
-
 </script>
+
+<?
+//Yii::app()->clientScript->registerScript('displayprops', 'alert("ddd");', CClientScript::POS_LOAD);
+?>
 
 
 
