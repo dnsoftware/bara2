@@ -208,6 +208,10 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 
 
 <? // Блок куда подгружаются данные по свойствам объявы ?>
+<div id="div_ajax_loader_icon" style="clear: both; text-align: center; margin-top: 50px; margin-bottom: 30px; display: none;">
+    <img src="/images/ajaxload.gif">
+</div>
+
 <div id="div_props" style="margin: 0px; margin-top: 30px; clear: both">
 
 </div>

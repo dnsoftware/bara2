@@ -18,6 +18,7 @@
     <div id="notice" style="width: 500px;">
         <div class="galleria">
             <?
+            deb::dump($uploadfiles_array);
             foreach($uploadfiles_array as $ukey=>$uval)
             {
                 ?>

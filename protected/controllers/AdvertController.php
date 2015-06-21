@@ -276,18 +276,24 @@ class AdvertController extends Controller
 
         <script>
 
-            var get_props_list_functions = {
-            <?
-            foreach (RubriksProps::$vibor_type as $vkey=>$vval)
-            {
-            ?>
-                f<?= $vkey;?>: function(field_id, parent_field_id, n_id, parent_ps_id) {
-                    get_props_list_<?= $vkey;?>(field_id, parent_field_id, n_id, parent_ps_id);
-                },
-            <?
-            }
-            ?>
-            };
+        var get_props_list_functions = {
+        <?
+        foreach (RubriksProps::$vibor_type as $vkey=>$vval)
+        {
+        ?>
+            f<?= $vkey;?>: function(field_id, parent_field_id, n_id, parent_ps_id) {
+                get_props_list_<?= $vkey;?>(field_id, parent_field_id, n_id, parent_ps_id);
+            },
+        <?
+        }
+        ?>
+        };
+
+        // Подготовка к загрузке блоков свойств, счетчик в ноль, отображаем индикатор загрузки и скрываем блок со свойствами
+        props_load_stack_count = 0;
+        $('#div_ajax_loader_icon').css('display', 'block');
+        $('#div_props').css('display', 'none');
+        // End Подготовка
 
         <?
         foreach ($model_items as $mkey=>$mval)
@@ -318,12 +324,25 @@ class AdvertController extends Controller
                 break;
             }
             */
-            ?>
-            //alert('<?= $mval->vibor_type;?>-<?= $field_id;?>-<?= $parent_field_id;?>');
+        ?>
             get_props_list_<?= $mval->vibor_type;?>('<?= $field_id;?>', '<?= $parent_field_id;?>', <?= $n_id;?>, <?= $parent_ps_id;?>);
-            <?
+
+        <?
         }
         ?>
+
+        // Проверка все ли свойства загрузились на страницу
+        var props_load_stack_count_timer = setInterval(function() {
+            console.log(props_load_stack_count);
+            if(props_load_stack_count == 0)
+            {
+                clearTimeout(props_load_stack_count_timer);
+                $('#div_ajax_loader_icon').css('display', 'none');
+                $('#div_props').css('display', 'block');
+            }
+        }, 1000);
+        // End Проверка
+
 
         $('.addnot-field-selected').click(
         function()
@@ -789,11 +808,25 @@ class AdvertController extends Controller
         $uploadfiles_array = Notice::getImageArray($fieldvalue);
         $uploadmainfile = $uploadfiles_array[0];
 
+        $prop_types_params_row = PropTypesParams::model()->find(array(
+            'select'=>'*',
+            'condition'=>'type_id = "'.$model_rubriks_props->type_id.'" AND selector = "photoblock"',
+        ));
+
         // Сокрытие блока где нет подчиненных свойств (если стоит тег hide_if_no_elems_tag)
         $this->HideBlockIfNoElems($field_id, $parent_field_id, $parent_ps_id, $model_notice, $model_rubriks_props);
 
+        $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
+deb::dump($props_sprav);
         ?>
-        <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>" value="<?= $fieldvalue;?>" style="display: block; width: 1000px;">
+
+        <!--
+        <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $model_rubriks_props->selector;?>][ps_id]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" value="<?= $pval->ps_id;?>">
+
+        <input style="" type="text" name="addfield[<?= $model_rubriks_props->selector;?>][hand_input_value]" id="<?= $model_rubriks_props->selector;?>" prop_id="<?= $model_rubriks_props->selector;?>" value="<?= htmlspecialchars($value_hand, ENT_COMPAT);?>">
+        -->
+
+        <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>][ps_id]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>" value="<?= $fieldvalue;?>" style="display: block; width: 1000px;">
 
         <div class="form-row">
 
@@ -1243,8 +1276,6 @@ class AdvertController extends Controller
         $mainblock = Yii::app()->session['mainblock'];
         $addfield = Yii::app()->session['addfield'];
 
-        $uploadfiles_array = Notice::getImageArray($mainblock['uploadfiles'], $mainblock['uploadmainfile']);
-
         // Подготавливаем данные из основной части объявления
         $mainblock_data = array();
         $mainblock_data['country'] = Countries::model()->findByPk($mainblock['c_id']);
@@ -1254,7 +1285,9 @@ class AdvertController extends Controller
         // Подготавливаем данные из свойств
         $rubrik_props = RubriksProps::getAllProps($mainblock['r_id']);
         $rubrik_props_rp_id = RubriksProps::getAllPropsRp_id($mainblock['r_id']);
+//deb::dump($addfield);
 //deb::dump($rubrik_props);
+        $uploadfiles_array = array();
 
         $props_ids = array();
         $notice_props = array();
@@ -1299,6 +1332,13 @@ class AdvertController extends Controller
                             $notice_props[$rval->rp_id] = $addfield[$rkey]['hand_input_value'];
                         }
                     break;
+
+                    case "photoblock":
+                        if(trim($addfield[$rkey]) != '')
+                        {
+                            $uploadfiles_array = Notice::getImageArray($mainblock['uploadfiles'], $mainblock['uploadmainfile']);
+                        }
+                    break;
                 }
             }
         }
@@ -1311,7 +1351,7 @@ class AdvertController extends Controller
         $addfield_data['props_data'] = $props_data;
         $addfield_data['props_string_ids']= $props_string_ids;
 
-        //deb::dump($props_data);
+deb::dump($props_data);
 
         $this->render('addpreview', array('mainblock'=>$mainblock, 'addfield'=>$addfield, 'uploadfiles_array'=>$uploadfiles_array,
                                     'mainblock_data'=>$mainblock_data, 'addfield_data'=>$addfield_data

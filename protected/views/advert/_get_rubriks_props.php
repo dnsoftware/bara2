@@ -111,6 +111,7 @@
         }
         */
 
+        props_load_stack_count++;
         $.ajax({
             url: "/index.php?r=advert/getpropslist_selector",
             method: "post",
@@ -125,6 +126,7 @@
             // обработка успешного выполнения запроса
             success: function(data){
                 $('#div_'+field_id).html(data);
+                props_load_stack_count--;
             }
 
 
@@ -145,6 +147,7 @@
         }
         */
 
+        props_load_stack_count++;
         $.ajax({
             url: "/index.php?r=advert/getpropslist_listitem",
             method: "post",
@@ -168,6 +171,7 @@
                     $('#'+field_id+'-display').css('display', 'none');
                     $('#div_'+field_id+'_list').css('display', 'none');
                 }
+                props_load_stack_count--;
 
             }
         });
@@ -186,6 +190,7 @@
         }
         */
 
+        props_load_stack_count++;
         $.ajax({
             url: "/index.php?r=advert/getpropslist_checkbox",
             method: "post",
@@ -202,6 +207,7 @@
                 //alert(data);
 
                 $('#div_'+field_id+'_list').html(data);
+                props_load_stack_count--;
 
                 return 1;
             }
@@ -221,6 +227,7 @@
         }
         */
 
+        props_load_stack_count++;
         $.ajax({
             url: "/index.php?r=advert/getpropslist_radio",
             method: "post",
@@ -234,9 +241,10 @@
             },
             // обработка успешного выполнения запроса
             success: function(data){
-                //alert(data);
 
                 $('#div_'+field_id+'_list').html(data);
+                props_load_stack_count--;
+
             }
         });
     }
@@ -254,6 +262,7 @@
         }
         */
 
+        props_load_stack_count++;
         $.ajax({
             url: "/index.php?r=advert/getpropslist_string",
             method: "post",
@@ -267,15 +276,17 @@
             },
             // обработка успешного выполнения запроса
             success: function(data){
-                //alert(data);
 
                 $('#div_'+field_id+'_field').html(data);
+                props_load_stack_count--;
+
             }
         });
     }
 
     function get_props_list_photoblock(field_id, parent_field_id, n_id, parent_ps_id)
     {
+        props_load_stack_count++;
         $.ajax({
             url: "/index.php?r=advert/getpropslist_photoblock",
             method: "post",
@@ -289,9 +300,10 @@
             },
             // обработка успешного выполнения запроса
             success: function(data){
-                //alert(data);
 
                 $('#div_'+field_id+'_photoblock').html(data);
+                props_load_stack_count--;
+
             }
         });
     }
