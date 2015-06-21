@@ -381,7 +381,16 @@ class AdvertController extends Controller
         $field_id = $_POST['field_id'];
         $parent_field_id = $_POST['parent_field_id'];
         $parent_ps_id = intval($_POST['parent_ps_id']);
-        $n_id = intval($_POST['n_id']);
+
+        $n_id = 0;
+        if(isset($_POST['n_id']))
+        {
+            $n_id = intval($_POST['n_id']);
+        }
+        if(!$model_notice = Notice::model()->findByPk($n_id))
+        {
+            $model_notice = new Notice();
+        }
 
         $model_rubriks_props = RubriksProps::model()->find(
             array(
@@ -394,6 +403,8 @@ class AdvertController extends Controller
             'select'=>'*',
             'condition'=>'type_id = "'.$model_rubriks_props->type_id.'" AND selector = "item"',
         ));
+
+        $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
 
         $currvalue = $this->getAddfieldValue($n_id, $field_id);
         ?>
@@ -459,7 +470,16 @@ class AdvertController extends Controller
         //echo $_POST;
         $parent_field_id = $_POST['parent_field_id'];
         $parent_ps_id = intval($_POST['parent_ps_id']);
-        $n_id = intval($_POST['n_id']);
+
+        $n_id = 0;
+        if(isset($_POST['n_id']))
+        {
+            $n_id = intval($_POST['n_id']);
+        }
+        if(!$model_notice = Notice::model()->findByPk($n_id))
+        {
+            $model_notice = new Notice();
+        }
 
         $model_rubriks_props = RubriksProps::model()->find(
             array(
@@ -472,9 +492,10 @@ class AdvertController extends Controller
             'select'=>'*',
             'condition'=>'type_id = "'.$model_rubriks_props->type_id.'" AND selector = "item"',
         ));
-//deb::dump($model_rubriks_props);
-//deb::dump($prop_types_params_row);
-//deb::dump($parent_ps_id);
+
+        // Сокрытие блока где нет подчиненных свойств (если стоит тег hide_if_no_elems_tag)
+        $this->HideBlockIfNoElems($field_id, $parent_field_id, $parent_ps_id, $model_notice, $model_rubriks_props);
+
         $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
 
         if (count($props_sprav) > 0)
@@ -531,7 +552,17 @@ class AdvertController extends Controller
         //echo $field_id;
         $parent_field_id = $_POST['parent_field_id'];
         $parent_ps_id = intval($_POST['parent_ps_id']);
-        $n_id = intval($_POST['n_id']);
+
+        $n_id = 0;
+        if(isset($_POST['n_id']))
+        {
+            $n_id = intval($_POST['n_id']);
+        }
+
+        if(!$model_notice = Notice::model()->findByPk($n_id))
+        {
+            $model_notice = new Notice();
+        }
 
         $checked_array = $this->getAddfieldValue($n_id, $field_id);
         $model_rubriks_props = RubriksProps::model()->find(
@@ -545,6 +576,9 @@ class AdvertController extends Controller
             'select'=>'*',
             'condition'=>'type_id = "'.$model_rubriks_props->type_id.'" AND selector = "item"',
         ));
+
+        // Сокрытие блока где нет подчиненных свойств (если стоит тег hide_if_no_elems_tag)
+        $this->HideBlockIfNoElems($field_id, $parent_field_id, $parent_ps_id, $model_notice, $model_rubriks_props);
 
         $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
 
@@ -588,7 +622,17 @@ class AdvertController extends Controller
         //echo $field_id;
         $parent_field_id = $_POST['parent_field_id'];
         $parent_ps_id = intval($_POST['parent_ps_id']);
-        $n_id = intval($_POST['n_id']);
+
+        $n_id = 0;
+        if(isset($_POST['n_id']))
+        {
+            $n_id = intval($_POST['n_id']);
+        }
+
+        if(!$model_notice = Notice::model()->findByPk($n_id))
+        {
+            $model_notice = new Notice();
+        }
 
         $value = $this->getAddfieldValue($n_id, $field_id);
 
@@ -603,6 +647,9 @@ class AdvertController extends Controller
             'select'=>'*',
             'condition'=>'type_id = "'.$model_rubriks_props->type_id.'" AND selector = "item"',
         ));
+
+        // Сокрытие блока где нет подчиненных свойств (если стоит тег hide_if_no_elems_tag)
+        $this->HideBlockIfNoElems($field_id, $parent_field_id, $parent_ps_id, $model_notice, $model_rubriks_props);
 
         $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
 
@@ -652,6 +699,11 @@ class AdvertController extends Controller
             $n_id = intval($_POST['n_id']);
         }
 
+        if(!$model_notice = Notice::model()->findByPk($n_id))
+        {
+            $model_notice = new Notice();
+        }
+
         $value = $this->getAddfieldValue($n_id, $field_id);
 
         $model_rubriks_props = RubriksProps::model()->find(
@@ -666,6 +718,9 @@ class AdvertController extends Controller
             'condition'=>'type_id = "'.$model_rubriks_props->type_id.'" AND selector = "string"',
         ));
 //deb::dump($prop_types_params_row);
+
+        // Сокрытие блока где нет подчиненных свойств (если стоит тег hide_if_no_elems_tag)
+        $this->HideBlockIfNoElems($field_id, $parent_field_id, $parent_ps_id, $model_notice, $model_rubriks_props);
 
         $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
 
@@ -724,34 +779,18 @@ class AdvertController extends Controller
             $model_notice = new Notice();
         }
 
-
+        $model_rubriks_props = RubriksProps::model()->find(array(
+            'select'=>'*',
+            'condition'=>'selector=:rp_id',
+            'params'=>array(':rp_id'=>$field_id)
+        ));
 
         $fieldvalue = $this->getAddfieldValue($n_id, $field_id);
         $uploadfiles_array = Notice::getImageArray($fieldvalue);
         $uploadmainfile = $uploadfiles_array[0];
 
-        /*************** Блок сокрытия блока если нет ни одного зависимого элемента... ****************/
-    deb::dump($parent_field_id);
-        if($parent_field_id != '')   // Если блок зависим от родителя
-        {
-            $prop = PropsSprav::model()->findByPk($parent_ps_id);
-    deb::dump($prop);
-            if($prop != null)   // Если родитель выбран
-            {
-                $props_sprav_records = $prop->childs(array('condition'=>'rp_id = :rp_id',
-                    'params'=>array(':rp_id'=>$prop->rp_id)));
-    deb::dump($props_sprav_records);
-                if(count($props_sprav_records) == 0 )    // если нет зависимых элементов
-                {
-                ?>
-                    <script>
-                        //$('#div_<?= $field_id;?>').css('display', 'none');
-                    </script>
-                <?
-                }
-            }
-        }
-
+        // Сокрытие блока где нет подчиненных свойств (если стоит тег hide_if_no_elems_tag)
+        $this->HideBlockIfNoElems($field_id, $parent_field_id, $parent_ps_id, $model_notice, $model_rubriks_props);
 
         ?>
         <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>" value="<?= $fieldvalue;?>" style="display: block; width: 1000px;">
@@ -961,6 +1000,34 @@ class AdvertController extends Controller
     <?
     }
 
+    public function HideBlockIfNoElems($field_id, $parent_field_id, $parent_ps_id, $model_notice, $model_rubriks_props)
+    {
+        /*************** Блок сокрытия блока если нет ни одного зависимого элемента... ****************/
+        if($parent_field_id != '')   // Если блок зависим от родителя
+        {
+            if($model_rubriks_props->hide_if_no_elems_tag == 1 && $model_rubriks_props->require_prop_tag == 0)
+            {
+                $prop = PropsSprav::model()->findByPk($parent_ps_id);
+    //deb::dump($model_rubriks_props);
+                if($prop != null)   // Если родитель выбран
+                {
+                    $props_sprav_records = $prop->childs(array('condition'=>'rp_id = :rp_id',
+                        'params'=>array(':rp_id'=>$model_rubriks_props->rp_id)));
+
+                    if(count($props_sprav_records) == 0 )    // если нет зависимых элементов
+                    {
+                        ?>
+                        <script>
+                            $('#div_<?= $field_id;?>').css('display', 'none');
+                        </script>
+                    <?
+                    }
+                }
+            }
+        }
+        /****************** Конец Блок сокрытия**********************/
+    }
+
 
     // Загрузка файлов
     public function actionUpload()
@@ -1088,6 +1155,7 @@ class AdvertController extends Controller
                         case "listitem":
                         case "selector":
                         case "radio":
+                        case "photoblock":
                             if(intval($addfield_array[$rkey]) <= 0)
                             {
                                 $return_array['errors_props'][$rval['selector']] = 'Необходимо заполнить поле "' . $rval['name'] . '"';
@@ -1107,6 +1175,7 @@ class AdvertController extends Controller
                                 $return_array['errors_props'][$rval['selector']] = 'Необходимо заполнить поле "' . $rval['name'] . '"';
                             }
                         break;
+
                     }
                 }
 

@@ -404,7 +404,7 @@ if($('#r_id').val() != '')
 // При смене значения - обновляем данные зависимых свойств
 function ChangeRelateProps(jobj, n_id)
 {
-    field_id = jobj.attr('prop_id');
+    var field_id = jobj.attr('prop_id');
 //console.log(field_id);
     if (props_hierarhy[field_id]['childs_selector'] !== undefined)
     {
@@ -416,7 +416,7 @@ function ChangeRelateProps(jobj, n_id)
             if (props_hierarhy[field_id] !== undefined)
             {
                 // тут возможно надо будет переделать для checkbox и radio
-                parent_ps_id = $('[prop_id='+props_hierarhy[field_id]['field_value_id']).val();
+                parent_ps_id = $('[prop_id='+props_hierarhy[field_id]['field_value_id']+']').val();
             }
 
             get_props_list_functions['f'+props_hierarhy[index]['vibor_type']](index, props_hierarhy[index]['parent_selector'], n_id, parent_ps_id);
@@ -429,13 +429,13 @@ function ChangeRelateProps(jobj, n_id)
 // Каскадное обнуление зависимых свойств
 function CascadeNullRelateProps(jobj, n_id)
 {
-    field_id = jobj.attr('prop_id');
-//console.log(field_id);
-    if (props_hierarhy[field_id] !== undefined && props_hierarhy[field_id]['childs_selector'] !== undefined)
-    {
-        $.each (props_hierarhy[field_id]['childs_selector'], function (index, value, n_id) {
+    var field_id = jobj.attr('prop_id');
 
-            //console.log(index+' = '+$('#'+index).attr('id'));
+    if (field_id !== undefined && props_hierarhy[field_id] !== undefined && props_hierarhy[field_id]['childs_selector'] !== undefined)
+    {
+        $.each (props_hierarhy[field_id]['childs_selector'], function (index, value) {
+
+            //console.log(index+' = '+n_id);
 
             $('#div_'+index).css('display', 'none');
 
@@ -463,6 +463,8 @@ function CascadeNullRelateProps(jobj, n_id)
 
             CascadeNullRelateProps($('[prop_id = '+index+']'), n_id);
         });
+
+
 
     }
 }
