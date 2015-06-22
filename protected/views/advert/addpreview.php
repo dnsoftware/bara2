@@ -52,7 +52,26 @@
     <td style="vertical-align: top;">
 
 
-    <div id="properties" style="border: #000 solid 1px;">
+    <div style="border: #ddd solid 1px; padding: 5px; font-size: 18px; font-weight: bold; display: table-cell;">
+        <?= intval($mainblock['cost']*$options['kurs_'.strtolower($mainblock['cost_valuta'])]);?>
+        <?= Options::$valutes[$mainblock['cost_valuta']]['symbol'];?>
+        <div style="font-weight: normal; font-size: 12px;">
+        <?
+        foreach(Options::$valutes as $vkey=>$vval)
+        {
+            if($mainblock['cost_valuta'] == 'RUB')
+            {
+                if($vkey != $mainblock['cost_valuta'])
+                {
+                    echo round($mainblock['cost']/$options['kurs_'.strtolower($vkey)], 2)." ".$vval['symbol']." ";
+                }
+            }
+        }
+        ?>
+        </div>
+    </div>
+
+    <div id="properties" style="border: #000 solid 0px; margin-top: 5px;">
         <table>
             <?
             foreach($addfield_data['notice_props'] as $nkey=>$nval)
@@ -82,7 +101,7 @@
 
                             case "string":
                                 echo $nval;
-                                break;
+                            break;
                         }
                         ?>
                     </td>

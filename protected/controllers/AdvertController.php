@@ -781,7 +781,6 @@ class AdvertController extends Controller
     public function actionGetpropslist_photoblock()
     {
         $field_id = $_POST['field_id'];
-        //echo $field_id;
         $parent_field_id = $_POST['parent_field_id'];
         $parent_ps_id = intval($_POST['parent_ps_id']);
 //deb::dump($parent_field_id);
@@ -805,7 +804,8 @@ class AdvertController extends Controller
         ));
 
         $fieldvalue = $this->getAddfieldValue($n_id, $field_id);
-        $uploadfiles_array = Notice::getImageArray($fieldvalue);
+//deb::dump($fieldvalue);
+        $uploadfiles_array = Notice::getImageArray($fieldvalue['hand_input_value']);
         $uploadmainfile = $uploadfiles_array[0];
 
         $prop_types_params_row = PropTypesParams::model()->find(array(
@@ -817,16 +817,12 @@ class AdvertController extends Controller
         $this->HideBlockIfNoElems($field_id, $parent_field_id, $parent_ps_id, $model_notice, $model_rubriks_props);
 
         $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
-deb::dump($props_sprav);
+//deb::dump($props_sprav);
         ?>
 
-        <!--
-        <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $model_rubriks_props->selector;?>][ps_id]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" value="<?= $pval->ps_id;?>">
+        <input class="_add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $field_id;?>][ps_id]" id="<?= $field_id;?>-<?= $props_sprav[0]->ps_id;?>" value="<?= $props_sprav[0]->ps_id;?>">
 
-        <input style="" type="text" name="addfield[<?= $model_rubriks_props->selector;?>][hand_input_value]" id="<?= $model_rubriks_props->selector;?>" prop_id="<?= $model_rubriks_props->selector;?>" value="<?= htmlspecialchars($value_hand, ENT_COMPAT);?>">
-        -->
-
-        <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>][ps_id]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>" value="<?= $fieldvalue;?>" style="display: block; width: 1000px;">
+        <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>][hand_input_value]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>" value="<?= $fieldvalue['hand_input_value'];?>" style="display: block; width: 1000px;">
 
         <div class="form-row">
 
@@ -1305,8 +1301,6 @@ deb::dump($props_sprav);
                     case "radio":
                         if(intval($addfield[$rkey]) > 0)
                         {
-//                            deb::dump($rkey);
-//                            deb::dump($addfield[$rkey]);
                             $props_ids[] = $addfield[$rkey];
                             $notice_props[$rval->rp_id] = $addfield[$rkey];
                         }
@@ -1315,8 +1309,6 @@ deb::dump($props_sprav);
                     case "checkbox":
                         foreach($addfield[$rkey] as $ckey=>$cval)
                         {
-//                            deb::dump($rkey);
-//                            deb::dump($ckey);
                             $props_ids[] = $ckey;
                             $props_string_ids[$ckey] = $ckey;
                             $notice_props[$rval->rp_id][$ckey] = $ckey;
@@ -1326,17 +1318,16 @@ deb::dump($props_sprav);
                     case "string":
                         if(trim($addfield[$rkey]['hand_input_value']) != '')
                         {
-//                            deb::dump($rkey);
-//                            deb::dump($addfield[$rkey]['ps_id']);
                             $props_ids[] = $addfield[$rkey]['ps_id'];
                             $notice_props[$rval->rp_id] = $addfield[$rkey]['hand_input_value'];
                         }
                     break;
 
                     case "photoblock":
-                        if(trim($addfield[$rkey]) != '')
+                        if(trim($addfield[$rkey]['hand_input_value']) != '')
                         {
-                            $uploadfiles_array = Notice::getImageArray($mainblock['uploadfiles'], $mainblock['uploadmainfile']);
+                            $uploadfiles_array = Notice::getImageArray($addfield[$rkey]['hand_input_value']);
+                            //deb::dump($uploadfiles_array);
                         }
                     break;
                 }
@@ -1351,10 +1342,15 @@ deb::dump($props_sprav);
         $addfield_data['props_data'] = $props_data;
         $addfield_data['props_string_ids']= $props_string_ids;
 
-deb::dump($props_data);
+        $options = Options::getAllOptions();
 
-        $this->render('addpreview', array('mainblock'=>$mainblock, 'addfield'=>$addfield, 'uploadfiles_array'=>$uploadfiles_array,
-                                    'mainblock_data'=>$mainblock_data, 'addfield_data'=>$addfield_data
+        $this->render('addpreview', array(
+                                    'mainblock'=>$mainblock,
+                                    'addfield'=>$addfield,
+                                    'uploadfiles_array'=>$uploadfiles_array,
+                                    'mainblock_data'=>$mainblock_data,
+                                    'addfield_data'=>$addfield_data,
+                                    'options'=>$options
         ));
 
     }
