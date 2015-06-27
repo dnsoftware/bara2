@@ -118,7 +118,21 @@
 
     <div class="add-input-block">
         <div class="input-field-border" id="input-error-client_email">
-        <input class="form-input-text" type="text" name="mainblock[client_email]" id="client_email" value="<?= htmlspecialchars($this->getMainblockValue($model, 'client_email'), ENT_COMPAT);?>">
+        <?
+        if(Yii::app()->user->id > 0)
+        {
+        ?>
+            <?= Yii::app()->user->email;?>
+            <input class="form-input-text" type="text" name="mainblock[client_email]" id="client_email" value="<?= Yii::app()->user->email;?>" readonly style="display: none;">
+        <?
+        }
+        else
+        {
+        ?>
+            <input class="form-input-text" type="text" name="mainblock[client_email]" id="client_email" value="<?= htmlspecialchars($this->getMainblockValue($model, 'client_email'), ENT_COMPAT);?>">
+        <?
+        }
+        ?>
         </div>
         <div class="input-error-msg"></div>
     </div>
@@ -560,7 +574,7 @@ function addformsubmit()
             {
                 location.href='/index.php?r=advert/addpreview';
             }
-            console.log(msg);
+            //console.log(msg);
         }
         /*
         ,

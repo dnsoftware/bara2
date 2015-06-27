@@ -783,6 +783,7 @@ class AdvertController extends Controller
         $field_id = $_POST['field_id'];
         $parent_field_id = $_POST['parent_field_id'];
         $parent_ps_id = intval($_POST['parent_ps_id']);
+//deb::dump($field_id);
 //deb::dump($parent_field_id);
 //deb::dump($parent_ps_id);
 
@@ -805,7 +806,8 @@ class AdvertController extends Controller
 
         $fieldvalue = $this->getAddfieldValue($n_id, $field_id);
 //deb::dump($fieldvalue);
-        $uploadfiles_array = Notice::getImageArray($fieldvalue['hand_input_value']);
+        $uploadfiles_array = Notice::getImageArray(isset($fieldvalue['hand_input_value']) ? $fieldvalue['hand_input_value'] : '');
+//deb::dump($uploadfiles_array);
         $uploadmainfile = $uploadfiles_array[0];
 
         $prop_types_params_row = PropTypesParams::model()->find(array(
@@ -822,7 +824,7 @@ class AdvertController extends Controller
 
         <input class="_add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $field_id;?>][ps_id]" id="<?= $field_id;?>-<?= $props_sprav[0]->ps_id;?>" value="<?= $props_sprav[0]->ps_id;?>">
 
-        <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>][hand_input_value]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>" value="<?= $fieldvalue['hand_input_value'];?>" style="display: block; width: 1000px;">
+        <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>][hand_input_value]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>" value="<?= isset($fieldvalue['hand_input_value']) ? $fieldvalue['hand_input_value'] : '';?>" style="display: block; width: 1000px;">
 
         <div class="form-row">
 
@@ -1106,7 +1108,7 @@ class AdvertController extends Controller
         echo json_encode($delfile);
     }
 
-    // Сохранение нового объявления
+    // Проверка данных для  нового объявления
     public function actionAddnew()
     {
         $mainblock_array = array();
@@ -1115,11 +1117,6 @@ class AdvertController extends Controller
             Yii::app()->session['mainblock'] = $_POST['mainblock'];
             $mainblock_array = $_POST['mainblock'];
         }
-        else
-        if(isset(Yii::app()->session['mainblock']))
-        {
-            $mainblock_array = Yii::app()->session['mainblock'];
-        }
 
         $addfield_array = array();
         if (isset($_POST['addfield']))
@@ -1127,12 +1124,220 @@ class AdvertController extends Controller
             Yii::app()->session['addfield'] = $_POST['addfield'];
             $addfield_array = $_POST['addfield'];
         }
+
+        if (!isset($_POST['mainblock']) || !isset($_POST['addfield']))
+        {
+            $return_array['status'] = 'error';
+            $return_array['message'] = 'Данные в запросе отсутствуют';
+            echo json_encode($return_array);
+
+            return false;
+        }
+
+        $return_array = $this->CheckAndMakeNewData($mainblock_array, $addfield_array);
+
+        if(count($return_array['errors_props']) == 0 && count($return_array['errors']) == 0)
+        {
+            $return_array['status'] = 'ok';
+            $return_array['message'] = 'Все ок!';
+        }
         else
+        {
+            $return_array['status'] = 'error';
+            $return_array['message'] = 'Есть ошибки';
+        }
+
+
+        //$return_array['debugdata'] = $_POST['addfield'];
+
+        echo json_encode($return_array);
+
+    }
+
+
+    // Сохранение
+    public function actionSavenew()
+    {
+        $mainblock_array = array();
+        if(isset(Yii::app()->session['mainblock']))
+        {
+            $mainblock_array = Yii::app()->session['mainblock'];
+        }
+
+        $addfield_array = array();
         if(isset(Yii::app()->session['addfield']))
         {
             $addfield_array = Yii::app()->session['addfield'];
         }
 
+        $return_array = $this->CheckAndMakeNewData($mainblock_array, $addfield_array);
+//deb::dump($return_array);
+
+        $newnot_user_id = 0;
+        if(Yii::app()->user->id > 0)
+        {
+            $newnot_user_id = Yii::app()->user->id;
+        }
+        else
+        if (isset(Yii::app()->session['add_user_id']) && Yii::app()->session['add_user_id'] > 0)
+        {
+            $newnot_user_id = Yii::app()->session['add_user_id'];
+        }
+        else
+        {
+            echo "Ошибка! Пользователь не определен!";
+
+            return false;
+        }
+
+        if(count($return_array['errors_props']) == 0 && count($return_array['errors']) == 0 )
+        {
+            //echo "Ура!";
+
+            // Заносим данные в базу
+
+            $newmodel = $this->MakeNoticeAttributes($mainblock_array);
+            $newmodel->u_id = $newnot_user_id;
+
+
+            //Формируем daynumber_id
+            $optmodel = Options::model()->findByPk(1);
+            $daycount_date_now = date("Ymd", time());
+            if ($daycount_date_now != $optmodel->daycount_date)
+            {
+                $optmodel->daycount_date = $daycount_date_now;
+                $optmodel->daycount_currcount = 1;
+            }
+            else
+            {
+                $optmodel->daycount_date = $daycount_date_now;
+                $optmodel->daycount_currcount = $optmodel->daycount_currcount + 1;
+            }
+            $daycount_currcount_str = sprintf("%07d", $optmodel->daycount_currcount);
+            $newmodel->daynumber_id = date("ymd", time()).$daycount_currcount_str;
+            $optmodel->save();
+            $newmodel->save();
+
+
+
+            // Подготовка данных по свойствам к вставке
+            //...
+            // Подготавливаем данные из свойств
+            $rubrik_props = RubriksProps::getAllProps($mainblock_array['r_id']);
+            //$rubrik_props_rp_id = RubriksProps::getAllPropsRp_id($mainblock_array['r_id']);
+
+            // или сразу из записи таблицы notice_props поля hand_input_value
+            foreach($rubrik_props as $rkey=>$rval)
+            {
+                if(isset($addfield_array[$rkey]))
+                {
+                    switch($rval->vibor_type)
+                    {
+                        case "autoload_with_listitem":
+                        case "selector":
+                        case "listitem":
+                        case "radio":
+                            if(intval($addfield_array[$rkey]) > 0)
+                            {
+                                $newprop = new NoticeProps();
+                                $newprop->n_id = $newmodel->n_id;
+                                $newprop->rp_id = $rval->rp_id;
+                                $newprop->ps_id = $addfield_array[$rkey];
+                                $newprop->save();
+                                //deb::dump($newprop->errors);
+                            }
+                        break;
+
+                        case "checkbox":
+                            foreach($addfield_array[$rkey] as $ckey=>$cval)
+                            {
+                                $newprop = new NoticeProps();
+                                $newprop->n_id = $newmodel->n_id;
+                                $newprop->rp_id = $rval->rp_id;
+                                $newprop->ps_id = $ckey;
+                                $newprop->save();
+                            }
+                            break;
+
+                        case "string":
+                            if(trim($addfield_array[$rkey]['hand_input_value']) != '')
+                            {
+                                $newprop = new NoticeProps();
+                                $newprop->n_id = $newmodel->n_id;
+                                $newprop->rp_id = $rval->rp_id;
+                                $newprop->ps_id = $addfield_array[$rkey]['ps_id'];
+                                $newprop->hand_input_value = $addfield_array[$rkey]['hand_input_value'];
+                                $newprop->save();
+                            }
+                            break;
+
+                        case "photoblock":
+                            $files_str = trim($addfield_array[$rkey]['hand_input_value']);
+                            if($files_str != '')
+                            {
+                                if($files_str[strlen($files_str)-1] == ';')
+                                {
+                                    $files_str = substr($files_str, 0, strlen($files_str)-1);
+                                }
+
+                                $files_array = explode(";", $files_str);
+                                foreach ($files_array as $fkey=>$fval)
+                                {
+                                    if(@copy ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval, $_SERVER['DOCUMENT_ROOT']."/photos/".$fval ))
+                                    {
+                                        unlink ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval);
+                                    }
+                                }
+
+                                $newprop = new NoticeProps();
+                                $newprop->n_id = $newmodel->n_id;
+                                $newprop->rp_id = $rval->rp_id;
+                                $newprop->ps_id = $addfield_array[$rkey]['ps_id'];
+                                $newprop->hand_input_value = $addfield_array[$rkey]['hand_input_value'];
+                                $newprop->save();
+                            }
+                            break;
+                    }
+                }
+            } // end foreach
+
+            $user_url = $this->createAbsoluteUrl('/usercab/adverts');
+            $this->redirect($user_url);
+
+        }
+        else
+        {
+            echo "Ошибки!";
+            deb::dump($return_array);
+            foreach ($return_array['errors'] as $rkey=>$rval)
+            {
+                echo $rval."<br>";
+            }
+        }
+
+    }
+
+    // Проверка и формирование данных для занесения в базу
+    public function CheckAndMakeNewData($mainblock_array, $addfield_array)
+    {
+        $newmodel = $this->MakeNoticeAttributes($mainblock_array);
+
+        $return_array = $this->CheckRequireNoticeProps($newmodel, $addfield_array);
+
+        $return_array['errors'] = array();
+        if(!$newmodel->validate())
+        {
+            $return_array['errors'] = $newmodel->getErrors();
+        }
+
+        return $return_array;
+
+    }
+
+    // Подготовка атрибутов модели объявления для проверки перед предварительным просмотром
+    // и перед добавлением
+    public function MakeNoticeAttributes($mainblock_array)
+    {
         $newmodel = new Notice();
         $newmodel->attributes = $mainblock_array;
 
@@ -1161,10 +1366,19 @@ class AdvertController extends Controller
             $newmodel->u_id = Yii::app()->user->id;
         }
 
+        return $newmodel;
+
+    }
+
+
+    // Проверка обязательных свойств перед подачей объявления
+    // $newmodel - модель объявы
+    //
+    public function CheckRequireNoticeProps($newmodel, $addfield_array)
+    {
         $return_array = array();
 
         // Блок проверки свойств
-
         $require_props = RubriksProps::getRequireProps(intval($newmodel->r_id));
         $return_array['errors_props'] = array();
         if(count($require_props) > 0)
@@ -1189,21 +1403,21 @@ class AdvertController extends Controller
                             {
                                 $return_array['errors_props'][$rval['selector']] = 'Необходимо заполнить поле "' . $rval['name'] . '"';
                             }
-                        break;
+                            break;
 
                         case "checkbox":
                             if(count($addfield_array[$rkey]) <= 0)
                             {
                                 $return_array['errors_props'][$rval['selector']] = 'Необходимо заполнить поле "' . $rval['name'] . '"';
                             }
-                        break;
+                            break;
 
                         case "string":
                             if(strlen(trim($addfield_array[$rkey]['hand_input_value'])) == 0)
                             {
                                 $return_array['errors_props'][$rval['selector']] = 'Необходимо заполнить поле "' . $rval['name'] . '"';
                             }
-                        break;
+                            break;
 
                     }
                 }
@@ -1213,56 +1427,9 @@ class AdvertController extends Controller
 
         }
 
-
-        $return_array['errors'] = array();
-        if(!$newmodel->validate())
-        {
-            $return_array['errors'] = $newmodel->getErrors();
-        }
-        else
-        {
-            //
-
-            // На следующем шаге
-            /*
-            //Формируем daynumber_id
-            $optmodel = Options::model()->findByPk(1);
-            $daycount_date_now = date("Ymd", time());
-            if ($daycount_date_now != $optmodel->daycount_date)
-            {
-                $optmodel->daycount_date = $daycount_date_now;
-                $optmodel->daycount_currcount = 1;
-            }
-            else
-            {
-                $optmodel->daycount_date = $daycount_date_now;
-                $optmodel->daycount_currcount = $optmodel->daycount_currcount + 1;
-            }
-            $daycount_currcount_str = sprintf("%07d", $optmodel->daycount_currcount);
-            $newmodel->daynumber_id = date("ymd", time()).$daycount_currcount_str;
-            $optmodel->save();
-            $newmodel->save();
-            */
-        }
-
-        if(count($return_array['errors_props']) == 0 && count($return_array['errors']) == 0)
-        {
-            $return_array['status'] = 'ok';
-            $return_array['message'] = 'Все ок!';
-        }
-        else
-        {
-            $return_array['status'] = 'error';
-            $return_array['message'] = 'Есть ошибки';
-        }
-
-
-        //$return_array['debugdata'] = $_POST['addfield'];
-
-        echo json_encode($return_array);
+        return $return_array;
 
     }
-
 
     // Предварительный просмотр и авторизация
     public function actionAddpreview()
@@ -1344,13 +1511,22 @@ class AdvertController extends Controller
 
         $options = Options::getAllOptions();
 
+    //deb::dump(Yii::app()->user->id);
+        $email_in_database_tag = 0;
+        if(count(User::model()->findByAttributes(array('email'=>$mainblock['client_email']))) > 0)
+        {
+            $email_in_database_tag = 1;
+        }
+    //deb::dump($email_in_database_tag);
+
         $this->render('addpreview', array(
                                     'mainblock'=>$mainblock,
                                     'addfield'=>$addfield,
                                     'uploadfiles_array'=>$uploadfiles_array,
                                     'mainblock_data'=>$mainblock_data,
                                     'addfield_data'=>$addfield_data,
-                                    'options'=>$options
+                                    'options'=>$options,
+                                    'email_in_database_tag'=>$email_in_database_tag
         ));
 
     }
@@ -1439,6 +1615,114 @@ class AdvertController extends Controller
 
         $notice_type_id = $this->getMainblockValue($model, 'notice_type_id');
         NoticeTypeRelations::displayNoticeTypeList($r_id, $notice_type_id);
+    }
+
+
+    public function actionAddreglogin()
+    {
+        $model = new RegistrationFromAddForm;
+        $profile = new Profile;
+
+        $usertype = $_POST['usertype'];
+
+        $return_array = array();
+
+        if (Yii::app()->user->id)
+        {
+            $return_array['status'] = 'ok';
+            $return_array['message'] = 'Уже залогиненый пользователь';
+            $return_array['errors'] = array();;
+
+        }
+        else {
+            if(isset($_POST['RegistrationForm'])) {
+                $model->attributes=$_POST['RegistrationForm'];
+
+                if($usertype == 'newreg')
+                {
+                    if($model->validate())
+                    {
+                        $soucePassword = $model->password;
+                        $model->activkey=UserModule::encrypting(microtime().$model->password);
+                        $model->password=UserModule::encrypting($model->password);
+                        $model->verifyPassword=UserModule::encrypting($model->verifyPassword);
+                        $model->superuser=0;
+                        $model->status=((Yii::app()->controller->module->activeAfterRegister)?User::STATUS_ACTIVE:User::STATUS_NOACTIVE);
+
+
+                        if ($model->save()) {
+                            $profile->user_id=$model->id;
+                            $profile->save();
+
+                            // отправка мыла с верификацией
+                            $activation_url = $this->createAbsoluteUrl('/user/activation/activation',array("activkey" => $model->activkey, "email" => $model->email));
+                            UserModule::sendMail($model->email,UserModule::t("You registered from {site_name}",array('{site_name}'=>Yii::app()->name)),UserModule::t("Please activate you account go to {activation_url}",array('{activation_url}'=>$activation_url)));
+
+                            Yii::app()->session['add_user_id'] = $model->id;
+
+                            $return_array['status'] = 'ok';
+                            $return_array['message'] = 'Регистрация прошла успешно';
+                        }
+
+                    }
+                    else
+                    {
+                        $return_array['status'] = 'error';
+                        $errors = '';
+                        foreach($model->errors as $ekey=>$eval)
+                        {
+                            $errors .= $eval[0]."<br>";
+                        }
+                        $return_array['message'] = $errors;
+                        $return_array['errors'] = $model->errors;
+                    }
+                }
+                else
+                if($usertype == 'inbase')
+                {
+                    $usermodel = User::model()->findByAttributes(array(
+                                                        'email'=>$model->email,
+                                                        'password'=>UserModule::encrypting($model->password)));
+                    if(isset($usermodel) && count($usermodel) == 1)
+                    {
+                        /******* Залогиниваемся **********/
+                        $identity=new UserIdentity($usermodel->username,$model->password);
+                        if($identity->authenticate())
+                        {
+                            Yii::app()->user->login($identity,0);
+                        }
+                        /****************/
+
+                        Yii::app()->session['add_user_id'] = $usermodel->id;
+
+                        $return_array['status'] = 'ok';
+                        $return_array['message'] = 'Авторизация прошла успешно';
+                    }
+                    else
+                    {
+                        $return_array['status'] = 'error';
+                        $return_array['message'] = 'Пароль введен неверно';
+                    }
+                }
+                else
+                {
+                    $return_array['status'] = 'error';
+                    $return_array['message'] = 'Ошибка авторизации!';
+                    $return_array['errors'] = array();;
+                }
+
+            }
+            else
+            {
+                $return_array['status'] = 'error';
+                $return_array['message'] = 'Нет данных формы';
+                $return_array['errors'] = array();;
+            }
+        }
+
+
+        echo json_encode($return_array);
+
     }
 
 	// Uncomment the following methods and override them if needed

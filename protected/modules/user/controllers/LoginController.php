@@ -11,6 +11,7 @@ class LoginController extends Controller
 	{
         $serviceName = Yii::app()->request->getQuery('service');
         if (isset($serviceName)) {
+
             /** @var $eauth EAuthServiceBase */
             $eauth = Yii::app()->eauth->getIdentity($serviceName);
             $eauth->redirectUrl = Yii::app()->user->returnUrl;
@@ -68,6 +69,7 @@ class LoginController extends Controller
 
         else
         if (Yii::app()->user->isGuest) {
+
 			$model=new UserLogin;
 			// collect user input data
 			if(isset($_POST['UserLogin']))
@@ -76,6 +78,7 @@ class LoginController extends Controller
 				// validate user input and redirect to previous page if valid
 				if($model->validate()) {
 					$this->lastViset();
+
 					if (Yii::app()->user->returnUrl=='/index.php')
 						$this->redirect(Yii::app()->controller->module->returnUrl);
 					else
