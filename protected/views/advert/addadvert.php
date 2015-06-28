@@ -11,12 +11,12 @@
         cursor: pointer; background-color: #dddddd;
     }
 
-    .add_hideinput
+    ._add_hideinput
     {
         display: none;
     }
 
-    .add_hideselector, .add_hidevibortype
+    ._add_hideselector, ._add_hidevibortype
     {
         display: none;
     }
@@ -101,6 +101,8 @@
 //deb::dump(Yii::app()->session['addfield']);
 ?>
 <form id="addform" onsubmit="addformsubmit(); return false;">
+
+<input type="hidden" name="n_id" id="notice_id" value="<?= $n_id;?>">
 
 <div class="form-row">
     <label id="lbl-client_name" class="add-form-label"><?= Notice::model()->getAttributeLabel('client_name');?>:</label>
@@ -391,7 +393,7 @@ $('.selrub').change(function (fromwhere)
     $.ajax({
         type: 'POST',
         url: '/index.php?r=/advert/getrubriksprops',
-        data: 'r_id='+this.value,
+        data: 'r_id='+this.value+'&n_id='+$('#notice_id').val(),
         success: function(msg){
             $('#div_errors').html('');
             $('#div_errors').css('display', 'none');

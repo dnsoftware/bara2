@@ -94,6 +94,22 @@ class Notice extends CActiveRecord
         return $temp;
     }
 
+    // Проверка является ли пользователь владельцем объявы
+    // u_id - код юзера, n_id - код объявы
+    // true - является, false - Не является
+    public static function checkAdvertOwner($u_id, $n_id)
+    {
+        if($advert = Notice::model()->findByAttributes(array('u_id'=>$u_id, 'n_id'=>$n_id)))
+        {
+            return $advert;
+        }
+        else
+        {
+            return false;
+        }
+
+    }
+
     /*
         public static function getImageArray($uploadfiles, $uploadmainfile)
         {

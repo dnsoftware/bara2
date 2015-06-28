@@ -2,9 +2,13 @@
 
 class AdvertController extends Controller
 {
+    // В режиме редактирования аналог Yii::app()->session['addfield']
+    public $addfield_array = array();
+
 	public function actionAddadvert()
 	{
         $rub_array = Rubriks::get_rublist();
+//    deb::dump(Yii::app()->session['addfield']);
 
         $n_id=0;
         if(isset($_GET['n_id']))
@@ -12,13 +16,22 @@ class AdvertController extends Controller
             $n_id = intval($_GET['n_id']);
         }
 
-        $model = new Notice();
-//deb::dump(Yii::app()->session['addfield']);
-        $mainblock = array();
-        if(isset(Yii::app()->session['mainblock']))
+        if(Yii::app()->controller->action->id != 'advert_edit')
         {
-            $mainblock = Yii::app()->session['mainblock'];
+            $model = new Notice();
+            $mainblock = array();
+            if(isset(Yii::app()->session['mainblock']))
+            {
+                $mainblock = Yii::app()->session['mainblock'];
+            }
         }
+        else
+        {
+            $model = Notice::model()->findByPk($n_id);
+            $mainblock = $model->attributes;
+            //deb::dump($mainblock);
+        }
+
 
         $country_array = Countries::getCountryList();
 
@@ -31,7 +44,7 @@ class AdvertController extends Controller
     {
 
         // Режим добавления, данные берем из сессии (если там есть)
-        if($model->n_id == null)
+        if($model->n_id == 0 || $model->n_id == null)
         {
             $value = '';
             if(isset(Yii::app()->session['mainblock'][$field_name]))
@@ -41,9 +54,15 @@ class AdvertController extends Controller
 
             return $value;
         }
+        // Режим редактирования
+        else
+        {
+            return $model->$field_name;
+        }
+
     }
 
-    public function getAddfieldValue($n_id, $field_name)
+    public function getAddfieldValue($n_id, $field_name, $rubriks_props_model)
     {
 
         // Режим добавления, данные берем из сессии (если там есть)
@@ -54,25 +73,101 @@ class AdvertController extends Controller
             {
                 $value = Yii::app()->session['addfield'][$field_name];
             }
-
-            return $value;
+//echo($value);
         }
-    }
-
-    public function getParentPsId($n_id, $parent_field_id)
-    {
-
-        // Режим добавления, данные берем из сессии (если там есть)
-        if($n_id == 0)
+        else
         {
+            //deb::dump($rubriks_props_model);
+            $prop = NoticeProps::model()->findAllByAttributes(array('n_id'=>$n_id, 'rp_id'=>$rubriks_props_model->rp_id));
             $value = '';
-            if(isset(Yii::app()->session['addfield'][$parent_field_id]))
+            //deb::dump($rubriks_props_model->vibor_type);
+            switch($rubriks_props_model->vibor_type)
             {
-                $value = Yii::app()->session['addfield'][$parent_field_id];
+                case "autoload_with_listitem":
+                case "selector":
+                case "listitem":
+                case "radio":
+                    $value = $prop[0]->ps_id;
+                break;
+
+                case "checkbox":
+                    foreach($prop as $ckey=>$cval)
+                    {
+                        $value[$cval->ps_id] = 'on';
+                    }
+                break;
+
+                case "string":
+                    if(trim($prop[0]->hand_input_value) != '')
+                    {
+                        $value = array('ps_id'=>$prop[0]->ps_id, 'hand_input_value'=>$prop[0]->hand_input_value);
+                    }
+                break;
+
+                case "photoblock":
+                    if(trim($prop[0]->hand_input_value) != '')
+                    {
+                        $value = array('ps_id'=>$prop[0]->ps_id, 'hand_input_value'=>$prop[0]->hand_input_value);
+                    }
+                break;
             }
 
-            return $value;
+            //echo($value);
         }
+
+        return $value;
+
+    }
+
+    public function getParentPsId($model_notice, $parent_field_id, $rubriks_props_model)
+    {
+        $addfield_array = array();
+        $value = 0;
+
+        // Режим добавления, данные берем из сессии (если там есть)
+        if($model_notice->n_id == 0 || $model_notice->n_id == null)
+        {
+            if(isset(Yii::app()->session['addfield'][$parent_field_id]))
+            {
+                $addfield_array = Yii::app()->session['addfield'];
+            }
+        }
+        // Режим редактирования, данные берем из массива $this addfield_array
+        else
+        {
+            if(isset($this->addfield_array[$parent_field_id]))
+            {
+                $addfield_array = $this->addfield_array;
+            }
+
+        }
+
+        switch($rubriks_props_model->vibor_type)
+        {
+            case "autoload_with_listitem":
+            case "selector":
+            case "listitem":
+            case "radio":
+                $value = $addfield_array[$parent_field_id];
+            break;
+
+            case "checkbox":
+                // $parent_field_id получается что может быть несколько,
+                // если будет необходимость - подумать над этим
+            break;
+
+            case "string":
+                $value = $addfield_array[$parent_field_id]['ps_id'];
+            break;
+
+            case "photoblock":
+                // Заглушка
+            break;
+
+        }
+
+        return $value;
+
     }
 
     public function getSelectedAttr($value, $list_value)
@@ -160,6 +255,53 @@ class AdvertController extends Controller
             }
         }
 
+        /////////// Для режима редактирования получаем свойства и их значения
+        if($n_id > 0)
+        {
+            $this->addfield_array = array();
+
+            $props_relate = RubriksProps::model()->with('notice_props')->findAll(array(
+                'select'=>'*',
+                'condition'=>'r_id='.$r_id . " AND n_id=".$n_id,
+                'order'=>'t.hierarhy_tag DESC, t.hierarhy_level ASC, t.display_sort, t.rp_id'
+            ));
+
+            foreach($props_relate as $pkey=>$pval)
+            {
+                //deb::dump($pval);
+                //deb::dump('----------------------');
+                switch($pval->vibor_type)
+                {
+                    case "autoload_with_listitem":
+                    case "selector":
+                    case "listitem":
+                    case "radio":
+                        $this->addfield_array[$pval->selector] = $pval->notice_props[0]->ps_id;
+                    break;
+
+                    case "checkbox":
+                        foreach($pval->notice_props as $nkey=>$nval)
+                        {
+                            $this->addfield_array[$pval->selector][$nval->ps_id] = 'on';
+                        }
+                    break;
+
+                    case "string":
+                        $this->addfield_array[$pval->selector]['ps_id'] = $pval->notice_props[0]->ps_id;
+                        $this->addfield_array[$pval->selector]['hand_input_value'] = $pval->notice_props[0]->hand_input_value;
+                    break;
+
+                    case "photoblock":
+                        $this->addfield_array[$pval->selector]['ps_id'] = $pval->notice_props[0]->ps_id;
+                        $this->addfield_array[$pval->selector]['hand_input_value'] = $pval->notice_props[0]->hand_input_value;
+                    break;
+
+                }
+            }
+            //deb::dump($this->addfield_array);
+        }
+        ////////////////// КОНЕЦ для режима редактирования
+
         //deb::dump($props_hierarhy);
 
         foreach ($model_items as $mkey=>$mval)
@@ -173,7 +315,6 @@ class AdvertController extends Controller
                 $block_display = 'block';
             }
 
-            //deb::dump($mval);
         ?>
          <!--<div id="div_<?= $mval->selector;?>" style="display: <?= $block_display;?>;">-->
          <div class="prop_block" id="div_<?= $mval->selector;?>" style="display: <?= $block_display;?>;">
@@ -195,7 +336,7 @@ class AdvertController extends Controller
                  ?>
                  <input type="text" name="<?= $mval->selector;?>-display" id="<?= $mval->selector;?>-display" inputfield="<?= $mval->selector;?>">
                  <span class="addnot-field-selected" id="<?= $mval->selector;?>-span" inputfield="<?= $mval->selector;?>"></span>
-                 <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $mval->selector;?>]" id="<?= $mval->selector;?>"  prop_id="<?= $mval->selector;?>" value="<?= $this->getAddfieldValue($n_id, $mval->selector);?>">
+                 <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $mval->selector;?>]" id="<?= $mval->selector;?>"  prop_id="<?= $mval->selector;?>" value="<?= $this->getAddfieldValue($n_id, $mval->selector, $mval);?>">
 
                  <?
                  // id поля формы <input> в которое заносится выбранное значение
@@ -215,7 +356,7 @@ class AdvertController extends Controller
              case "listitem":
                  ?>
                  <span class="addnot-field-selected" id="<?= $mval->selector;?>-span" inputfield="<?= $mval->selector;?>"></span>
-                <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $mval->selector;?>]" id="<?= $mval->selector;?>" prop_id="<?= $mval->selector;?>" value="<?= $this->getAddfieldValue($n_id, $mval->selector);?>">
+                <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $mval->selector;?>]" id="<?= $mval->selector;?>" prop_id="<?= $mval->selector;?>" value="<?= $this->getAddfieldValue($n_id, $mval->selector, $mval);?>">
 
                  <div id="div_<?= $mval->selector;?>_list"></div>
                  <?
@@ -305,7 +446,7 @@ class AdvertController extends Controller
                 $parent_field_id = $model_items_array[$mval->parent_id]->selector;
             }
 
-            $parent_ps_id = intval($this->getParentPsId($n_id, $parent_field_id));
+            $parent_ps_id = intval($this->getParentPsId($model_notice, $parent_field_id, $mval));
 
             /*
             // убрать switch, т.к. вызов всех функций формируется автоматом
@@ -400,7 +541,6 @@ class AdvertController extends Controller
         $field_id = $_POST['field_id'];
         $parent_field_id = $_POST['parent_field_id'];
         $parent_ps_id = intval($_POST['parent_ps_id']);
-
         $n_id = 0;
         if(isset($_POST['n_id']))
         {
@@ -425,7 +565,7 @@ class AdvertController extends Controller
 
         $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
 
-        $currvalue = $this->getAddfieldValue($n_id, $field_id);
+        $currvalue = $this->getAddfieldValue($n_id, $field_id, $model_rubriks_props);
         ?>
         <div class="add_hideselector"><?= $model_rubriks_props->selector;?></div>
         <div class="add_hidevibortype"><?= $model_rubriks_props->vibor_type;?></div>
@@ -486,7 +626,7 @@ class AdvertController extends Controller
     public function actionGetpropslist_listitem()
     {
         $field_id = $_POST['field_id'];
-        //echo $_POST;
+        //deb::dump($_POST);
         $parent_field_id = $_POST['parent_field_id'];
         $parent_ps_id = intval($_POST['parent_ps_id']);
 
@@ -499,7 +639,6 @@ class AdvertController extends Controller
         {
             $model_notice = new Notice();
         }
-
         $model_rubriks_props = RubriksProps::model()->find(
             array(
                 'condition'=>'selector = :selector',
@@ -526,7 +665,6 @@ class AdvertController extends Controller
             <?
             }
         }
-
         ?>
         <script>
             if($('#<?= $field_id;?>').val() != '')
@@ -583,13 +721,14 @@ class AdvertController extends Controller
             $model_notice = new Notice();
         }
 
-        $checked_array = $this->getAddfieldValue($n_id, $field_id);
         $model_rubriks_props = RubriksProps::model()->find(
             array(
                 'condition'=>'selector = :selector',
                 'params'=>array(':selector'=>$field_id),
             )
         );
+
+        $checked_array = $this->getAddfieldValue($n_id, $field_id, $model_rubriks_props);
 
         $prop_types_params_row = PropTypesParams::model()->find(array(
             'select'=>'*',
@@ -653,14 +792,14 @@ class AdvertController extends Controller
             $model_notice = new Notice();
         }
 
-        $value = $this->getAddfieldValue($n_id, $field_id);
-
         $model_rubriks_props = RubriksProps::model()->find(
             array(
                 'condition'=>'selector = :selector',
                 'params'=>array(':selector'=>$field_id),
             )
         );
+
+        $value = $this->getAddfieldValue($n_id, $field_id, $model_rubriks_props);
 
         $prop_types_params_row = PropTypesParams::model()->find(array(
             'select'=>'*',
@@ -723,14 +862,15 @@ class AdvertController extends Controller
             $model_notice = new Notice();
         }
 
-        $value = $this->getAddfieldValue($n_id, $field_id);
-
         $model_rubriks_props = RubriksProps::model()->find(
             array(
                 'condition'=>'selector = :selector',
                 'params'=>array(':selector'=>$field_id),
             )
         );
+
+        $value = $this->getAddfieldValue($n_id, $field_id, $model_rubriks_props);
+//deb::dump($value);
 //deb::dump($model_rubriks_props);
         $prop_types_params_row = PropTypesParams::model()->find(array(
             'select'=>'*',
@@ -804,7 +944,7 @@ class AdvertController extends Controller
             'params'=>array(':rp_id'=>$field_id)
         ));
 
-        $fieldvalue = $this->getAddfieldValue($n_id, $field_id);
+        $fieldvalue = $this->getAddfieldValue($n_id, $field_id, $model_rubriks_props);
 //deb::dump($fieldvalue);
         $uploadfiles_array = Notice::getImageArray(isset($fieldvalue['hand_input_value']) ? $fieldvalue['hand_input_value'] : '');
 //deb::dump($uploadfiles_array);

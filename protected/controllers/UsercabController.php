@@ -16,9 +16,30 @@ class UsercabController extends Controller
         ));
 
 //        deb::dump($adverts);
-
         $this->render('adverts', array('adverts'=>$adverts));
     }
+
+
+    public function actionAdvert_edit()
+    {
+        $n_id = intval($_GET['n_id']);
+        if($advert = Notice::checkAdvertOwner(Yii::app()->user->id, $n_id))
+        {
+            //deb::dump($advert);
+
+            $props = NoticeProps::model()->findAllByAttributes(array('n_id'=>$n_id));
+            //deb::dump($props);
+
+            list($controller) = Yii::app()->createController('advert');
+            //deb::dump($controller);
+            $controller->actionAddadvert();
+
+            //$this->render('/advert/addadvert');
+        }
+
+    }
+
+
 
 	// Uncomment the following methods and override them if needed
 	/*
