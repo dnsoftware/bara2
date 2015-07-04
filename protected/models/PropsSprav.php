@@ -128,7 +128,6 @@ class PropsSprav extends CActiveRecord
 
     public static function getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id)
     {
-        //deb::dump($model_rubriks_props);
         $rp_id = $model_rubriks_props->rp_id;
         $sort_sql = self::getSortSql($model_rubriks_props->sort_props_sprav);
 

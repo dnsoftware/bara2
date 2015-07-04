@@ -55,7 +55,7 @@ class RubriksProps extends CActiveRecord
 			array('r_id, selector, name, type_id, vibor_type, sort_props_sprav, ptype', 'required'),
             array('selector', 'unique'),
             array('r_id', 'numerical', 'min'=>1),
-			array('hierarhy_tag, hierarhy_level, display_sort, use_in_filter, parent_id, require_prop_tag, hide_if_no_elems_tag', 'numerical', 'integerOnly'=>true),
+			array('hierarhy_tag, hierarhy_level, display_sort, use_in_filter, parent_id, require_prop_tag, hide_if_no_elems_tag, all_values_in_filter', 'numerical', 'integerOnly'=>true),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('rp_id, r_id, hierarhy_tag, hierarhy_level, display_sort, use_in_filter', 'safe', 'on'=>'search'),

@@ -55,6 +55,7 @@
             </td>
 
             <td style="background-color: #adffc8;">
+                <?= Yii::app()->params['yesno'][$model->all_values_in_filter];?>
             </td>
 
             <td style="background-color: #adffc8;">

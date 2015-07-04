@@ -40,6 +40,7 @@ class PropertyController extends Controller
         $model = new RubriksProps();
         $model->hierarhy_tag = 0;
         $model->use_in_filter = 0;
+        $model->all_values_in_filter = 0;
         $model->attributes = $_POST['rubrikprops'];
 
         if (!$model->save())
@@ -81,6 +82,7 @@ class PropertyController extends Controller
         $model->use_in_filter = 0;
         $model->require_prop_tag = 0;
         $model->hide_if_no_elems_tag = 0;
+        $model->all_values_in_filter = 0;
         $model->attributes = $_POST['params'];
 
         if (!$model->save())

@@ -73,7 +73,7 @@
             </td>
 
             <td>
-
+                зависимость
             </td>
         </tr>
         <tr>
@@ -96,10 +96,11 @@
             </td>
 
             <td>
+                все значения в фильтре?<br>
+                <input type="checkbox" name="rubrikprops[all_values_in_filter]" value="1">
             </td>
 
             <td>
-
             </td>
         </tr>
 

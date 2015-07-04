@@ -11,12 +11,12 @@
         cursor: pointer; background-color: #dddddd;
     }
 
-    ._add_hideinput
+    .add_hideinput
     {
         display: none;
     }
 
-    ._add_hideselector, ._add_hidevibortype
+    .add_hideselector, .add_hidevibortype
     {
         display: none;
     }
@@ -97,12 +97,18 @@
 </style>
 
 <?
-//deb::dump(Yii::app()->session['mainblock']);
-//deb::dump(Yii::app()->session['addfield']);
-?>
-<form id="addform" onsubmit="addformsubmit(); return false;">
+$title = "Новое объявления";
+if(Yii::app()->controller->action->id == 'advert_edit')
+{
+    $title = "Редактирование объявления";
+}
 
-<input type="hidden" name="n_id" id="notice_id" value="<?= $n_id;?>">
+?>
+<h1 style="font-size: 16px; margin-bottom: 30px;"><?= $title;?></h1>
+
+<form id="addform" onsubmit="addformsubmit(<?= $n_id;?>); return false;">
+
+<input type="hidden" name="mainblock[n_id]" id="notice_id" value="<?= $n_id;?>">
 
 <div class="form-row">
     <label id="lbl-client_name" class="add-form-label"><?= Notice::model()->getAttributeLabel('client_name');?>:</label>
@@ -354,7 +360,17 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 <div id="status" style="clear: both;"></div>
 
 <div class="form-row">
-    <input type="submit" name="" value="Добавить">
+    <?
+    if($n_id <= 0)
+    {
+        $button_text = "Добавить";
+    }
+    else
+    {
+        $button_text = "Сохранить";
+    }
+    ?>
+    <input type="submit" name="" value="<?= $button_text;?>">
 </div>
 
 </form>
@@ -393,6 +409,7 @@ $('.selrub').change(function (fromwhere)
     $.ajax({
         type: 'POST',
         url: '/index.php?r=/advert/getrubriksprops',
+        //url: '<?= $this->createUrl('advert/getrubriksprops');?>',
         data: 'r_id='+this.value+'&n_id='+$('#notice_id').val(),
         success: function(msg){
             $('#div_errors').html('');
@@ -528,13 +545,22 @@ function DisplayAfterLoad(field_id)
     DisplayChildsPropsBlock(field_id);
 }
 
-function addformsubmit()
+function addformsubmit(n_id)
 {
+    var do_action = '/advert/addnew';
+    var redirect_action = '/advert/addpreview';
+
+    if(n_id>0)
+    {
+        do_action = '/advert/saveedit';
+        redirect_action = '/usercab/adverts';
+    }
+
     var form_data = $('#addform').serialize();
 
     $.ajax({
         type: "POST",
-        url: '/index.php?r=/advert/addnew',
+        url: '/index.php?r='+do_action,
         data: form_data,
         dataType: 'json',
         error: function(msg) {
@@ -574,7 +600,7 @@ function addformsubmit()
 
             if(msg['status'] == 'ok')
             {
-                location.href='/index.php?r=advert/addpreview';
+                location.href='/index.php?r='+redirect_action;
             }
             //console.log(msg);
         }

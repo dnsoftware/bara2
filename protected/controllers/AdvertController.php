@@ -141,7 +141,37 @@ class AdvertController extends Controller
             }
 
         }
+?>
+    //console.log('<?= json_encode($parent_field_id);?>');
+<?
+        // Ищем родителя по полю selector в таблице rubriks_props
+        $pub_props_parent_model = RubriksProps::model()->findByAttributes(array('selector'=>$parent_field_id));
 
+        switch($pub_props_parent_model->vibor_type)
+        {
+            case "autoload_with_listitem":
+            case "selector":
+            case "listitem":
+            case "radio":
+                $value = $addfield_array[$parent_field_id];
+                break;
+
+            case "checkbox":
+                // $parent_field_id получается что может быть несколько,
+                // если будет необходимость - подумать над этим
+                break;
+
+            case "string":
+                $value = $addfield_array[$parent_field_id]['ps_id'];
+                break;
+
+            case "photoblock":
+                $value = $addfield_array[$parent_field_id]['ps_id'];
+            break;
+
+        }
+
+        /*
         switch($rubriks_props_model->vibor_type)
         {
             case "autoload_with_listitem":
@@ -165,6 +195,7 @@ class AdvertController extends Controller
             break;
 
         }
+        */
 
         return $value;
 
@@ -466,6 +497,7 @@ class AdvertController extends Controller
             }
             */
         ?>
+        //alert('<?= $parent_ps_id;?>');
             get_props_list_<?= $mval->vibor_type;?>('<?= $field_id;?>', '<?= $parent_field_id;?>', <?= $n_id;?>, <?= $parent_ps_id;?>);
 
         <?
@@ -882,7 +914,6 @@ class AdvertController extends Controller
         $this->HideBlockIfNoElems($field_id, $parent_field_id, $parent_ps_id, $model_notice, $model_rubriks_props);
 
         $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
-
         if (count($props_sprav) > 0)
         {
             // По идее в $props_sprav только один элемент. Цикл тем не менее оставил.
@@ -945,26 +976,38 @@ class AdvertController extends Controller
         ));
 
         $fieldvalue = $this->getAddfieldValue($n_id, $field_id, $model_rubriks_props);
-//deb::dump($fieldvalue);
+//deb::dump($n_id);
         $uploadfiles_array = Notice::getImageArray(isset($fieldvalue['hand_input_value']) ? $fieldvalue['hand_input_value'] : '');
 //deb::dump($uploadfiles_array);
         $uploadmainfile = $uploadfiles_array[0];
 
+        // Переносим фото в директорию /tmp для работы в режиме редактирования
+        if($n_id > 0)
+        {
+            foreach ($uploadfiles_array as $fkey=>$fval)
+            {
+                if(@copy ( $_SERVER['DOCUMENT_ROOT']."/photos/".$fval, $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval ))
+                {
+                    // Может нужно, а может и нет
+                }
+            }
+        }
+
+
         $prop_types_params_row = PropTypesParams::model()->find(array(
             'select'=>'*',
-            'condition'=>'type_id = "'.$model_rubriks_props->type_id.'" AND selector = "photoblock"',
+            'condition'=>'type_id = "'.$model_rubriks_props->type_id.'" AND selector = "item"',
         ));
 
         // Сокрытие блока где нет подчиненных свойств (если стоит тег hide_if_no_elems_tag)
         $this->HideBlockIfNoElems($field_id, $parent_field_id, $parent_ps_id, $model_notice, $model_rubriks_props);
 
         $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
-//deb::dump($props_sprav);
         ?>
 
-        <input class="_add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $field_id;?>][ps_id]" id="<?= $field_id;?>-<?= $props_sprav[0]->ps_id;?>" value="<?= $props_sprav[0]->ps_id;?>">
+        <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $field_id;?>][ps_id]" id="<?= $field_id;?>-<?= $props_sprav[0]->ps_id;?>" value="<?= $props_sprav[0]->ps_id;?>">
 
-        <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>][hand_input_value]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>" value="<?= isset($fieldvalue['hand_input_value']) ? $fieldvalue['hand_input_value'] : '';?>" style="display: block; width: 1000px;">
+        <input type="text" class="upload_photo_field" name="addfield[<?= $field_id;?>][hand_input_value]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>" value="<?= isset($fieldvalue['hand_input_value']) ? $fieldvalue['hand_input_value'] : '';?>" style="display: none; width: 1000px;">
 
         <div class="form-row">
 
@@ -1358,88 +1401,9 @@ class AdvertController extends Controller
             $optmodel->save();
             $newmodel->save();
 
-
-
-            // Подготовка данных по свойствам к вставке
-            //...
             // Подготавливаем данные из свойств
-            $rubrik_props = RubriksProps::getAllProps($mainblock_array['r_id']);
-            //$rubrik_props_rp_id = RubriksProps::getAllPropsRp_id($mainblock_array['r_id']);
+            $this->AddPropsToDatabase($newmodel, $mainblock_array, $addfield_array);
 
-            // или сразу из записи таблицы notice_props поля hand_input_value
-            foreach($rubrik_props as $rkey=>$rval)
-            {
-                if(isset($addfield_array[$rkey]))
-                {
-                    switch($rval->vibor_type)
-                    {
-                        case "autoload_with_listitem":
-                        case "selector":
-                        case "listitem":
-                        case "radio":
-                            if(intval($addfield_array[$rkey]) > 0)
-                            {
-                                $newprop = new NoticeProps();
-                                $newprop->n_id = $newmodel->n_id;
-                                $newprop->rp_id = $rval->rp_id;
-                                $newprop->ps_id = $addfield_array[$rkey];
-                                $newprop->save();
-                                //deb::dump($newprop->errors);
-                            }
-                        break;
-
-                        case "checkbox":
-                            foreach($addfield_array[$rkey] as $ckey=>$cval)
-                            {
-                                $newprop = new NoticeProps();
-                                $newprop->n_id = $newmodel->n_id;
-                                $newprop->rp_id = $rval->rp_id;
-                                $newprop->ps_id = $ckey;
-                                $newprop->save();
-                            }
-                            break;
-
-                        case "string":
-                            if(trim($addfield_array[$rkey]['hand_input_value']) != '')
-                            {
-                                $newprop = new NoticeProps();
-                                $newprop->n_id = $newmodel->n_id;
-                                $newprop->rp_id = $rval->rp_id;
-                                $newprop->ps_id = $addfield_array[$rkey]['ps_id'];
-                                $newprop->hand_input_value = $addfield_array[$rkey]['hand_input_value'];
-                                $newprop->save();
-                            }
-                            break;
-
-                        case "photoblock":
-                            $files_str = trim($addfield_array[$rkey]['hand_input_value']);
-                            if($files_str != '')
-                            {
-                                if($files_str[strlen($files_str)-1] == ';')
-                                {
-                                    $files_str = substr($files_str, 0, strlen($files_str)-1);
-                                }
-
-                                $files_array = explode(";", $files_str);
-                                foreach ($files_array as $fkey=>$fval)
-                                {
-                                    if(@copy ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval, $_SERVER['DOCUMENT_ROOT']."/photos/".$fval ))
-                                    {
-                                        unlink ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval);
-                                    }
-                                }
-
-                                $newprop = new NoticeProps();
-                                $newprop->n_id = $newmodel->n_id;
-                                $newprop->rp_id = $rval->rp_id;
-                                $newprop->ps_id = $addfield_array[$rkey]['ps_id'];
-                                $newprop->hand_input_value = $addfield_array[$rkey]['hand_input_value'];
-                                $newprop->save();
-                            }
-                            break;
-                    }
-                }
-            } // end foreach
 
             $user_url = $this->createAbsoluteUrl('/usercab/adverts');
             $this->redirect($user_url);
@@ -1454,6 +1418,184 @@ class AdvertController extends Controller
                 echo $rval."<br>";
             }
         }
+
+    }
+
+
+    // Сохранение отредактированного объявления
+    public function actionSaveedit()
+    {
+        $mainblock_array = array();
+        if (isset($_POST['mainblock']))
+        {
+            $mainblock_array = $_POST['mainblock'];
+        }
+
+        $addfield_array = array();
+        if (isset($_POST['addfield']))
+        {
+            $addfield_array = $_POST['addfield'];
+        }
+
+        if (!isset($_POST['mainblock']) || !isset($_POST['addfield']))
+        {
+            $return_array['status'] = 'error';
+            $return_array['message'] = 'Данные в запросе отсутствуют';
+            echo json_encode($return_array);
+
+            return false;
+        }
+
+        $return_array = $this->CheckAndMakeNewData($mainblock_array, $addfield_array);
+
+        if(count($return_array['errors_props']) == 0 && count($return_array['errors']) == 0)
+        {
+            $newmodel = $this->MakeNoticeAttributes($mainblock_array);
+            $newmodel->u_id = Yii::app()->user->id;
+            $newmodel->save();
+
+            // Получаем названия старых файлов фото, если есть
+            $old_photoblock_prop = RubriksProps::model()->with('notice_props')->find(array(
+                'select'=>'*',
+                'condition'=>"t.r_id = ".$mainblock_array['r_id']." AND notice_props.n_id=".$mainblock_array['n_id']. " AND t.vibor_type = 'photoblock' "
+            ));
+            $params['old_photoblock_prop'] = $old_photoblock_prop;
+
+            // Удаляем все старые свойства
+            NoticeProps::model()->deleteAll(array(
+                'condition'=>'n_id='.$newmodel->n_id
+            ));
+
+            // Подготавливаем данные из свойств
+            $this->AddPropsToDatabase($newmodel, $mainblock_array, $addfield_array, $params);
+
+
+            $return_array['status'] = 'ok';
+            $return_array['message'] = 'Объявление отредактировано!';
+
+            echo json_encode($return_array);
+
+            return true;
+        }
+        else
+        {
+            $return_array['status'] = 'error';
+            $return_array['message'] = 'Есть ошибки!';
+            //$return_array['message'] = $_POST['mainblock']['n_id'];
+
+            echo json_encode($return_array);
+
+            return false;
+        }
+
+
+    }
+
+
+    // Добавление набора свойств объявления в базу
+    // $newmodel - модель записи объявления
+    // $mainblock_array - данные объявления
+    // $addfield_array - данные свойств
+    public function AddPropsToDatabase($newmodel, $mainblock_array, $addfield_array, $params = array())
+    {
+        $rubrik_props = RubriksProps::getAllProps($mainblock_array['r_id']);
+
+        foreach($rubrik_props as $rkey=>$rval)
+        {
+            if(isset($addfield_array[$rkey]))
+            {
+                switch($rval->vibor_type)
+                {
+                    case "autoload_with_listitem":
+                    case "selector":
+                    case "listitem":
+                    case "radio":
+                        if(intval($addfield_array[$rkey]) > 0)
+                        {
+                            $newprop = new NoticeProps();
+                            $newprop->n_id = $newmodel->n_id;
+                            $newprop->rp_id = $rval->rp_id;
+                            $newprop->ps_id = $addfield_array[$rkey];
+                            $newprop->save();
+                            //deb::dump($newprop->errors);
+                        }
+                        break;
+
+                    case "checkbox":
+                        foreach($addfield_array[$rkey] as $ckey=>$cval)
+                        {
+                            $newprop = new NoticeProps();
+                            $newprop->n_id = $newmodel->n_id;
+                            $newprop->rp_id = $rval->rp_id;
+                            $newprop->ps_id = $ckey;
+                            $newprop->save();
+                        }
+                        break;
+
+                    case "string":
+                        if(trim($addfield_array[$rkey]['hand_input_value']) != '')
+                        {
+                            $newprop = new NoticeProps();
+                            $newprop->n_id = $newmodel->n_id;
+                            $newprop->rp_id = $rval->rp_id;
+                            $newprop->ps_id = $addfield_array[$rkey]['ps_id'];
+                            $newprop->hand_input_value = $addfield_array[$rkey]['hand_input_value'];
+                            $newprop->save();
+                        }
+                        break;
+
+                    case "photoblock":
+
+                        $files_str = trim($addfield_array[$rkey]['hand_input_value']);
+                        if($files_str != '')
+                        {
+                            if($files_str[strlen($files_str)-1] == ';')
+                            {
+                                $files_str = substr($files_str, 0, strlen($files_str)-1);
+                            }
+
+                            $files_array = explode(";", $files_str);
+                            $files_assoc_array = array();
+                            foreach ($files_array as $fkey=>$fval)
+                            {
+                                if(@copy ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval, $_SERVER['DOCUMENT_ROOT']."/photos/".$fval ))
+                                {
+                                    unlink ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval);
+                                }
+
+                                $files_assoc_array[$fval] = $fval;
+                            }
+
+
+                            $newprop = new NoticeProps();
+                            $newprop->n_id = $newmodel->n_id;
+                            $newprop->rp_id = $rval->rp_id;
+                            $newprop->ps_id = $addfield_array[$rkey]['ps_id'];
+                            $newprop->hand_input_value = $addfield_array[$rkey]['hand_input_value'];
+                            $newprop->save();
+                            //deb::dump($newprop->errors);
+                        }
+
+
+                        if(isset($params['old_photoblock_prop']->notice_props[0]))
+                        {
+                            $old_files_str = $params['old_photoblock_prop']->notice_props[0]->hand_input_value;
+                            $image_array = Notice::getImageArray($old_files_str);
+
+                            foreach ($image_array as $ikey=>$ival)
+                            {
+                                if(!isset($files_assoc_array[$ival]))
+                                {
+                                    //var_dump($ival);
+                                    unlink ( $_SERVER['DOCUMENT_ROOT']."/photos/".$ival);
+                                }
+                            }
+                        }
+
+                        break;
+                }
+            }
+        } // end foreach
 
     }
 
@@ -1478,11 +1620,23 @@ class AdvertController extends Controller
     // и перед добавлением
     public function MakeNoticeAttributes($mainblock_array)
     {
-        $newmodel = new Notice();
+        if($mainblock_array['n_id'] <= 0)
+        {
+            $newmodel = new Notice();
+            $newmodel->date_add = time();
+            $newmodel->active_tag = 1;
+            $newmodel->verify_tag = 1;
+            $newmodel->views_count = 0;
+            $newmodel->moder_counted_tag = 0;
+        }
+        else
+        {
+            $newmodel = Notice::model()->findByPk($mainblock_array['n_id']);
+        }
+
         $newmodel->attributes = $mainblock_array;
 
-        $newmodel->date_add = time();
-        $newmodel->date_lastedit = $newmodel->date_add;
+        $newmodel->date_lastedit = time();
         $expire_period = intval($mainblock_array['expire_period']);
         $newmodel->date_expire = $newmodel->date_add + $expire_period*86400;
 
@@ -1492,10 +1646,6 @@ class AdvertController extends Controller
         // Доделать поиск дублей
         // ...
 
-        $newmodel->active_tag = 1;
-        $newmodel->verify_tag = 1;
-        $newmodel->views_count = 0;
-        $newmodel->moder_counted_tag = 0;
 
         if(Yii::app()->user->id <= 0)
         {

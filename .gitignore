@@ -6,3 +6,5 @@ config
 kcfinder
 yii
 ckeditor
+/tmp
+/photos
