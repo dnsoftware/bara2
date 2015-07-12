@@ -7,6 +7,7 @@
  * @property integer $reg_id
  * @property integer $c_id
  * @property string $name
+ * @property string $transname
  */
 class Regions extends CActiveRecord
 {
@@ -27,8 +28,9 @@ class Regions extends CActiveRecord
 		// will receive user inputs.
 		return array(
 			array('c_id, name', 'required'),
+            array('transname', 'unique'),
 			array('c_id', 'numerical', 'integerOnly'=>true),
-			array('name', 'length', 'max'=>256),
+			array('name, transname', 'length', 'max'=>256),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('reg_id, c_id, name', 'safe', 'on'=>'search'),

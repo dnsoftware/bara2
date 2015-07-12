@@ -3,7 +3,7 @@
     <div id="div_types_params_form_error_<?= $type_id;?>">
     </div>
 
-    <form id="types_params_form_<?= $type_id;?>" method="post" action="/index.php?r=adminka/property/ajax_addtypeparam">
+    <form id="types_params_form_<?= $type_id;?>" method="post" action="<?= Yii::app()->createUrl('adminka/property/ajax_addtypeparam');?>">
 
         <input type="text" name="typeparam[type_id]" value="<?= $type_id;?>">
 

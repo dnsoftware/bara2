@@ -6,6 +6,7 @@
  * The followings are the available columns in table '{{countries}}':
  * @property integer $c_id
  * @property string $name
+ * @property string $transname
  * @property integer $sort_number
  */
 class Countries extends CActiveRecord
@@ -27,8 +28,9 @@ class Countries extends CActiveRecord
 		// will receive user inputs.
 		return array(
 			array('name, sort_number', 'required'),
+            array('transname', 'unique'),
 			array('sort_number', 'numerical', 'integerOnly'=>true),
-			array('name', 'length', 'max'=>256),
+			array('name, transname', 'length', 'max'=>256),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('c_id, name, sort_number', 'safe', 'on'=>'search'),

@@ -1,5 +1,5 @@
 <form class="" id="props_sprav_item_edit_form_<?= $model->ps_id;?>" method="post"
-      action="/index.php?r=adminka/propssprav/ajax_saveedit_row" onsubmit="saveedit_props_sprav_item_row(<?= $model->ps_id;?>);return false;">
+      action="<?= Yii::app()->createUrl('adminka/propssprav/ajax_saveedit_row');?>" onsubmit="saveedit_props_sprav_item_row(<?= $model->ps_id;?>);return false;">
 
     <input type="hidden" name="params[ps_id]" value="<?= $model->ps_id;?>">
 

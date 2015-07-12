@@ -12,7 +12,7 @@
 
 <div class="form">
 
-    <form id="rubriks_props_form" method="post" action="/index.php?r=adminka/property/ajax_addrubprops">
+    <form id="rubriks_props_form" method="post" action="<?= Yii::app()->createUrl('adminka/property/ajax_addrubprops');?>">
 
         <input type="hidden" name="rubrikprops[r_id]" value="<?= $r_id;?>">
 

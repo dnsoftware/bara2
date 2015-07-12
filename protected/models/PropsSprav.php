@@ -202,7 +202,7 @@ class PropsSprav extends CActiveRecord
 		return array(
 			array('rp_id, type_id, selector, value', 'required'),
 			array('rp_id, sort_number', 'numerical', 'integerOnly'=>true),
-			array('selector, value', 'length', 'max'=>256),
+			array('selector, value, transname', 'length', 'max'=>256),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('ps_id, selector, value', 'safe', 'on'=>'search'),

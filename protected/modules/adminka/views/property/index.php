@@ -42,6 +42,16 @@ foreach ($rub_array as $rkey=>$rval)
 </select>
 
 <span style="cursor: pointer; text-decoration: underline;" onclick="$('#r_id').change();">Обновить</span>
+&nbsp;&nbsp;&nbsp;
+<span style="cursor: pointer; text-decoration: underline;" onclick="">Шаблон вывода объявления в списке</span>
+
+<div id="div_advert_list_item" style="display: block;">
+    <form id="form_advert_list_item">
+        <textarea name="advert_list_item_shablon" style="width: 600px; height: 200px;"></textarea>
+        <br>
+        <input type="submit" value="Сохранить шаблон">
+    </form>
+</div>
 
 <div style="color: #f00; display: none;" id="div_errors">
 
@@ -68,7 +78,7 @@ foreach ($rub_array as $rkey=>$rval)
     {
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/property/ajax_rubprops',
+            url: '<?= Yii::app()->createUrl('adminka/property/ajax_rubprops');?>',
             data: 'r_id='+this.value,
             success: function(msg){
                 $('#div_errors').html('');
@@ -84,7 +94,7 @@ foreach ($rub_array as $rkey=>$rval)
     {
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/property/ajax_edit_rubriks_props_row',
+            url: '<?= Yii::app()->createUrl('adminka/property/ajax_edit_rubriks_props_row');?>',
             data: 'rp_id='+rp_id,
             success: function(ret) {
                 //alert(ret);
@@ -98,7 +108,7 @@ foreach ($rub_array as $rkey=>$rval)
     {
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/property/ajax_saveedit_rubriks_props_row',
+            url: '<?= Yii::app()->createUrl('adminka/property/ajax_saveedit_rubriks_props_row');?>',
             data: $('#rpf_form_'+rp_id).serialize(),
             success: function(ret) {
                 if(ret.indexOf('<!--ok-->') + 1)
@@ -118,7 +128,7 @@ foreach ($rub_array as $rkey=>$rval)
     {
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/property/ajax_del_rubriks_props_row',
+            url: '<?= Yii::app()->createUrl('adminka/property/ajax_del_rubriks_props_row');?>',
             data: 'rp_id='+rp_id,
             success: function(ret) {
                 if(ret.indexOf('<!--ok-->') + 1)
@@ -140,7 +150,7 @@ foreach ($rub_array as $rkey=>$rval)
 
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/propssprav/ajax_get_props_sprav',
+            url: '<?= Yii::app()->createUrl('adminka/propssprav/ajax_get_props_sprav');?>',
             data: 'rp_id='+rp_id,
             success: function(ret) {
                 if(ret.indexOf('<!--ok-->') + 1)

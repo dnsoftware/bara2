@@ -23,6 +23,7 @@ class UsercabController extends Controller
     public function actionAdvert_edit()
     {
         $n_id = intval($_GET['n_id']);
+//AdvertController::PropsXmlGenerate($n_id);
         if($advert = Notice::checkAdvertOwner(Yii::app()->user->id, $n_id))
         {
             //deb::dump($advert);

@@ -81,7 +81,7 @@ foreach ($props_selected_spav_records as $rowkey=>$rowval)
         cell = $(this);
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/propssprav/ajax_gettable_relation_setrelate',
+            url: '<?= Yii::app()->createUrl('adminka/propssprav/ajax_gettable_relation_setrelate');?>',
             data: 'parent_ps_id='+$(this).attr('parent_ps_id')+'&child_ps_id='+$(this).attr('child_ps_id'),
             success: function(ret) {
                 if(ret.indexOf('<!--yes-->') + 1)

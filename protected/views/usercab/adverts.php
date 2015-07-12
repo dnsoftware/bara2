@@ -18,7 +18,7 @@ foreach ($adverts as $akey=>$aval)
         <a href=""><?= $aval->title;?></a>
     </td>
     <td>
-        <a href="/index.php?r=usercab/advert_edit&n_id=<?= $aval->n_id;?>">Редактировать</a>
+        <a href="<?= Yii::app()->createUrl('usercab/advert_edit', array('n_id'=>$aval->n_id));?>">Редактировать</a>
     </td>
 </tr>
 <?

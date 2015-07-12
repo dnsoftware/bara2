@@ -21,7 +21,7 @@
         </div>
 
         <form class="prop_types_params_form" method="post"
-              action="/index.php?r=adminka/proptypesparams/ajax_add_prop_types_params">
+              action="<?= Yii::app()->createUrl('adminka/proptypesparams/ajax_add_prop_types_params');?>">
 
             <input type="hidden" name="params[type_id]" value="<?= $data->type_id;?>">
 

@@ -1,6 +1,6 @@
 <div id="rubriks_props_item_edit_<?= $model->rp_id;?>">
     <form class="rubriks_props_form" id="rpf_form_<?= $model->rp_id;?>" method="post"
-          action="/index.php?r=adminka/property/ajax_saveedit_rubriks_props_row" onsubmit="saveedit_rubriks_props(<?= $model->rp_id;?>);return false;">
+          action="<?= Yii::app()->createUrl('adminka/property/ajax_saveedit_rubriks_props_row');?>" onsubmit="saveedit_rubriks_props(<?= $model->rp_id;?>);return false;">
 
         <input type="hidden" name="params[rp_id]" value="<?= $model->rp_id;?>">
         <input type="hidden" name="params[r_id]" value="<?= $model->r_id;?>">

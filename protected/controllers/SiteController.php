@@ -23,8 +23,17 @@ class SiteController extends Controller
 
     public function actionIndex()
     {
-        //https://api.vk.com/method/users.search?group_id=64061717&v=5.27&access_token=tq8nYiABThDT0odts9it
-        $this->render('index');
+        //$support = new Supporter();
+        //$support->MakeTranslitAll();
+        //deb::dump($row);
+
+        $countries = Countries::model()->findAll();
+        $regions = Regions::model()->findAll(array(
+            'condition'=>'c_id=1',
+            'order'=>'name'
+        ));
+
+        $this->render('index', array('countries'=>$countries, 'regions'=>$regions));
     }
 
 

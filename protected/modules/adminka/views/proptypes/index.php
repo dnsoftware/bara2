@@ -77,9 +77,6 @@ $this->menu=array(
                         //alert('div_prop_item_'+type_id);
                         $('#div_params_'+type_id).append(ret);
 
-                        //console.log(matches[1]);
-                        //alert('dd');
-                        //location.href = '/index.php?r=adminka/proptypes/index&r_id=';
                     }
                     else
                     {
@@ -97,7 +94,7 @@ $this->menu=array(
     {
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/proptypesparams/ajax_edit_rubprops_row',
+            url: '<?= Yii::app()->createUrl('adminka/proptypesparams/ajax_edit_rubprops_row');?>',
             data: 'pt_id='+pt_id,
             success: function(ret) {
                 //alert(ret);
@@ -111,7 +108,7 @@ $this->menu=array(
     {
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/proptypesparams/ajax_saveedit_rubprops_row',
+            url: '<?= Yii::app()->createUrl('adminka/proptypesparams/ajax_saveedit_rubprops_row');?>',
             data: $('#ptp_form_'+pt_id).serialize(),
             success: function(ret) {
                 if(ret.indexOf('<!--ok-->') + 1)
@@ -131,7 +128,7 @@ $this->menu=array(
     {
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/proptypesparams/ajax_del_rubprops_row',
+            url: '<?= Yii::app()->createUrl('adminka/proptypesparams/ajax_del_rubprops_row');?>',
             data: 'pt_id='+pt_id,
             success: function(ret) {
                 if(ret.indexOf('<!--ok-->') + 1)

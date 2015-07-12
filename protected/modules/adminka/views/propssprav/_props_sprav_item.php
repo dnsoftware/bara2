@@ -16,7 +16,7 @@
         $prop_types_params_row->maybe_count != 'one' )
     {
     ?>
-    <form id="props_sprav_form_<?= $prop_types_params_row->pt_id;?>" method="post" action="/index.php?r=adminka/propssprav/ajax_addrow"
+    <form id="props_sprav_form_<?= $prop_types_params_row->pt_id;?>" method="post" action="<?= Yii::app()->createUrl('adminka/propssprav/ajax_addrow');?>"
         onsubmit="props_sprav_row_add(<?= $rp_id;?>, <?= $prop_types_params_row->pt_id;?>); return false;">
 
         <input type="hidden" name="field[rp_id]" value="<?= $rp_id;?>">

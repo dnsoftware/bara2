@@ -1,6 +1,6 @@
 <div id="tparam_item_edit_<?= $model->pt_id;?>">
     <form class="prop_types_params_form" id="ptp_form_<?= $model->pt_id;?>" method="post"
-          action="/index.php?r=adminka/proptypesparams/ajax_saveedit_rubprops_row" onsubmit="saveedit_rubprops(<?= $model->pt_id;?>);return false;">
+          action="<?= Yii::app()->createUrl('adminka/proptypesparams/ajax_saveedit_rubprops_row');?>" onsubmit="saveedit_rubprops(<?= $model->pt_id;?>);return false;">
 
         <input type="hidden" name="params[pt_id]" value="<?= $model->pt_id;?>">
         <input type="hidden" name="params[type_id]" value="<?= $model->type_id;?>">

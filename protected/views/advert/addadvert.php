@@ -381,7 +381,7 @@ $('#select_country').change(function ()
 {
     $.ajax({
         type: 'POST',
-        url: '/index.php?r=/advert/get_html_regions',
+        url: '<?= Yii::app()->createUrl('advert/get_html_regions');?>',
         data: 'c_id='+$(this).val(),
         success: function(msg){
             $('#select_town').html('<option value="">Выберите город<option>');
@@ -394,7 +394,7 @@ $('#select_region').change(function ()
 {
     $.ajax({
         type: 'POST',
-        url: '/index.php?r=/advert/get_html_towns',
+        url: '<?= Yii::app()->createUrl('advert/get_html_towns');?>',
         data: 'reg_id='+$(this).val(),
         success: function(msg){
             $('#select_town').html(msg);
@@ -408,8 +408,7 @@ $('.selrub').change(function (fromwhere)
 {
     $.ajax({
         type: 'POST',
-        url: '/index.php?r=/advert/getrubriksprops',
-        //url: '<?= $this->createUrl('advert/getrubriksprops');?>',
+        url: '<?= Yii::app()->createUrl('advert/getrubriksprops');?>',
         data: 'r_id='+this.value+'&n_id='+$('#notice_id').val(),
         success: function(msg){
             $('#div_errors').html('');
@@ -419,16 +418,6 @@ $('.selrub').change(function (fromwhere)
         }
     });
 
-    /*
-    $.ajax({
-        type: 'POST',
-        url: '/index.php?r=/advert/get_notice_types',
-        data: 'r_id='+this.value,
-        success: function(msg){
-            $('#notice_type_id').html(msg);
-        }
-    });
-    */
 
 });
 
@@ -512,7 +501,7 @@ function CascadeNullRelatePropsSession(r_id, parent_field_id)
 {
     $.ajax({
         type: "POST",
-        url: '/index.php?r=/advert/cascade_null_relate_props_session',
+        url: '<?= Yii::app()->createUrl('advert/cascade_null_relate_props_session');?>',
         data: {
             r_id: r_id,
             parent_field_id: parent_field_id
@@ -547,20 +536,20 @@ function DisplayAfterLoad(field_id)
 
 function addformsubmit(n_id)
 {
-    var do_action = '/advert/addnew';
-    var redirect_action = '/advert/addpreview';
+    var do_action = '<?= Yii::app()->createUrl('advert/addnew');?>';
+    var redirect_action = '<?= Yii::app()->createUrl('advert/addpreview');?>';
 
     if(n_id>0)
     {
-        do_action = '/advert/saveedit';
-        redirect_action = '/usercab/adverts';
+        do_action = '<?= Yii::app()->createUrl('advert/saveedit');?>';
+        redirect_action = '<?= Yii::app()->createUrl('usercab/adverts');?>';
     }
 
     var form_data = $('#addform').serialize();
 
     $.ajax({
         type: "POST",
-        url: '/index.php?r='+do_action,
+        url: do_action,
         data: form_data,
         dataType: 'json',
         error: function(msg) {
@@ -600,7 +589,7 @@ function addformsubmit(n_id)
 
             if(msg['status'] == 'ok')
             {
-                location.href='/index.php?r='+redirect_action;
+                location.href=redirect_action;
             }
             //console.log(msg);
         }

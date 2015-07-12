@@ -30,6 +30,7 @@ class Towns extends CActiveRecord
 		// will receive user inputs.
 		return array(
 			array('reg_id, c_id, name, transname, inname', 'required'),
+            array('transname', 'unique'),
 			array('reg_id, c_id', 'numerical', 'integerOnly'=>true),
 			array('name, transname, inname', 'length', 'max'=>256),
 			// The following rule is used by search().

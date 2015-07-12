@@ -7,7 +7,7 @@
 
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/propssprav/ajax_addrow',
+            url: '<?= Yii::app()->createUrl('adminka/propssprav/ajax_addrow');?>',
             data: $('#props_sprav_form_'+pt_id).serialize(),
             success: function(ret) {
                 if(ret.indexOf('<!--ok-->') + 1)
@@ -28,7 +28,7 @@
     {
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/propssprav/ajax_editrow',
+            url: '<?= Yii::app()->createUrl('adminka/propssprav/ajax_editrow');?>',
             data: 'ps_id='+ps_id,
             success: function(ret) {
                 //alert(ret);
@@ -42,7 +42,7 @@
     {
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/propssprav/ajax_saveedit_row',
+            url: '<?= Yii::app()->createUrl('adminka/propssprav/ajax_saveedit_row');?>',
             data: $('#props_sprav_item_edit_form_'+ps_id).serialize(),
             success: function(ret) {
                 if(ret.indexOf('<!--ok-->') + 1)
@@ -62,7 +62,7 @@
     {
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/propssprav/ajax_del_row',
+            url: '<?= Yii::app()->createUrl('adminka/propssprav/ajax_del_row');?>',
             data: 'ps_id='+ps_id,
             success: function(ret) {
                 if(ret.indexOf('<!--ok-->') + 1)
@@ -85,7 +85,7 @@
 
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/propssprav/ajax_get_range_spr_select',
+            url: '<?= Yii::app()->createUrl('adminka/propssprav/ajax_get_range_spr_select');?>',
             data: 'rp_id='+rp_id+'&child_rp_id='+child_rp_id+'&ps_id='+ps_id,
             success: function(ret) {
                 if(ret.indexOf('<!--ok-->') + 1)
@@ -120,7 +120,7 @@
 
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/propssprav/ajax_get_range_spr_select_end',
+            url: '<?= Yii::app()->createUrl('adminka/propssprav/ajax_get_range_spr_select_end');?>',
             data: 'rp_id='+rp_id+'&parent_rp_id='+parent_rp_id+'&ps_id='+ps_id,
             success: function(ret) {
                 if(ret.indexOf('<!--ok-->') + 1)
@@ -197,7 +197,7 @@
     {
         $.ajax({
             type: 'POST',
-            url: '/index.php?r=adminka/propssprav/ajax_gettable_relation',
+            url: '<?= Yii::app()->createUrl('adminka/propssprav/ajax_gettable_relation');?>',
             data: $('#frm_gettable_relation').serialize(),
             success: function(ret) {
                 if(ret.indexOf('<!--ok-->') + 1)
@@ -226,7 +226,7 @@
 <br>
 
 <div style="float: right;">
-    <form id="frm_gettable_relation"  method="post" action="/index.php?r=adminka/propssprav/ajax_gettable_relation"
+    <form id="frm_gettable_relation"  method="post" action="<?= Yii::app()->createUrl('adminka/propssprav/ajax_gettable_relation');?>"
            onsubmit="gettable_relation(); return false;">
         <input readonly style="width: 20px; background-color: #dedede;" type="text" id="current_ps_id" name="current_ps_id" value="<?= $current_ps_id;?>">
         <input readonly style="width: 20px; background-color: #dedede;" type="text" id="parent2_rp_id" name="parent2_rp_id" value="<?= $parent2_rp_id;?>">

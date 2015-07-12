@@ -287,6 +287,8 @@ class PropsspravController extends Controller
     {
         $model = new PropsSprav();
         $model->attributes = $_POST['field'];
+        $supporter = new Supporter();
+        $model->transname = $supporter->TranslitForUrl($model->value);
 //deb::dump($_POST);
 
 //die();
@@ -357,6 +359,8 @@ class PropsspravController extends Controller
         $model = PropsSprav::model()->findByPk($_POST['params']['ps_id']);
 
         $model->attributes = $_POST['params'];
+        $supporter = new Supporter();
+        $model->transname = $supporter->TranslitForUrl($model->value);
         if (!$model->save())
         {
             deb::model_errors($model->errors);

@@ -26,7 +26,7 @@
                 */
 
                 $.ajax({
-                    url: "/index.php?r=advert/getpropslist_autocomplete",
+                    url: "<?= Yii::app()->createUrl('advert/getpropslist_autocomplete');?>",
                     method: "post",
                     dataType: "json",
                     // параметры запроса, передаваемые на сервер (последний - подстрока для поиска):
@@ -113,7 +113,7 @@
 
         props_load_stack_count++;
         $.ajax({
-            url: "/index.php?r=advert/getpropslist_selector",
+            url: "<?= Yii::app()->createUrl('advert/getpropslist_selector');?>",
             method: "post",
             //dataType: "json",
             // параметры запроса, передаваемые на сервер (последний - подстрока для поиска):
@@ -149,7 +149,7 @@
 
         props_load_stack_count++;
         $.ajax({
-            url: "/index.php?r=advert/getpropslist_listitem",
+            url: "<?= Yii::app()->createUrl('advert/getpropslist_listitem');?>",
             method: "post",
             //dataType: "json",
             // параметры запроса, передаваемые на сервер (последний - подстрока для поиска):
@@ -192,7 +192,7 @@
 
         props_load_stack_count++;
         $.ajax({
-            url: "/index.php?r=advert/getpropslist_checkbox",
+            url: "<?= Yii::app()->createUrl('advert/getpropslist_checkbox');?>",
             method: "post",
             //dataType: "json",
             // параметры запроса, передаваемые на сервер (последний - подстрока для поиска):
@@ -229,7 +229,7 @@
 
         props_load_stack_count++;
         $.ajax({
-            url: "/index.php?r=advert/getpropslist_radio",
+            url: "<?= Yii::app()->createUrl('advert/getpropslist_radio');?>",
             method: "post",
             //dataType: "json",
             // параметры запроса, передаваемые на сервер (последний - подстрока для поиска):
@@ -264,7 +264,7 @@
 
         props_load_stack_count++;
         $.ajax({
-            url: "/index.php?r=advert/getpropslist_string",
+            url: "<?= Yii::app()->createUrl('advert/getpropslist_string');?>",
             method: "post",
             //dataType: "json",
             // параметры запроса, передаваемые на сервер (последний - подстрока для поиска):
@@ -288,7 +288,7 @@
     {
         props_load_stack_count++;
         $.ajax({
-            url: "/index.php?r=advert/getpropslist_photoblock",
+            url: "<?= Yii::app()->createUrl('advert/getpropslist_photoblock');?>",
             method: "post",
             //dataType: "json",
             // параметры запроса, передаваемые на сервер (последний - подстрока для поиска):

@@ -125,7 +125,7 @@ if(Yii::app()->user->id > 0)
 {
     echo "Вы залогинены, все ок";
     ?>
-    <form id="savenew" method="post" action="/index.php?r=/advert/savenew">
+    <form id="savenew" method="post" action="<?= Yii::app()->createUrl('advert/savenew');?>">
     <table style="width: 400px;">
         <tr>
             <td>
@@ -227,7 +227,7 @@ else
 
         $.ajax({
             type: "POST",
-            url: '/index.php?r=/advert/addreglogin',
+            url: '<?= Yii::app()->createUrl('advert/addreglogin');?>',
             data: form_data,
             dataType: 'json',
             error: function(msg) {
@@ -249,7 +249,7 @@ else
 
                 if(msg['status'] == 'ok')
                 {
-                    location.href = '/index.php?r=advert/savenew';
+                    location.href = '<?= Yii::app()->createUrl('advert/savenew');?>';
                 }
 
             }

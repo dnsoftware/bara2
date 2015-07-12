@@ -70,8 +70,11 @@ class RubriksController extends Controller
 		if(isset($_POST['Rubriks']))
 		{
 			$model->attributes=$_POST['Rubriks'];
+            $supporter = new Supporter();
+            $model->transname = $supporter->TranslitForUrl($model->name);
 			if($model->save())
             {
+                /*
                 if(is_array($_POST['NoticeTypeRelations']['notice_type_id']) > 0)
                 {
                     foreach ($_POST['NoticeTypeRelations']['notice_type_id'] as $nval)
@@ -82,18 +85,19 @@ class RubriksController extends Controller
                         $ntr_model->save();
                     }
                 }
+                */
 
                 $this->redirect(array('view','id'=>$model->r_id));
             }
 		}
 
         $parent_list = Rubriks::get_parentlist();
-        $empty_type = new NoticeTypeRelations;
+        //$empty_type = new NoticeTypeRelations;
 
         $this->render('create',array(
 			'model'=>$model,
             'parent_list'=>$parent_list,
-            'empty_type'=>$empty_type
+            /*'empty_type'=>$empty_type*/
 		));
 	}
 
@@ -112,7 +116,9 @@ class RubriksController extends Controller
 		if(isset($_POST['Rubriks']))
 		{
 			$model->attributes=$_POST['Rubriks'];
-			if($model->save())
+            $supporter = new Supporter();
+            $model->transname = $supporter->TranslitForUrl($model->name);
+            if($model->save())
             {
                 NoticeTypeRelations::model()->deleteAll('r_id='.$id);
                 if(is_array($_POST['NoticeTypeRelations']['notice_type_id']) > 0)

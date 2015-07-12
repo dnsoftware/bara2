@@ -37,6 +37,10 @@
 		<?php echo $form->error($model,'sort_num'); ?>
 	</div>
 
+<?
+if(0)       // Данный сегмент не актуален (удалить в будущем)
+{
+?>
     Допустимые типы объявлений:<br>
     <div class="row">
     <? //$form->checkBoxList($empty_type, 'notice_type_id', Rubriks::$notice_type, array('style'=>'text-align: left;'));?>
@@ -45,10 +49,12 @@
     foreach (NoticeTypeRelations::$notice_type as $nkey=>$nval)
     {
         $checked = '';
+
         if(in_array($nkey, $empty_type->notice_type_id))
         {
             $checked = ' checked ';
         }
+
     ?>
         <div style="border: #003bb3 solid 1px; padding: 5px; margin: 3px;">
             <input type="checkbox" <?= $checked;?> name="NoticeTypeRelations[notice_type_id][<?= $nkey;?>]" value="<?= $nkey;?>"> <b><?= $nval;?></b><br>
@@ -90,7 +96,9 @@
 
     ?>
     </div>
-
+<?
+}
+?>
 
 
     <div class="row buttons">

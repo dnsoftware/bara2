@@ -32,7 +32,8 @@ class Rubriks extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('parent_id, name, sort_num', 'required'),
+			array('parent_id, name, sort_num, transname', 'required'),
+            array('transname', 'unique'),
 			array('parent_id', 'numerical', 'integerOnly'=>true),
 			array('name', 'length', 'max'=>256),
 			// The following rule is used by search().

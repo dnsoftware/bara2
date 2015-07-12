@@ -1142,7 +1142,7 @@ class AdvertController extends Controller
             }
 
             $("#fileuploader").uploadFile({
-                url:"<?= Yii::app()->request->baseUrl;?>/index.php?r=advert/upload",
+                url:"<?= Yii::app()->createUrl('advert/upload');?>",
                 fileName:"myfile",
                 multiple:true,
                 showDelete:true,
@@ -1181,7 +1181,7 @@ class AdvertController extends Controller
                     //console.log(data);
 
                     for (var i = 0; i < data.length; i++) {
-                        $.post("<?= Yii::app()->request->baseUrl;?>/index.php?r=advert/uploaddelete", {op: "delete",name: data[i], field_id: field_id},
+                        $.post("<?= Yii::app()->createUrl('advert/uploaddelete');?>", {op: "delete",name: data[i], field_id: field_id},
                             function (resp,textStatus, jqXHR) {
                                 changeFileListAfterDelete(data[0]);
                             });
@@ -1199,7 +1199,7 @@ class AdvertController extends Controller
 
                 $.ajax({
                     type: 'POST',
-                    url: '/index.php?r=/advert/uploaddelete',
+                    url: '<?= Yii::app()->createUrl('advert/uploaddelete');?>',
                     data: 'op=delete&name='+delfile+'&field_id='+field_id,
                     success: function(msg){
                         $('#oldload_'+delfile_id).remove();
@@ -1404,6 +1404,8 @@ class AdvertController extends Controller
             // Подготавливаем данные из свойств
             $this->AddPropsToDatabase($newmodel, $mainblock_array, $addfield_array);
 
+            // Генерируем xml данные свойств
+            self::PropsXmlGenerate($newmodel->n_id);
 
             $user_url = $this->createAbsoluteUrl('/usercab/adverts');
             $this->redirect($user_url);
@@ -1596,6 +1598,68 @@ class AdvertController extends Controller
                 }
             }
         } // end foreach
+
+    }
+
+
+    // Генерация xml данных со значениями всех свойств объявления и сохранение их в запись с данными объявы
+    public static function PropsXmlGenerate($n_id)
+    {
+        $notice = Notice::model()->findByPk($n_id);
+
+        /*
+        $rubriks_props = RubriksProps::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>"r_id = ".$notice->r_id." ",
+            'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
+            //'limit'=>'10'
+        ));
+
+        $notice_props = NoticeProps::model()->findAllByAttributes(array('n_id'=>$n_id));
+        */
+
+        $notice_props = array();
+        $connection=Yii::app()->db;
+        $sql = "SELECT rp.rp_id, rp.name, rp.selector, rp.vibor_type, np.ps_id, np.hand_input_value,
+                       ps.value
+                        FROM
+                        ". $connection->tablePrefix . "rubriks_props rp,
+                        ". $connection->tablePrefix . "notice_props np,
+                        ". $connection->tablePrefix . "props_sprav ps
+                        WHERE
+                        np.n_id = $n_id AND rp.rp_id = np.rp_id AND np.ps_id = ps.ps_id
+                        ORDER BY
+                        rp.hierarhy_tag DESC, rp.hierarhy_level ASC, rp.display_sort, rp.rp_id ";
+        //deb::dump($sql);
+        $command=$connection->createCommand($sql);
+        $dataReader=$command->query();
+        $xml = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><body><block></block></body>');
+        while(($row = $dataReader->read())!==false)
+        {
+            if(count($xml->block[0]->$row['selector']) == 0)
+            {
+                $props = $xml->block[0]->addChild($row['selector']);
+            }
+            else
+            {
+                $props = $xml->block[0]->$row['selector'];
+            }
+
+            $item = $props->addChild('item');
+            foreach($row as $rkey=>$rval)
+            {
+                $item->addChild($rkey, $rval);
+            }
+
+            //$notice_props[] = $row;
+
+        }
+
+        //echo htmlspecialchars($xml->asXML());
+        $notice->props_xml = $xml->asXML();
+        $notice->save();
+
+        //deb::dump($notice_props);
 
     }
 
