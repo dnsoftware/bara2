@@ -18,6 +18,7 @@ class PropertyController extends Controller
     public function actionAjax_rubprops()
     {
         $r_id=intval($_POST['r_id']);
+        $rubrik = Rubriks::model()->findByPk($r_id);
 
         $model= new RubriksProps();
 
@@ -31,8 +32,11 @@ class PropertyController extends Controller
         $props_type_array = PropTypes::getPropsType();
         $potential_parents = RubriksProps::getPotentialParents($r_id, 0);
 
-        $this->renderPartial('ajax_rubprops', array('r_id'=>$r_id, 'model'=>$model, 'model_items'=>$model_items,
+//        if($rubrik->parent_id != 0)
+//        {
+            $this->renderPartial('ajax_rubprops', array('r_id'=>$r_id, 'model'=>$model, 'model_items'=>$model_items,
                 'props_type_array'=>$props_type_array, 'potential_parents'=>$potential_parents));
+//        }
     }
 
     public function actionAjax_addrubprops()
@@ -112,6 +116,42 @@ class PropertyController extends Controller
     }
 
 
+    public function actionAjax_save_advert_list_item_shablon()
+    {
+        $r_id = intval($_POST['r_id']);
+
+        if($rubrik = Rubriks::model()->findByPk($r_id))
+        {
+            $rubrik->advert_list_item_shablon = $_POST['advert_list_item_shablon'];
+
+            if($rubrik->save())
+            {
+                echo 'ok';
+            }
+            else
+            {
+                echo 'error';
+            }
+        }
+        else
+        {
+            echo 'error';
+        }
+    }
+
+    public function actionGet_rubrik_advert_list_shablon()
+    {
+        $r_id = intval($_POST['r_id']);
+
+        if($rubrik = Rubriks::model()->findByPk($r_id))
+        {
+            echo $rubrik->advert_list_item_shablon;
+        }
+        else
+        {
+            echo "error";
+        }
+    }
 
 	// Uncomment the following methods and override them if needed
 	/*

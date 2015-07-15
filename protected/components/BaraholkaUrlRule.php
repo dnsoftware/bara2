@@ -79,10 +79,26 @@ class BaraholkaUrlRule extends CBaseUrlRule
                 $j++;
             }
 
+            // Если третий сегмент есть, и последняя его часть состоит только из 13-ти цифр -
+            // то это ссылка на конкретное объявление
+            if(count($parts) == 3)
+            {
+                $parts_third = explode("_", $parts[2]);
+                $last_part = $parts_third[count($parts_third)-1];
+                preg_match('|[0-9]+?|siU', $last_part, $match);
+                //deb::dump($match[0]);
+                if(count($parts_third)>1 && $match[0] == $last_part && strlen($last_part) == 13)
+                {
+                    $_GET = null;
+                    $_GET['daynumber_id'] = $last_part;
+                    $controller_action_url = 'advert/viewadvert';
+                    return $controller_action_url;
+                }
+            }
             //deb::dump($params);
         }
 
-
+        //deb::dump($_GET);
         //deb::dump($controller_action_url.$params_str);
         return $controller_action_url;
 

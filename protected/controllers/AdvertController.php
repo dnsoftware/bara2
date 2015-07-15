@@ -5,7 +5,15 @@ class AdvertController extends Controller
     // В режиме редактирования аналог Yii::app()->session['addfield']
     public $addfield_array = array();
 
-	public function actionAddadvert()
+    // Общие данные для режимов предварительного просмотра и просмотра страницы объявления
+    public $uploadfiles_array = array();
+    public $mainblock_data = array();
+    public $addfield_data = array();
+    public $options = array();
+    // Конец Общие данные
+
+
+    public function actionAddadvert()
 	{
         $rub_array = Rubriks::get_rublist();
 //    deb::dump(Yii::app()->session['addfield']);
@@ -64,7 +72,7 @@ class AdvertController extends Controller
 
     public function getAddfieldValue($n_id, $field_name, $rubriks_props_model)
     {
-
+//deb::dump(Yii::app()->session['addfield']);
         // Режим добавления, данные берем из сессии (если там есть)
         if($n_id == 0)
         {
@@ -976,7 +984,7 @@ class AdvertController extends Controller
         ));
 
         $fieldvalue = $this->getAddfieldValue($n_id, $field_id, $model_rubriks_props);
-//deb::dump($n_id);
+//deb::dump($fieldvalue);
         $uploadfiles_array = Notice::getImageArray(isset($fieldvalue['hand_input_value']) ? $fieldvalue['hand_input_value'] : '');
 //deb::dump($uploadfiles_array);
         $uploadmainfile = $uploadfiles_array[0];
@@ -1281,7 +1289,7 @@ class AdvertController extends Controller
         $output_dir = $_SERVER['DOCUMENT_ROOT']."/tmp/";
         $field_id = $_POST['field_id'];
         $delfile = str_replace('../', '', $_POST['name']);
-        unlink($output_dir.$delfile);
+        @unlink($output_dir.$delfile);
 
         $temp = Yii::app()->session['addfield'];
         $temp[$field_id] = str_replace($delfile.';', '', $temp[$field_id]);
@@ -1354,7 +1362,8 @@ class AdvertController extends Controller
         }
 
         $return_array = $this->CheckAndMakeNewData($mainblock_array, $addfield_array);
-//deb::dump($return_array);
+deb::dump($addfield_array);
+die();
 
         $newnot_user_id = 0;
         if(Yii::app()->user->id > 0)
@@ -1471,6 +1480,7 @@ class AdvertController extends Controller
             // Подготавливаем данные из свойств
             $this->AddPropsToDatabase($newmodel, $mainblock_array, $addfield_array, $params);
 
+            self::PropsXmlGenerate($newmodel->n_id);
 
             $return_array['status'] = 'ok';
             $return_array['message'] = 'Объявление отредактировано!';
@@ -1562,7 +1572,7 @@ class AdvertController extends Controller
                             {
                                 if(@copy ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval, $_SERVER['DOCUMENT_ROOT']."/photos/".$fval ))
                                 {
-                                    unlink ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval);
+                                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval);
                                 }
 
                                 $files_assoc_array[$fval] = $fval;
@@ -1589,7 +1599,7 @@ class AdvertController extends Controller
                                 if(!isset($files_assoc_array[$ival]))
                                 {
                                     //var_dump($ival);
-                                    unlink ( $_SERVER['DOCUMENT_ROOT']."/photos/".$ival);
+                                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/photos/".$ival);
                                 }
                             }
                         }
@@ -1785,31 +1795,23 @@ class AdvertController extends Controller
 
     }
 
-    // Предварительный просмотр и авторизация
-    public function actionAddpreview()
+    // Подготовка данных для отображения предварительного просмотра или страницы объявления
+    public function MakeDataForView($mainblock, $addfield)
     {
-        Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/galleria/galleria-1.4.2.js');
-
-        $mainblock = Yii::app()->session['mainblock'];
-        $addfield = Yii::app()->session['addfield'];
-
         // Подготавливаем данные из основной части объявления
-        $mainblock_data = array();
-        $mainblock_data['country'] = Countries::model()->findByPk($mainblock['c_id']);
-        $mainblock_data['region'] = Regions::model()->findByPk($mainblock['reg_id']);
-        $mainblock_data['town'] = Towns::model()->findByPk($mainblock['t_id']);
+        $this->mainblock_data['country'] = Countries::model()->findByPk($mainblock['c_id']);
+        $this->mainblock_data['region'] = Regions::model()->findByPk($mainblock['reg_id']);
+        $this->mainblock_data['town'] = Towns::model()->findByPk($mainblock['t_id']);
 
         // Подготавливаем данные из свойств
         $rubrik_props = RubriksProps::getAllProps($mainblock['r_id']);
         $rubrik_props_rp_id = RubriksProps::getAllPropsRp_id($mainblock['r_id']);
-//deb::dump($addfield);
-//deb::dump($rubrik_props);
-        $uploadfiles_array = array();
+
 
         $props_ids = array();
         $notice_props = array();
         $props_string_ids = array();    // Для ручного ввода данные берутся сразу из сессии (при предварительном просмотре)
-                                        // или сразу из записи таблицы notice_props поля hand_input_value
+        // или сразу из записи таблицы notice_props поля hand_input_value
         foreach($rubrik_props as $rkey=>$rval)
         {
             if(isset($addfield[$rkey]))
@@ -1825,7 +1827,7 @@ class AdvertController extends Controller
                             $props_ids[] = $addfield[$rkey];
                             $notice_props[$rval->rp_id] = $addfield[$rkey];
                         }
-                    break;
+                        break;
 
                     case "checkbox":
                         foreach($addfield[$rkey] as $ckey=>$cval)
@@ -1834,7 +1836,7 @@ class AdvertController extends Controller
                             $props_string_ids[$ckey] = $ckey;
                             $notice_props[$rval->rp_id][$ckey] = $ckey;
                         }
-                    break;
+                        break;
 
                     case "string":
                         if(trim($addfield[$rkey]['hand_input_value']) != '')
@@ -1842,44 +1844,56 @@ class AdvertController extends Controller
                             $props_ids[] = $addfield[$rkey]['ps_id'];
                             $notice_props[$rval->rp_id] = $addfield[$rkey]['hand_input_value'];
                         }
-                    break;
+                        break;
 
                     case "photoblock":
                         if(trim($addfield[$rkey]['hand_input_value']) != '')
                         {
-                            $uploadfiles_array = Notice::getImageArray($addfield[$rkey]['hand_input_value']);
+                            $this->uploadfiles_array = Notice::getImageArray($addfield[$rkey]['hand_input_value']);
                             //deb::dump($uploadfiles_array);
                         }
-                    break;
+                        break;
                 }
             }
         }
 
         $props_data = PropsSprav::getDataByIds($props_ids);
 //deb::dump($notice_props);
-        $addfield_data['notice_props'] = $notice_props;
-        $addfield_data['rubrik_props'] = $rubrik_props;
-        $addfield_data['rubrik_props_rp_id'] = $rubrik_props_rp_id;
-        $addfield_data['props_data'] = $props_data;
-        $addfield_data['props_string_ids']= $props_string_ids;
+        $this->addfield_data['notice_props'] = $notice_props;
+        $this->addfield_data['rubrik_props'] = $rubrik_props;
+        $this->addfield_data['rubrik_props_rp_id'] = $rubrik_props_rp_id;
+        $this->addfield_data['props_data'] = $props_data;
+        $this->addfield_data['props_string_ids']= $props_string_ids;
 
-        $options = Options::getAllOptions();
+        $this->options = Options::getAllOptions();
 
-    //deb::dump(Yii::app()->user->id);
+    }
+
+    // Предварительный просмотр и авторизация
+    public function actionAddpreview()
+    {
+        Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/galleria/galleria-1.4.2.js');
+
+        $mainblock = Yii::app()->session['mainblock'];
+        $addfield = Yii::app()->session['addfield'];
+//deb::dump(Yii::app()->session['addfield']);
+        $this->MakeDataForView($mainblock, $addfield);
+
+        //deb::dump(Yii::app()->user->id);
         $email_in_database_tag = 0;
         if(count(User::model()->findByAttributes(array('email'=>$mainblock['client_email']))) > 0)
         {
             $email_in_database_tag = 1;
         }
-    //deb::dump($email_in_database_tag);
+    //deb::dump($this->uploadfiles_array);
 
         $this->render('addpreview', array(
                                     'mainblock'=>$mainblock,
                                     'addfield'=>$addfield,
-                                    'uploadfiles_array'=>$uploadfiles_array,
-                                    'mainblock_data'=>$mainblock_data,
-                                    'addfield_data'=>$addfield_data,
-                                    'options'=>$options,
+                                    'uploadfiles_array'=>$this->uploadfiles_array,
+                                    'mainblock_data'=>$this->mainblock_data,
+                                    'addfield_data'=>$this->addfield_data,
+                                    'options'=>$this->options,
                                     'email_in_database_tag'=>$email_in_database_tag
         ));
 
@@ -2077,6 +2091,17 @@ class AdvertController extends Controller
 
         echo json_encode($return_array);
 
+    }
+
+
+    // Просмотр страницы с объявлением
+    public function actionViewadvert($daynumber_id)
+    {
+        //deb::dump($daynumber_id);
+
+
+
+        $this->render('viewadvert', array());
     }
 
 	// Uncomment the following methods and override them if needed

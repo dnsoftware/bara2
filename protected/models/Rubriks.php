@@ -36,6 +36,7 @@ class Rubriks extends CActiveRecord
             array('transname', 'unique'),
 			array('parent_id', 'numerical', 'integerOnly'=>true),
 			array('name', 'length', 'max'=>256),
+            array('advert_list_item_shablon', 'safe'),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('r_id, parent_id, name', 'safe', 'on'=>'search'),
@@ -62,6 +63,23 @@ class Rubriks extends CActiveRecord
                 $rub_array[$rval->parent_id]['childs'][$rval->r_id] = $rval;
             }
 
+        }
+
+        return $rub_array;
+    }
+
+    public static function get_all_subrubs()
+    {
+        $rubs = self::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'parent_id > 0',
+            'order' => 'parent_id, name'
+        ));
+
+        $rub_array = [];
+        foreach ($rubs as $rkey => $rval)
+        {
+            $rub_array[$rval->r_id] = $rval;
         }
 
         return $rub_array;

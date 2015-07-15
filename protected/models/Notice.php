@@ -144,6 +144,7 @@ class Notice extends CActiveRecord
 		return array(
             'user'=>array(self::BELONGS_TO, 'Users', array('id'=>'u_id')),
             'country'=>array(self::BELONGS_TO, 'Countries', 'c_id'),
+            'town'=>array(self::BELONGS_TO, 'Towns', array('t_id'=>'t_id')),
             'rubriks'=>array(self::BELONGS_TO, 'Rubriks', 'r_id'),
             'rubriks_props'=>array(self::HAS_MANY, 'RubriksProps', array('r_id'=>'r_id')),
             'notice_props'=>array(self::HAS_MANY, 'NoticeProps', array('n_id'=>'n_id'))

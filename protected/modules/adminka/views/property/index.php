@@ -43,14 +43,26 @@ foreach ($rub_array as $rkey=>$rval)
 
 <span style="cursor: pointer; text-decoration: underline;" onclick="$('#r_id').change();">Обновить</span>
 &nbsp;&nbsp;&nbsp;
-<span style="cursor: pointer; text-decoration: underline;" onclick="">Шаблон вывода объявления в списке</span>
+<span id="span_advert_list_item" style="cursor: pointer; text-decoration: underline;" onclick="GetRubrikAdvertListShablon($('#r_id'));">Шаблон вывода объявления в списке</span>
 
-<div id="div_advert_list_item" style="display: block;">
-    <form id="form_advert_list_item">
-        <textarea name="advert_list_item_shablon" style="width: 600px; height: 200px;"></textarea>
-        <br>
-        <input type="submit" value="Сохранить шаблон">
-    </form>
+<div id="div_advert_list_item" style="display: none;">
+    <table>
+    <tr>
+        <td>
+        <form id="form_advert_list_item" onsubmit="SaveAdvertListItemShablon(); return false;">
+            <input type="hidden" id="ali_r_id" name="r_id" value="">
+            <textarea id="advert_list_item_shablon" name="advert_list_item_shablon" style="width: 600px; height: 200px;"></textarea>
+            <br>
+            <input type="submit" value="Сохранить шаблон">
+        </form>
+        </td>
+        <td style="vertical-align: top;">
+            [[advert_page_url]] - url объявления<br>
+            [[mestopolozhenie]] - местоположение (город)<br>
+            [[date_add]] - дата добавления
+        </td>
+    </tr>
+    </table>
 </div>
 
 <div style="color: #f00; display: none;" id="div_errors">
@@ -76,6 +88,8 @@ foreach ($rub_array as $rkey=>$rval)
 <script>
     $('.selrub').change(function ()
     {
+        GetRubrikAdvertListShablon();
+
         $.ajax({
             type: 'POST',
             url: '<?= Yii::app()->createUrl('adminka/property/ajax_rubprops');?>',
@@ -89,6 +103,51 @@ foreach ($rub_array as $rkey=>$rval)
         });
     });
 
+    function SaveAdvertListItemShablon()
+    {
+        $('#ali_r_id').val($('#r_id').val());
+
+        $.ajax({
+            type: 'POST',
+            url: '<?= Yii::app()->createUrl('adminka/property/ajax_save_advert_list_item_shablon');?>',
+            data: $('#form_advert_list_item').serialize(),
+            success: function(ret) {
+                if(ret == 'ok')
+                {
+                    $('#span_advert_list_item').css('color', '#000;');
+                    $('#div_advert_list_item').css('display', 'none');
+                }
+                if(ret == 'error')
+                {
+                    alert('Ошибка!');
+                }
+
+            }
+        });
+    }
+
+    function GetRubrikAdvertListShablon()
+    {
+        $('#span_advert_list_item').css('color', '#f00;');
+        $('#div_advert_list_item').css('display', 'block');
+
+        $.ajax({
+            type: 'POST',
+            url: '<?= Yii::app()->createUrl('adminka/property/get_rubrik_advert_list_shablon');?>',
+            data: 'r_id='+$('#r_id').val(),
+            success: function(ret) {
+                if(ret != 'error')
+                {
+                    $('#advert_list_item_shablon').val(ret);
+                }
+                else
+                {
+
+                }
+            }
+        });
+
+    }
 
     function edit_rubriks_props_row(rp_id)
     {

@@ -18,7 +18,8 @@
     <div id="notice" style="width: 500px;">
         <div class="galleria">
             <?
-            deb::dump($uploadfiles_array);
+            //deb::dump($uploadfiles_array);
+
             foreach($uploadfiles_array as $ukey=>$uval)
             {
                 ?>
@@ -57,7 +58,7 @@
 
     <div style="border: #ddd solid 1px; padding: 5px; font-size: 18px; font-weight: bold; display: table-cell;">
         <?= intval($mainblock['cost']*$options['kurs_'.strtolower($mainblock['cost_valuta'])]);?>
-        <?= Options::$valutes[$mainblock['cost_valuta']]['symbol'];?>
+        <?= "Р"//Options::$valutes[$mainblock['cost_valuta']]['symbol'];?>
         <div style="font-weight: normal; font-size: 12px;">
         <?
         foreach(Options::$valutes as $vkey=>$vval)

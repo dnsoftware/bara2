@@ -119,14 +119,16 @@ class FilterController extends Controller
                 //deb::dump($where_n);
 
                 $rubrik_prop_sql = str_replace("r_id", "n.r_id", $rubrik_sql);
-                $sql = "SELECT n.n_id, n.title
+                $sql = "SELECT n.*, t.name town_name, t.transname town_transname
                         FROM ". $connection->tablePrefix . "notice n,
-                        ".$from_tables_sql."
+                        ".$from_tables_sql.",
+                        ". $connection->tablePrefix . "towns t
                         WHERE
                         $mesto_sql AND $rubrik_prop_sql AND
                         $where_filter_sql
                         ".$where_n."
-                        AND n1.n_id = n.n_id ";
+                        AND n1.n_id = n.n_id
+                        AND n.t_id = t.t_id ";
                 //deb::dump($sql);
                 $command=$connection->createCommand($sql);
                 $dataReader=$command->query();
@@ -177,7 +179,7 @@ class FilterController extends Controller
                     }
                 }
 
-
+//deb::dump($rubrik_groups);
 
             }
             else    // Нет записей удовлетворяющих критерию
@@ -189,13 +191,38 @@ class FilterController extends Controller
         // Если поиск только по местоположению/рубрике - простой запрос
         else
         {
-            $mesto_simple_sql = str_replace(" n.", " ", $mesto_sql);
-            $adverts = Notice::model()->findAll(array('condition'=>$mesto_simple_sql." AND ".$rubrik_sql));
+/*
+            $mesto_sql = "1 ";
+            if(isset($_GET['c_id']))
+            {
+                $mesto_sql = " n.c_id = ".intval($_GET['c_id']);
+            }
+            if(isset($_GET['reg_id']))
+            {
+                $mesto_sql = " n.reg_id = ".intval($_GET['reg_id']);
+            }
+            if(isset($_GET['t_id']))
+            {
+                $mesto_sql = " n.t_id = ".intval($_GET['t_id']);
+            }
+*/
+            $mesto_rub_sql = str_replace(" n.", " t.", $mesto_sql);
+            //$rubrik_simple_sql = str_replace(" r_id", " town.r_id", $rubrik_simple_sql);
+            $adverts = Notice::model()->with('town')->findAll(
+                array(
+                    'select'=>'n.*, town.name as town_name, town.transname as town_transname',
+                    'condition'=>$mesto_rub_sql." AND ".$rubrik_sql
+                )
+            );
+
             foreach ($adverts as $akey=>$aval)
             {
-                $search_adverts[$aval->n_id] = $aval;
+                //deb::dump($aval->town['name']);
+                $search_adverts[$aval->n_id] = $aval->attributes;
+                $search_adverts[$aval->n_id]['town_name'] = $aval->town['name'];
+                $search_adverts[$aval->n_id]['town_transname'] = $aval->town['transname'];
             }
-//deb::dump($mesto_simple_sql);
+//deb::dump($search_adverts);
 
             // Разбивка выбранного раздела на подгруппы
             // Если выбранный раздел является родительской рубрикой
@@ -237,7 +264,7 @@ class FilterController extends Controller
                     $props_rows[$pval->ps_id] = $pval;
                 }
             //deb::dump($props_sprav);
-
+                $mesto_simple_sql = str_replace(" n.", " ", $mesto_sql);
                 $sql = "SELECT p.ps_id, count(p.ps_id) cnt
                         FROM
                         ". $connection->tablePrefix . "notice n,
@@ -296,10 +323,102 @@ class FilterController extends Controller
         }
 
         //deb::dump($search_adverts);
+        // Шаблоны отображения из рубрик
+        $shablons = Rubriks::model()->findAll(array('select'=>'r_id, advert_list_item_shablon'));
+        $shablons_display = array();
+        foreach($shablons as $skey=>$sval)
+        {
+            $shablons_display[$sval->r_id] = $sval->advert_list_item_shablon;
+        }
+//deb::dump($search_adverts);
+        // Подготовка данных для отображения
+        $props_array = array();
+        $rubriks_all_array = Rubriks::get_all_subrubs();
+        foreach($search_adverts as $key=>$val)
+        {
+
+            $props_display = array();
+            $photos = array();
+            $xml = new SimpleXMLElement($val['props_xml']);
+            foreach($xml->block as $bkey=>$bval)
+            {
+                foreach($bval as $b2key=>$b2val)
+                {
+                    $temp = array();
+                    foreach($b2val->item as $ikey=>$ival)
+                    {
+                        if($ival->hand_input_value != '')
+                        {
+                            $temp[] = (string)$ival->hand_input_value;
+                            if($ival->vibor_type == 'photoblock')
+                            {
+                                if(strlen($ival->hand_input_value) > 0)
+                                {
+                                    $files_str = (string)$ival->hand_input_value;
+                                    if($files_str[strlen($files_str)-1] == ';')
+                                    {
+                                        $files_str = substr($files_str, 0, strlen($files_str)-1);
+                                    }
+                                    $photos = explode(";", $files_str);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            $temp[] = (string)$ival->value;
+                        }
+                    }
+
+                    $props_display[$b2key] = implode(", ", $temp);
+                    //deb::dump($temp);
+//            deb::dump($b2val);
+                }
+//        deb::dump($bval);
+            }
+
+            $short_advert_display = $shablons_display[$val['r_id']];
+            foreach($props_display as $pkey=>$pval)
+            {
+                $short_advert_display = str_replace('['.$pkey.']', $pval, $short_advert_display);
+            }
+
+            preg_match_all('|\{([a-zA-Z0-9_-]+)\}|siU', $short_advert_display, $matches);
+            //deb::dump($matches[1]);
+            foreach($matches[1] as $match)
+            {
+                $short_advert_display = str_replace('{'.$match.'}', $val[$match], $short_advert_display);
+            }
+
+            //deb::dump($val);
+            //$short_advert_display = str_replace('[[advert_page_url]]');
+            $short_advert_display = str_replace('[[mestopolozhenie]]', $val['town_name'], $short_advert_display);
+            $date_add_str = date('d-m-Y H:i', $val['date_add']);
+            if(time() - $val['date_add'] < 86400)
+            {
+                $date_add_str = date('Сегодня H:i', $val['date_add']);
+            }
+            if((time() - $val['date_add'] > 86400) && (time() - $val['date_add'] < 86400*2))
+            {
+                $date_add_str = date('Вчера H:i', $val['date_add']);
+            }
+            $short_advert_display = str_replace('[[date_add]]', $date_add_str, $short_advert_display);
+
+            // Генерация ссылки на объяву
+            $transliter = new Supporter();
+            $advert_page_url = $val['town_transname']."/".$rubriks_all_array[$val['r_id']]->transname."/".$transliter->TranslitForUrl($val['title'])."_".$val['daynumber_id'];
+            //deb::dump($advert_page_url);
+            $short_advert_display = str_replace('[[advert_page_url]]', Yii::app()->createUrl($advert_page_url), $short_advert_display);
+
+            $props_array[$key]['props_display'] = $short_advert_display;
+            $props_array[$key]['photos'] = $photos;
+
+
+        }
 
 		$this->render('index', array(
             'rubrik_groups'=>$rubrik_groups,
-            'search_adverts'=>$search_adverts
+            'search_adverts'=>$search_adverts,
+            'props_array'=>$props_array,
         ));
 	}
 

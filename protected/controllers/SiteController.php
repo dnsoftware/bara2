@@ -27,6 +27,15 @@ class SiteController extends Controller
         //$support->MakeTranslitAll();
         //deb::dump($row);
 
+
+        // Генерация xml для всех фото
+        $notices = Notice::model()->findAll();
+        foreach($notices as $nkey=>$nval)
+        {
+            AdvertController::PropsXmlGenerate($nval->n_id);
+        }
+
+
         $countries = Countries::model()->findAll();
         $regions = Regions::model()->findAll(array(
             'condition'=>'c_id=1',
