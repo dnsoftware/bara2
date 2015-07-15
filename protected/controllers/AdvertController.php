@@ -245,6 +245,47 @@ class AdvertController extends Controller
         }
     }
 
+
+    // Формирование массива данных свойств для редактирования и просмотра объявления
+    public function MakeAddfieldData($props_relate)
+    {
+        $this->addfield_array = array();
+
+        foreach($props_relate as $pkey=>$pval)
+        {
+            //deb::dump($pval);
+            //deb::dump('----------------------');
+            switch($pval->vibor_type)
+            {
+                case "autoload_with_listitem":
+                case "selector":
+                case "listitem":
+                case "radio":
+                    $this->addfield_array[$pval->selector] = $pval->notice_props[0]->ps_id;
+                    break;
+
+                case "checkbox":
+                    foreach($pval->notice_props as $nkey=>$nval)
+                    {
+                        $this->addfield_array[$pval->selector][$nval->ps_id] = 'on';
+                    }
+                    break;
+
+                case "string":
+                    $this->addfield_array[$pval->selector]['ps_id'] = $pval->notice_props[0]->ps_id;
+                    $this->addfield_array[$pval->selector]['hand_input_value'] = $pval->notice_props[0]->hand_input_value;
+                    break;
+
+                case "photoblock":
+                    $this->addfield_array[$pval->selector]['ps_id'] = $pval->notice_props[0]->ps_id;
+                    $this->addfield_array[$pval->selector]['hand_input_value'] = $pval->notice_props[0]->hand_input_value;
+                    break;
+
+            }
+        }   // END foreach($props_relate as $pkey=>$pval)
+
+    }
+
     public function actionGetRubriksProps()
     {
         $r_id=intval($_POST['r_id']);
@@ -305,38 +346,15 @@ class AdvertController extends Controller
                 'order'=>'t.hierarhy_tag DESC, t.hierarhy_level ASC, t.display_sort, t.rp_id'
             ));
 
-            foreach($props_relate as $pkey=>$pval)
-            {
-                //deb::dump($pval);
-                //deb::dump('----------------------');
-                switch($pval->vibor_type)
-                {
-                    case "autoload_with_listitem":
-                    case "selector":
-                    case "listitem":
-                    case "radio":
-                        $this->addfield_array[$pval->selector] = $pval->notice_props[0]->ps_id;
-                    break;
+            $props_relate = RubriksProps::model()->with('notice_props')->findAll(array(
+                'select'=>'*',
+                'condition'=>'r_id='.$r_id . " AND n_id=".$n_id,
+                'order'=>'t.hierarhy_tag DESC, t.hierarhy_level ASC, t.display_sort, t.rp_id'
+            ));
 
-                    case "checkbox":
-                        foreach($pval->notice_props as $nkey=>$nval)
-                        {
-                            $this->addfield_array[$pval->selector][$nval->ps_id] = 'on';
-                        }
-                    break;
+            $this->MakeAddfieldData($props_relate);
+            $this->MakeAddfieldData($props_relate);
 
-                    case "string":
-                        $this->addfield_array[$pval->selector]['ps_id'] = $pval->notice_props[0]->ps_id;
-                        $this->addfield_array[$pval->selector]['hand_input_value'] = $pval->notice_props[0]->hand_input_value;
-                    break;
-
-                    case "photoblock":
-                        $this->addfield_array[$pval->selector]['ps_id'] = $pval->notice_props[0]->ps_id;
-                        $this->addfield_array[$pval->selector]['hand_input_value'] = $pval->notice_props[0]->hand_input_value;
-                    break;
-
-                }
-            }
             //deb::dump($this->addfield_array);
         }
         ////////////////// КОНЕЦ для режима редактирования
@@ -1011,6 +1029,7 @@ class AdvertController extends Controller
         $this->HideBlockIfNoElems($field_id, $parent_field_id, $parent_ps_id, $model_notice, $model_rubriks_props);
 
         $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
+        //deb::dump($props_sprav);
         ?>
 
         <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $field_id;?>][ps_id]" id="<?= $field_id;?>-<?= $props_sprav[0]->ps_id;?>" value="<?= $props_sprav[0]->ps_id;?>">
@@ -1362,8 +1381,6 @@ class AdvertController extends Controller
         }
 
         $return_array = $this->CheckAndMakeNewData($mainblock_array, $addfield_array);
-deb::dump($addfield_array);
-die();
 
         $newnot_user_id = 0;
         if(Yii::app()->user->id > 0)
@@ -1869,14 +1886,49 @@ die();
 
     }
 
+    // Просмотр страницы с объявлением
+    public function actionViewadvert($daynumber_id)
+    {
+        $advert = Notice::model()->findByAttributes(array('daynumber_id'=>$daynumber_id));
+        //deb::dump($advert);
+//        $mainblock = Yii::app()->session['mainblock'];
+//        $addfield = Yii::app()->session['addfield'];
+
+        $props_relate = RubriksProps::model()->with('notice_props')->findAll(array(
+            'select'=>'*',
+            'condition'=>'r_id='.$advert->r_id . " AND n_id=".$advert->n_id,
+            'order'=>'t.hierarhy_tag DESC, t.hierarhy_level ASC, t.display_sort, t.rp_id'
+        ));
+
+        $this->MakeAddfieldData($props_relate);
+
+        $mainblock = $advert->attributes;
+        $addfield = $this->addfield_array;
+
+//deb::dump(Yii::app()->session['addfield']);
+
+        $this->MakeDataForView($mainblock, $addfield);
+
+        $this->render('viewadvert', array(
+            'mainblock'=>$mainblock,
+            'addfield'=>$addfield,
+            'uploadfiles_array'=>$this->uploadfiles_array,
+            'mainblock_data'=>$this->mainblock_data,
+            'addfield_data'=>$this->addfield_data,
+            'options'=>$this->options,
+        ));
+
+
+    }
+
+
     // Предварительный просмотр и авторизация
     public function actionAddpreview()
     {
-        Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/galleria/galleria-1.4.2.js');
-
         $mainblock = Yii::app()->session['mainblock'];
         $addfield = Yii::app()->session['addfield'];
 //deb::dump(Yii::app()->session['addfield']);
+
         $this->MakeDataForView($mainblock, $addfield);
 
         //deb::dump(Yii::app()->user->id);
@@ -2094,15 +2146,6 @@ die();
     }
 
 
-    // Просмотр страницы с объявлением
-    public function actionViewadvert($daynumber_id)
-    {
-        //deb::dump($daynumber_id);
-
-
-
-        $this->render('viewadvert', array());
-    }
 
 	// Uncomment the following methods and override them if needed
 	/*
