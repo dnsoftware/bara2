@@ -20,9 +20,9 @@ class PropsspravController extends Controller
         $hierarhy_chain = RubriksProps::getParentHierarchyChain($model_rubriks_props->r_id, $rp_id);
         $hierarhy_chain_reverse = array_flip($hierarhy_chain);
 
-    //deb::dump($hierarhy_chain_reverse);
         $parent2_rp_id = $hierarhy_chain_reverse[$hierarhy_chain_reverse[$rp_id]];
-    //deb::dump($parent2_rp_id);
+        //deb::dump($hierarhy_chain_reverse[$rp_id]);
+        //die();
         if ($parent2_rp_id === null)     // Связи нет, таблица связей не выводится, значение -1
         {
             $parent2_rp_id = -1;

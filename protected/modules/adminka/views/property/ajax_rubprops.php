@@ -101,6 +101,11 @@
             </td>
 
             <td>
+                filter_type<br>
+                <?
+                echo CHtml::dropDownList('rubrikprops[filter_type]', '', RubriksProps::$filter_type,
+                    array('style'=>'width: 130px;'));
+                ?>
             </td>
         </tr>
 

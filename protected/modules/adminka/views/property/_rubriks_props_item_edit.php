@@ -107,6 +107,10 @@
                     <input style="width: 115px;" <?= $checked;?> type="checkbox" name="params[all_values_in_filter]" value="1">
                 </td>
                 <td style="background-color: #adffc8; width: 180px;">
+                    <?
+                    echo CHtml::dropDownList('params[filter_type]', $model->filter_type,
+                        RubriksProps::$filter_type, array('style'=>'width:140px;'));
+                    ?>
                 </td>
                 <td style="background-color: #adffc8; width: 300px; text-align: center;" rowspan="2">
                 </td>

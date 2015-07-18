@@ -36,6 +36,16 @@ class RubriksProps extends CActiveRecord
 
     );
 
+    public static $filter_type = array(
+        ''=>'-- тип фильтра --',
+        'select_one' => 'select один выбор',
+        'select_multi' => 'select мультивыбор',
+        'range' => 'диапазон, от-до',
+        'checkbox_list' => 'список с чекбоксами',
+        'is_prop' => 'есть / нет', // Есть такое свойство у объявы или нет (например с фотографиями или без)
+        'none' => 'не используется'
+    );
+
 	/**
 	 * @return string the associated database table name
 	 */
@@ -52,7 +62,7 @@ class RubriksProps extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('r_id, selector, name, type_id, vibor_type, sort_props_sprav, ptype', 'required'),
+			array('r_id, selector, name, type_id, vibor_type, sort_props_sprav, ptype, filter_type', 'required'),
             array('selector', 'unique'),
             array('r_id', 'numerical', 'min'=>1),
 			array('hierarhy_tag, hierarhy_level, display_sort, use_in_filter, parent_id, require_prop_tag, hide_if_no_elems_tag, all_values_in_filter', 'numerical', 'integerOnly'=>true),
