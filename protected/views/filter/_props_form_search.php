@@ -1,6 +1,12 @@
 <div style="margin: 5px;">
     <?
     $select_multi_placeholders = '';
+
+    if(count($rubriks_props_array) == 0)
+    {
+        $rubriks_props_array = array();
+    }
+
     foreach($rubriks_props_array as $rkey=>$rval)
     {
         $props = $props_sprav_sorted_array[$rkey];
@@ -56,6 +62,19 @@
 
 
             case "range":
+
+                //deb::dump($rval);
+                if($rval->vibor_type == 'string')
+                {
+                ?>
+                    <br>
+                    <input title="<?= $rval['name'];?>, от" placeholder="<?= $rval['name'];?>, от" type="text" name="addfield[<?= $rval['selector'];?>][from]" style="width: 200px; border: 1px solid #A4A4A4; min-height: 14px; background-color: #fff;border-radius:2px;margin:0px; padding: 5px;" value="<?= $_GET['addfield'][$rval['selector']]['from'];?>">
+
+                    <input title="<?= $rval['name'];?>, до" placeholder="до" type="text" name="addfield[<?= $rval['selector'];?>][to]" style="width: 200px; border: 1px solid #A4A4A4; min-height: 14px; background-color: #fff;border-radius:2px;margin:0px; padding: 5px;" value="<?= $_GET['addfield'][$rval['selector']]['to'];?>">
+                <?
+                }
+                else
+                {
             ?>
                 <br>
                 <select class="sumoselect" style_id="<?= $rval['selector'];?>_start" name="addfield[<?= $rval['selector'];?>][from]">
@@ -63,8 +82,14 @@
                     <?
                     foreach ($props as $pkey=>$pval)
                     {
-                        ?>
-                        <option value="<?= $pval['ps_id'];?>"><?= $pval['value'];?></option>
+                        $selected = " ";
+                        if(isset($_GET['addfield'][$rval['selector']]['from'])
+                            && $_GET['addfield'][$rval['selector']]['from'] == $pval['ps_id'] )
+                        {
+                            $selected = " selected ";
+                        }
+                    ?>
+                        <option <?= $selected;?> value="<?= $pval['ps_id'];?>"><?= $pval['value'];?></option>
                     <?
                     }
                     ?>
@@ -75,13 +100,20 @@
                     <?
                     foreach ($props as $pkey=>$pval)
                     {
+                        $selected = " ";
+                        if(isset($_GET['addfield'][$rval['selector']]['to'])
+                            && $_GET['addfield'][$rval['selector']]['to'] == $pval['ps_id'] )
+                        {
+                            $selected = " selected ";
+                        }
                         ?>
-                        <option value="<?= $pval['ps_id'];?>"><?= $pval['value'];?></option>
+                        <option <?= $selected;?> value="<?= $pval['ps_id'];?>"><?= $pval['value'];?></option>
                     <?
                     }
                     ?>
                 </select>
             <?
+                }
 
             break;
 
@@ -95,8 +127,14 @@
                 <?
                 foreach($props as $hkey=>$hval)
                 {
+                    $checked = " ";
+                    if(isset($_GET['addfield'][$rval['selector']]) && count($_GET['addfield'][$rval['selector']]) > 0 && in_array($hval['ps_id'], $_GET['addfield'][$rval['selector']]))
+                    {
+                        $checked = " checked ";
+                    }
+
             ?>
-                <nobr><input type="checkbox" name="addfield[<?= $rval['selector'];?>][]" value="<?= $hval['ps_id'];?>">
+                <nobr><input <?= $checked;?> type="checkbox" name="addfield[<?= $rval['selector'];?>][]" value="<?= $hval['ps_id'];?>">
                 <?= $hval['value'];?>&nbsp;&nbsp;</nobr>
             <?
                 }
@@ -110,7 +148,14 @@
                 <br>
                 <div  style=" display:inline-block ; border: #ddd solid 1px; padding: 5px; ">
                 <?= $rval['name'];?>, есть/нет<br>
-                <input type="checkbox" name="addfield[<?= $rval['selector'];?>]" value="1">
+                <?
+                $checked = " ";
+                if(isset($_GET['addfield'][$rval['selector']]) && $_GET['addfield'][$rval['selector']] == 1)
+                {
+                    $checked = " checked ";
+                }
+                ?>
+                <input <?= $checked;?> type="checkbox" name="addfield[<?= $rval['selector'];?>]" value="1">
                 </div>
             <?
             break;
