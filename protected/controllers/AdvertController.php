@@ -48,7 +48,7 @@ class AdvertController extends Controller
 
     }
 
-    public function getMainblockValue($model, $field_name)
+    public static function getMainblockValue($model, $field_name)
     {
 
         // Режим добавления, данные берем из сессии (если там есть)
@@ -334,6 +334,7 @@ class AdvertController extends Controller
                 $props_hierarhy[$model_items_array[$mval->parent_id]->selector]['childs_selector'][$mval->selector] = $mval->selector;
             }
         }
+deb::dump($props_hierarhy);
 
         /////////// Для режима редактирования получаем свойства и их значения
         if($n_id > 0)
@@ -1259,6 +1260,7 @@ class AdvertController extends Controller
                     {
                         ?>
                         <script>
+                            //alert('#div_<?= $field_id;?>');
                             $('#div_<?= $field_id;?>').css('display', 'none');
                         </script>
                     <?
@@ -1324,8 +1326,14 @@ class AdvertController extends Controller
         $mainblock_array = array();
         if (isset($_POST['mainblock']))
         {
+            if($rubrik = Rubriks::model()->findByPk($_POST['mainblock']['r_id']))
+            {
+                $_POST['mainblock']['parent_r_id'] = $rubrik->parent_id;
+            }
+
             Yii::app()->session['mainblock'] = $_POST['mainblock'];
             $mainblock_array = $_POST['mainblock'];
+
         }
 
         $addfield_array = array();
@@ -1456,7 +1464,13 @@ class AdvertController extends Controller
         $mainblock_array = array();
         if (isset($_POST['mainblock']))
         {
+            if($rubrik = Rubriks::model()->findByPk($_POST['mainblock']['r_id']))
+            {
+                $_POST['mainblock']['parent_r_id'] = $rubrik->parent_id;
+            }
+
             $mainblock_array = $_POST['mainblock'];
+
         }
 
         $addfield_array = array();
@@ -1927,7 +1941,7 @@ class AdvertController extends Controller
     {
         $mainblock = Yii::app()->session['mainblock'];
         $addfield = Yii::app()->session['addfield'];
-//deb::dump(Yii::app()->session['addfield']);
+//deb::dump($mainblock);
 
         $this->MakeDataForView($mainblock, $addfield);
 

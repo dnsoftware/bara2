@@ -57,12 +57,12 @@ class Regions extends CActiveRecord
     }
 
     // Получение списка регионов для select
-    public static function displayRegionList($c_id, $selected_id = 0)
+    public static function displayRegionList($c_id, $selected_id = 0, $null_value = 'Выберите регион')
     {
         $result_array = self::getRegionList($c_id);
 
         ?>
-        <option value="">Выберите регион</option>
+        <option value=""><?= $null_value;?></option>
         <?
         if(count($result_array) > 0)
         {

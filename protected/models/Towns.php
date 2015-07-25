@@ -60,12 +60,12 @@ class Towns extends CActiveRecord
     }
 
     // Получение списка городов для select
-    public static function displayTownList($reg_id, $selected_id = 0)
+    public static function displayTownList($reg_id, $selected_id = 0, $null_value = 'Выберите город')
     {
         $result_array = self::getTownList($reg_id);
 
         ?>
-        <option value="">Выберите город</option>
+        <option value=""><?= $null_value;?></option>
         <?
         if(count($result_array) > 0)
         {

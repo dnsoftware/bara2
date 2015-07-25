@@ -13,6 +13,7 @@ class BaraholkaUrlRule extends CBaseUrlRule
     public function createUrl($manager,$route,$params,$ampersand)
     {
         //deb::dump($route);
+        //die();
         //$_GET['id'] = 322223;
         //return 'page/default/view';
 
@@ -21,7 +22,10 @@ class BaraholkaUrlRule extends CBaseUrlRule
 
     public function parseUrl($manager,$request,$pathInfo,$rawPathInfo)
     {
-        //deb::dump($pathInfo);
+        $query = parse_url($request->requestUri)['query'];
+        parse_str($query, $query_array);
+        //deb::dump($query_array);
+        //deb::dump($request);
         $parts = explode("/", $pathInfo);
         //deb::dump($parts);
 
@@ -91,6 +95,8 @@ class BaraholkaUrlRule extends CBaseUrlRule
                 {
                     $_GET = null;
                     $_GET['daynumber_id'] = $last_part;
+                    $_GET = array_merge($_GET, $query_array);
+//                    deb::dump($_GET);
                     $controller_action_url = 'advert/viewadvert';
                     return $controller_action_url;
                 }
@@ -100,6 +106,8 @@ class BaraholkaUrlRule extends CBaseUrlRule
 
         //deb::dump($_GET);
         //deb::dump($controller_action_url.$params_str);
+        $_GET = array_merge($_GET, $query_array);
+        //deb::dump($_GET);
         return $controller_action_url;
 
         //return false;  // не применяем данное правило

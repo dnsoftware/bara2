@@ -57,12 +57,12 @@ class Countries extends CActiveRecord
     }
 
     // Получение списка стран для select
-    public static function displayCountryList($selected_id = 0)
+    public static function displayCountryList($selected_id = 0, $null_value = 'Выберите страну')
     {
         $result_array = self::getCountryList();
 
         ?>
-        <option value="">Выберите страну</option>
+        <option value=""><?= $null_value;?></option>
         <?
         if(count($result_array) > 0)
         {

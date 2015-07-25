@@ -50,8 +50,14 @@ class FilterController extends Controller
             //'limit'=>'10'
             )
         );
-//deb::dump($rubriks_props);
 
+        $q_sql = " ";
+        if(isset($_GET['params']['q']) && trim($_GET['params']['q']) != '')
+        {
+            $q_sql = " AND n.title LIKE '%".trim($_GET['params']['q'])."%' ";
+        }
+    //deb::dump($_GET);
+    //deb::dump($q_sql);
         $search_adverts = array();  // Найденные объявы
         if(count($_GET['prop']) > 0)
         {
@@ -126,7 +132,7 @@ class FilterController extends Controller
                         WHERE
                         $mesto_sql AND $rubrik_prop_sql AND
                         $where_filter_sql
-                        ".$where_n."
+                        ".$where_n.$q_sql."
                         AND n1.n_id = n.n_id
                         AND n.t_id = t.t_id ";
                 //deb::dump($sql);
@@ -207,11 +213,11 @@ class FilterController extends Controller
             }
 */
             $mesto_rub_sql = str_replace(" n.", " t.", $mesto_sql);
-            //$rubrik_simple_sql = str_replace(" r_id", " town.r_id", $rubrik_simple_sql);
+            $q_sql = str_replace(" n.", " t.", $q_sql);
             $adverts = Notice::model()->with('town')->findAll(
                 array(
-                    'select'=>'n.*, town.name as town_name, town.transname as town_transname',
-                    'condition'=>$mesto_rub_sql." AND ".$rubrik_sql
+                    'select'=>'*, town.name as town_name, town.transname as town_transname',
+                    'condition'=>$mesto_rub_sql." AND ".$rubrik_sql.$q_sql
                 )
             );
 
@@ -415,12 +421,264 @@ class FilterController extends Controller
 
         }
 
+
+        // Формирование данных для фильтра по свойствам
+        if(isset($_GET['r_id']) && intval($_GET['r_id']) > 0)
+        {
+            $r_id = intval($_GET['r_id']);
+            $rubriks_props = RubriksProps::model()->findAll(array(
+                'select'=>'*',
+                'condition'=>'r_id = '.$r_id . " AND use_in_filter = 1 ",
+//                'condition'=>'r_id = '.$r_id . " AND use_in_filter = 1 AND (parent_id = 0 OR all_values_in_filter = 1) ",
+                'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
+                //'limit'=>'10'
+            ));
+
+            $rubriks_props_array = array();
+            $rp_id_ids_array = array();
+            foreach ($rubriks_props as $mkey=>$mval)
+            {
+                $rubriks_props_array[$mval->rp_id] = $mval;
+                $rp_id_ids_array[] = $mval->rp_id;
+            }
+
+            $props_hierarhy = array();
+            $props_id_hierarhy = array();
+            foreach ($rubriks_props_array as $mkey=>$mval)
+            {
+                $props_hierarhy[$mval->selector]['vibor_type'] = $mval->vibor_type;
+                $props_id_hierarhy[$mval->rp_id]['vibor_type'] = $mval->vibor_type;
+                $props_id_hierarhy[$mval->rp_id]['selector'] = $mval->selector;
+
+                if ($mval->parent_id <= 0)
+                {
+                    $props_hierarhy[$mval->selector]['parent_selector'] = '';
+                    $props_id_hierarhy[$mval->rp_id]['parent_ps_id'] = '';
+                }
+                else
+                {
+                    $props_hierarhy[$mval->selector]['parent_selector'] = $rubriks_props_array[$mval->parent_id]->selector;
+                    $props_id_hierarhy[$mval->rp_id]['parent_ps_id'] = $rubriks_props_array[$mval->parent_id]->rp_id;
+
+                    $props_hierarhy[$rubriks_props_array[$mval->parent_id]->selector]['childs_selector'][$mval->selector] = $mval->selector;
+                    $props_id_hierarhy[$rubriks_props_array[$mval->parent_id]->rp_id]['childs_ps_id'][$mval->rp_id] = $mval->rp_id;
+                }
+            }
+//deb::dump($props_id_hierarhy);
+//deb::dump($rubriks_props_array);
+//deb::dump($rp_id_ids_array);
+
+            // Получение данных из справочника props_sprav для всех свойств рубрики
+            // Внимание: выбираем всё, где rubriks_props.rp_id = props_sprav.rp_id
+            // без учета props_sprav.selector. В будущем, если в таблице prop_types_params
+            // для каждого rubriks_props.type_id будет несколько записей (сейчас одна),
+            // то надо внести соответствующие корректировки
+
+            /*
+            $props_sprav = PropsSprav::model()->findAll(array(
+                'select'=>'*',
+                'condition'=>'rp_id IN('.implode(", ", $rp_id_ids_array).')',
+                //'order'=>'rp_id'
+            ));
+//deb::dump($props_sprav);
+            $props_sprav_array = array();
+            $props_sprav_index_array = array();
+            foreach($props_sprav as $pkey=>$pval)
+            {
+                $props_sprav_array[$pval->rp_id][$pval->ps_id] = $pval->attributes;
+                $props_sprav_index_array[$pval->rp_id] = $pval;
+            }
+
+            */
+
+
+            $props_sprav_array = array();
+            $props_sprav_index_array = array();
+            $props_sprav = array();
+            foreach ($rubriks_props_array as $mkey=>$mval)
+            {
+                $props_sprav_temp = array();
+                if( ($props_id_hierarhy[$mval->rp_id]['parent_ps_id'] == '')
+                    || ($props_id_hierarhy[$mval->rp_id]['parent_ps_id'] > 0
+                        && $mval->all_values_in_filter == 1) )
+                {
+                    $temp = PropsSprav::model()->findAll(array(
+                        'select'=>'*',
+                        'condition'=>'rp_id = '. $mval->rp_id,
+                        //'order'=>'rp_id'
+                    ));
+
+                    foreach($temp as $tkey => $tval)
+                    {
+                        $props_sprav_temp[$tval->ps_id] = $tval->attributes;
+                    }
+                }
+
+                // Для зависимых свойств
+                $parent_selector = $props_id_hierarhy[$props_id_hierarhy[$mval->rp_id]['parent_ps_id']]['selector'];
+                //$parent_ps_id = 0;
+                $parent_ps_id_array = array();
+                if(isset($parent_selector) && isset($_GET['addfield'][$parent_selector]))
+                {
+                    if($mval->filter_type == 'select_one')
+                    {
+                        $parent_ps_id_array[] = intval($_GET['addfield'][$parent_selector]);
+                    }
+
+                    if($mval->filter_type == 'select_multi')
+                    {
+    
+                    }
+                }
+            //deb::dump($_GET['addfield']);
+            //deb::dump($props_id_hierarhy);
+
+                if($props_id_hierarhy[$mval->rp_id]['parent_ps_id'] > 0
+                    && $mval->all_values_in_filter == 0
+                    && $parent_ps_id > 0 )
+                {
+                    $sql = "SELECT *
+                            FROM
+                            ". $connection->tablePrefix . "props_sprav ps,
+                            ". $connection->tablePrefix . "props_relations pr
+                            WHERE
+                            ps.rp_id = $mval->rp_id AND ps.ps_id = pr.child_ps_id
+                            AND pr.parent_ps_id = $parent_ps_id ";
+                    //deb::dump($sql);
+                    $command=$connection->createCommand($sql);
+                    $dataReader=$command->query();
+                    $props_sprav_temp = array();
+                    while(($rowrelate = $dataReader->read())!==false)
+                    {
+                        $props_sprav_temp[$rowrelate['ps_id']] = $rowrelate;
+                    }
+                }
+
+                $props_sprav = array_merge($props_sprav, $props_sprav_temp);
+            }
+            // КОНЕЦ Для зависимых свойств
+
+            foreach($props_sprav as $pkey=>$pval)
+            {
+                $props_sprav_array[$pval->rp_id][$pval['ps_id']] = $pval;
+                $props_sprav_index_array[$pval->rp_id] = $pval;
+            }
+
+
+            $props_sprav_sorted_array = array();
+            foreach($props_sprav_array as $pkey=>$pval)
+            {
+                $type_id_array = array();
+                $selector_array = array();
+                $value_array = array();
+                $transname_array = array();
+                $sort_number_array = array();
+
+                foreach($pval as $p2key=>$p2val)
+                {
+                    $type_id_array[$p2key] = $p2val['type_id'];
+                    $selector_array[$p2key] = $p2val['selector'];
+                    $value_array[$p2key] = $p2val['value'];
+                    $transname_array[$p2key] = $p2val['transname'];
+                    $sort_number_array[$p2key] = $p2val['sort_number'];
+                }
+
+                // $rubriks_props_array
+                //deb::dump($rubriks_props_array[$pkey]['sort_props_sprav']);
+                switch($rubriks_props_array[$pkey]['sort_props_sprav'])
+                {
+                    case "asc":
+                        array_multisort($value_array, SORT_ASC, $pval);
+                    break;
+
+                    case "desc":
+                        array_multisort($value_array, SORT_DESC, $pval);
+                    break;
+
+                    case "sort_number":
+                        array_multisort($sort_number_array, SORT_ASC, $pval);
+                    break;
+                }
+
+                foreach($pval as $sortkey=>$sortval)
+                {
+                    $props_sprav_sorted_array[$sortval['rp_id']][$sortval['ps_id']] = $sortval;
+                }
+
+                //deb::dump($pval);
+                //deb::dump($sort_number_array);
+
+            }
+
+
+            //deb::dump($props_sprav_sorted_array);
+            //deb::dump($rubriks_props_array);
+        }
+
+        unset($props_sprav_array);
+
+        // END формирование данных
+
+
+
+        $rub_array = Rubriks::get_rublist();
+
 		$this->render('index', array(
             'rubrik_groups'=>$rubrik_groups,
             'search_adverts'=>$search_adverts,
             'props_array'=>$props_array,
+            'rub_array'=>$rub_array,
+            'props_sprav_sorted_array'=>$props_sprav_sorted_array,
+            'rubriks_props_array'=>$rubriks_props_array,
         ));
 	}
+
+
+    public function  actionSearch()
+    {
+        $url_parts = array();
+        if(($t_id = intval($_POST['mainblock']['t_id'])) > 0)
+        {
+            $town = Towns::model()->findByPk($t_id);
+            $url_parts[0] = $town->transname;
+        }
+        else if (($reg_id = intval($_POST['mainblock']['reg_id'])) > 0)
+        {
+            $region = Regions::model()->findByPk($reg_id);
+            $url_parts[0] = $region->transname;
+        }
+        else if (($c_id = intval($_POST['mainblock']['c_id'])) > 0)
+        {
+            $country = Countries::model()->findByPk($c_id);
+            $url_parts[0] = $country->transname;
+        }
+        else
+        {
+            $url_parts[0] = 'rossiya';
+        }
+
+        if(($r_id = intval($_POST['mainblock']['r_id'])) > 0)
+        {
+            $rubrik = Rubriks::model()->findByPk($r_id);
+            $url_parts[1] = $rubrik->transname;
+        }
+
+        $url_str = implode("/", $url_parts);
+        $url = Yii::app()->createAbsoluteUrl($url_str)."?".http_build_query($_POST);
+
+        header('Location: '.$url);
+
+        //deb::dump($url);
+
+        //$curl = new Curl;
+        //$content = $curl->get($url);
+
+
+        //echo($content);
+        //deb::dump($_POST);
+    }
+
+
 
 	// Uncomment the following methods and override them if needed
 	/*

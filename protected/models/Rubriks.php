@@ -68,6 +68,23 @@ class Rubriks extends CActiveRecord
         return $rub_array;
     }
 
+    public static function get_simple_rublist()
+    {
+        $rubs = self::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'1',
+            'order' => 'parent_id, name'
+        ));
+
+        $rub_array = [];
+        foreach ($rubs as $rkey => $rval)
+        {
+            $rub_array[$rval->r_id] = $rval;
+        }
+
+        return $rub_array;
+    }
+
     public static function get_all_subrubs()
     {
         $rubs = self::model()->findAll(array(
