@@ -9,24 +9,27 @@ class FilterController extends Controller
 
         // Местоположение
         $mesto_sql = "1 ";
-        if(isset($_GET['c_id']))
+        //if(isset($_GET['c_id']))
+        if(isset($_GET['mainblock']['c_id']))
         {
-            $mesto_sql = " n.c_id = ".intval($_GET['c_id']);
+            $mesto_sql = " n.c_id = ".intval($_GET['mainblock']['c_id']);
         }
-        if(isset($_GET['reg_id']))
+        if(isset($_GET['mainblock']['reg_id']))
         {
-            $mesto_sql = " n.reg_id = ".intval($_GET['reg_id']);
+            $mesto_sql = " n.reg_id = ".intval($_GET['mainblock']['reg_id']);
         }
-        if(isset($_GET['t_id']))
+        if(isset($_GET['mainblock']['t_id']))
         {
-            $mesto_sql = " n.t_id = ".intval($_GET['t_id']);
+            $mesto_sql = " n.t_id = ".intval($_GET['mainblock']['t_id']);
         }
 
         //Рубрика
         $rubrik_sql = "1 ";
-        if(isset($_GET['r_id']))
+        //deb::dump($_GET);
+        //if(isset($_GET['mainblock']['r_id']))
+        if(!isset($_GET['parent_r_id']) && isset($_GET['mainblock']['r_id']))
         {
-              $rubrik_sql = " r_id = ".intval($_GET['r_id']);
+              $rubrik_sql = " r_id = ".intval($_GET['mainblock']['r_id']);
         }
         else if(isset($_GET['parent_r_id']))
         {
@@ -59,7 +62,7 @@ class FilterController extends Controller
     //deb::dump($_GET);
     //deb::dump($q_sql);
         $search_adverts = array();  // Найденные объявы
-        if(count($_GET['prop']) > 0)
+        if(count($_GET['prop']) > 0 || (isset($_GET['addfield']) && count($_GET['addfield']) > 0 ) )
         {
             $rp_ids = array();
             $rubriks_props_poryadok_array = array();
@@ -99,11 +102,17 @@ class FilterController extends Controller
                 }
             }
             $current_ps_id = $ps_id;
-            //deb::dump($path_ps_id_array);
+
+          //deb::dump($props_route_items);
+//            deb::dump($_GET);
 
             // Ищем объявы с совпадением значений всех указанных свойств
             if(count($_GET['prop']) == count($props_sql_array))
             {
+//deb::dump($_GET);
+
+
+
                 $kol_props = count($props_sql_array);
                 $from_tables_array = array();
                 $from_tables_sql = "";
@@ -197,21 +206,6 @@ class FilterController extends Controller
         // Если поиск только по местоположению/рубрике - простой запрос
         else
         {
-/*
-            $mesto_sql = "1 ";
-            if(isset($_GET['c_id']))
-            {
-                $mesto_sql = " n.c_id = ".intval($_GET['c_id']);
-            }
-            if(isset($_GET['reg_id']))
-            {
-                $mesto_sql = " n.reg_id = ".intval($_GET['reg_id']);
-            }
-            if(isset($_GET['t_id']))
-            {
-                $mesto_sql = " n.t_id = ".intval($_GET['t_id']);
-            }
-*/
             $mesto_rub_sql = str_replace(" n.", " t.", $mesto_sql);
             $q_sql = str_replace(" n.", " t.", $q_sql);
             $adverts = Notice::model()->with('town')->findAll(
@@ -220,7 +214,7 @@ class FilterController extends Controller
                     'condition'=>$mesto_rub_sql." AND ".$rubrik_sql.$q_sql
                 )
             );
-
+//deb::dump(count($adverts));
             foreach ($adverts as $akey=>$aval)
             {
                 //deb::dump($aval->town['name']);
@@ -228,7 +222,7 @@ class FilterController extends Controller
                 $search_adverts[$aval->n_id]['town_name'] = $aval->town['name'];
                 $search_adverts[$aval->n_id]['town_transname'] = $aval->town['transname'];
             }
-//deb::dump($search_adverts);
+//deb::dump(count($search_adverts));
 
             // Разбивка выбранного раздела на подгруппы
             // Если выбранный раздел является родительской рубрикой
@@ -258,7 +252,7 @@ class FilterController extends Controller
                 //deb::dump($rubrik_groups);
             }
             // Если выбранный раздел является подрубрикой
-            else if (isset($_GET['r_id']) )
+            else if (isset($_GET['mainblock']['r_id']) && !isset($_GET['mainblock']['parent_r_id']) )
             {
                 $props_sprav = PropsSprav::model()->findAll(array('condition'=>'rp_id = '.$rubriks_props[0]->rp_id));
 
@@ -277,7 +271,7 @@ class FilterController extends Controller
                         ". $connection->tablePrefix . "rubriks r,
                         ". $connection->tablePrefix . "notice_props p
                         WHERE
-                        n.r_id = ".intval($_GET['r_id'])."
+                        n.r_id = ".intval($_GET['mainblock']['r_id'])."
                         AND $mesto_simple_sql
                         AND n.r_id = r.r_id AND n.n_id = p.n_id
                         AND p.ps_id IN (".implode(", ", $props_groups).")
@@ -421,11 +415,13 @@ class FilterController extends Controller
 
         }
 
+//deb::dump(count($search_adverts));
 
+        /**************************************************************************/
         // Формирование данных для фильтра по свойствам
-        if(isset($_GET['r_id']) && intval($_GET['r_id']) > 0)
+        if(isset($_GET['mainblock']['r_id']) && intval($_GET['mainblock']['r_id']) > 0)
         {
-            $r_id = intval($_GET['r_id']);
+            $r_id = intval($_GET['mainblock']['r_id']);
             $rubriks_props = RubriksProps::model()->findAll(array(
                 'select'=>'*',
                 'condition'=>'r_id = '.$r_id . " AND use_in_filter = 1 ",
@@ -464,32 +460,14 @@ class FilterController extends Controller
                     $props_id_hierarhy[$rubriks_props_array[$mval->parent_id]->rp_id]['childs_ps_id'][$mval->rp_id] = $mval->rp_id;
                 }
             }
-//deb::dump($props_id_hierarhy);
-//deb::dump($rubriks_props_array);
-//deb::dump($rp_id_ids_array);
+
+
 
             // Получение данных из справочника props_sprav для всех свойств рубрики
             // Внимание: выбираем всё, где rubriks_props.rp_id = props_sprav.rp_id
             // без учета props_sprav.selector. В будущем, если в таблице prop_types_params
             // для каждого rubriks_props.type_id будет несколько записей (сейчас одна),
             // то надо внести соответствующие корректировки
-
-            /*
-            $props_sprav = PropsSprav::model()->findAll(array(
-                'select'=>'*',
-                'condition'=>'rp_id IN('.implode(", ", $rp_id_ids_array).')',
-                //'order'=>'rp_id'
-            ));
-//deb::dump($props_sprav);
-            $props_sprav_array = array();
-            $props_sprav_index_array = array();
-            foreach($props_sprav as $pkey=>$pval)
-            {
-                $props_sprav_array[$pval->rp_id][$pval->ps_id] = $pval->attributes;
-                $props_sprav_index_array[$pval->rp_id] = $pval;
-            }
-
-            */
 
             $props_sprav_array = array();
             $props_sprav_index_array = array();
@@ -554,7 +532,9 @@ class FilterController extends Controller
                         //deb::dump($rubriks_props_array[$parent_ps_id]);
 
                         if(isset($_GET['addfield'][$parent_selector]['from'])
-                            && isset($_GET['addfield'][$parent_selector]['to']))
+                            && isset($_GET['addfield'][$parent_selector]['to'])
+                            && $_GET['addfield'][$parent_selector]['from'] != ''
+                            && $_GET['addfield'][$parent_selector]['to'] != '')
                         {
                             $from = PropsSprav::model()->findByPk(intval($_GET['addfield'][$parent_selector]['from']));
                             $to = PropsSprav::model()->findByPk(intval($_GET['addfield'][$parent_selector]['to']));
@@ -564,7 +544,8 @@ class FilterController extends Controller
                                         AND ps.value >= " . intval($from->value) . " AND ps.value <= " . intval($to->value);
                         }
                         else
-                        if(isset($_GET['addfield'][$parent_selector]['from']))
+                        if(isset($_GET['addfield'][$parent_selector]['from'])
+                            && $_GET['addfield'][$parent_selector]['from'] != '')
                         {
                             $from = PropsSprav::model()->findByPk(intval($_GET['addfield'][$parent_selector]['from']));
                             $sql = "SELECT *
@@ -573,7 +554,8 @@ class FilterController extends Controller
                                     AND ps.value >= " . intval($from->value) ;
                         }
                         else
-                        if(isset($_GET['addfield'][$parent_selector]['to']))
+                        if(isset($_GET['addfield'][$parent_selector]['to'])
+                            && $_GET['addfield'][$parent_selector]['from'] != '')
                         {
                             $to = PropsSprav::model()->findByPk(intval($_GET['addfield'][$parent_selector]['to']));
                             $sql = "SELECT *

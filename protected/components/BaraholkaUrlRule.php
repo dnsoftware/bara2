@@ -37,17 +37,23 @@ class BaraholkaUrlRule extends CBaseUrlRule
         $params = array();
         if($town = Towns::model()->findByAttributes(array('transname'=>$parts[0])))
         {
-            $_GET['t_id'] = $town->t_id;
+            //$_GET['t_id'] = $town->t_id;
+            $_GET['mainblock']['t_id'] = $town->t_id;
+            $_GET['mainblock']['reg_id'] = $town->reg_id;
+            $_GET['mainblock']['c_id'] = $town->c_id;
         }
         else
         if($region = Regions::model()->findByAttributes(array('transname'=>$parts[0])))
         {
-            $_GET['reg_id'] = $region->reg_id;
+            //$_GET['reg_id'] = $region->reg_id;
+            $_GET['mainblock']['reg_id'] = $region->reg_id;
+            $_GET['mainblock']['c_id'] = $region->c_id;
         }
         else
         if($country = Countries::model()->findByAttributes(array('transname'=>$parts[0])))
         {
-            $_GET['c_id'] = $country->c_id;
+            //$_GET['c_id'] = $country->c_id;
+            $_GET['mainblock']['c_id'] = $country->c_id;
         }
         else
         {
@@ -61,10 +67,12 @@ class BaraholkaUrlRule extends CBaseUrlRule
                 array('transname'=>$parts[1]) );
             if($rubrik && $rubrik->parent_id > 0)
             {
-                $_GET['r_id'] = $rubrik->r_id;
+                //$_GET['r_id'] = $rubrik->r_id;
+                $_GET['mainblock']['r_id'] = $rubrik->r_id;
             }
             else if($rubrik && $rubrik->parent_id == 0)
             {
+                $_GET['mainblock']['r_id'] = $rubrik->r_id;
                 $_GET['parent_r_id'] = $rubrik->r_id;
             }
             else
@@ -82,7 +90,7 @@ class BaraholkaUrlRule extends CBaseUrlRule
                 $_GET['prop'][$j] = $parts[$j];
                 $j++;
             }
-
+//deb::dump($_GET['prop']);
             // Если третий сегмент есть, и последняя его часть состоит только из 13-ти цифр -
             // то это ссылка на конкретное объявление
             if(count($parts) == 3)

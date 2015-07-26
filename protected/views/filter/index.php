@@ -172,6 +172,7 @@ foreach ($rubrik_groups as $rkey=>$rval)
 ?>
 <table>
 <?
+//deb::dump(count($search_adverts));
 foreach($search_adverts as $key=>$val)
 {
 ?>
