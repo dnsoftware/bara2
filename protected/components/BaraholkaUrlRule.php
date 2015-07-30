@@ -84,12 +84,15 @@ class BaraholkaUrlRule extends CBaseUrlRule
         // Фильтр по свойствам
         if(isset($parts[2]) && $parts[2] != '')
         {
+
+
             $j=2;
             while(isset($parts[$j]))
             {
                 $_GET['prop'][$j] = $parts[$j];
                 $j++;
             }
+
 //deb::dump($_GET['prop']);
             // Если третий сегмент есть, и последняя его часть состоит только из 13-ти цифр -
             // то это ссылка на конкретное объявление
@@ -110,7 +113,11 @@ class BaraholkaUrlRule extends CBaseUrlRule
                 }
             }
             //deb::dump($params);
+
+
         }
+
+
 
         //deb::dump($_GET);
         //deb::dump($controller_action_url.$params_str);
