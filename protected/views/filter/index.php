@@ -15,15 +15,19 @@ $this->breadcrumbs=array(
 <div id="form_search" style="margin-bottom: 25px;">
 
 <?
-deb::dump($_GET);
+//deb::dump($query_delta);
 ?>
 
     <form id="form_filter" method="post" action="<?= Yii::app()->createUrl('filter/search');?>" _onsubmit="advertFilter('<?= Yii::app()->createUrl('filter/search');?>'); return false;">
 
+        <span myhint="Тестовая кнопка" style="display: none; background-color: #aaaaaa;" onclick="changeFilterReload('<?= Yii::app()->createUrl('filter/getdatafilter');?>')">
+            Фильтр
+        </span>
+
         <table  style="display: inline;">
             <tr>
                 <td>
-                    <select class="_sumoselect" name="mainblock[r_id]" id="r_id" class="" onchange="">
+                    <select class="_sumoselect fchange" name="mainblock[r_id]" id="r_id" class="" onchange="">
                         <option value="">--- выберите категорию  ---</option>
                         <?
                         foreach ($rub_array as $rkey=>$rval)
@@ -87,6 +91,7 @@ deb::dump($_GET);
             </tr>
         </table>
 
+        <div id="form_search_filter">
         <?
         $this->renderPartial('_props_form_search', array(
             //'rubrik_groups'=>$rubrik_groups,
@@ -96,9 +101,8 @@ deb::dump($_GET);
             'props_sprav_sorted_array'=>$props_sprav_sorted_array,
             'rubriks_props_array'=>$rubriks_props_array,
         ));
-
         ?>
-
+        </div>
 
 
 
@@ -149,6 +153,20 @@ deb::dump($_GET);
                 success: function(msg){
 
                     $('#search_data').html(msg);
+
+                }
+            });
+        }
+
+        function changeFilterReload(action)
+        {
+            $.ajax({
+                type: 'get',
+                url: action,
+                data: $('#form_filter').serialize(),
+                success: function(msg){
+
+                    $('#form_search_filter').html(msg);
 
                 }
             });

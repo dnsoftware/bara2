@@ -1583,9 +1583,10 @@ deb::dump($props_hierarhy);
                             $newprop->rp_id = $rval->rp_id;
                             $newprop->ps_id = $addfield_array[$rkey]['ps_id'];
                             $newprop->hand_input_value = $addfield_array[$rkey]['hand_input_value'];
+                            $newprop->hand_input_value_digit = floatval($addfield_array[$rkey]['hand_input_value']);
                             $newprop->save();
                         }
-                        break;
+                    break;
 
                     case "photoblock":
 

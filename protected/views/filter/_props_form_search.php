@@ -20,7 +20,7 @@
         {
             case "select_one":
                 ?>
-                <select class="sumoselect" id="<?= $rval['selector'];?>" name="addfield[<?= $rval['selector'];?>]">
+                <select class="sumoselect fchange" id="<?= $rval['selector'];?>" name="addfield[<?= $rval['selector'];?>]">
                     <option value="0" disabled selected><?= $rval['name'];?></option>
                     <?
                     foreach ($props as $pkey=>$pval)
@@ -41,7 +41,7 @@
 
             case "select_multi":
                 ?>
-                <select class="sumoselect_multi" id="<?= $rval['selector'];?>" multiple="multiple" <?= $multiple;?> name="addfield[<?= $rval['selector'];?>][]">
+                <select class="sumoselect_multi fchange" id="<?= $rval['selector'];?>" multiple="multiple" <?= $multiple;?> name="addfield[<?= $rval['selector'];?>][]">
                     <?
                     foreach ($props as $pkey=>$pval)
                     {
@@ -77,7 +77,7 @@
                 {
             ?>
                 <br>
-                <select class="sumoselect" style_id="<?= $rval['selector'];?>_start" name="addfield[<?= $rval['selector'];?>][from]">
+                <select class="sumoselect  fchange" style_id="<?= $rval['selector'];?>_start" name="addfield[<?= $rval['selector'];?>][from]">
                     <option value="0" disabled selected><?= $rval['name'];?>, от</option>
                     <?
                     foreach ($props as $pkey=>$pval)
@@ -95,7 +95,7 @@
                     ?>
                 </select>
 
-                <select class="sumoselect" style_id="<?= $rval['selector'];?>_end" name="addfield[<?= $rval['selector'];?>][to]">
+                <select class="sumoselect  fchange" style_id="<?= $rval['selector'];?>_end" name="addfield[<?= $rval['selector'];?>][to]">
                     <option value="0" disabled selected>до </option>
                     <?
                     foreach ($props as $pkey=>$pval)
@@ -134,7 +134,7 @@
                     }
 
             ?>
-                <nobr><input <?= $checked;?> type="checkbox" name="addfield[<?= $rval['selector'];?>][]" value="<?= $hval['ps_id'];?>">
+                <nobr><input <?= $checked;?> class="fchange" type="checkbox" name="addfield[<?= $rval['selector'];?>][]" value="<?= $hval['ps_id'];?>">
                 <?= $hval['value'];?>&nbsp;&nbsp;</nobr>
             <?
                 }
@@ -147,7 +147,7 @@
             ?>
                 <br>
                 <div  style=" display:inline-block ; border: #ddd solid 1px; padding: 5px; ">
-                <?= $rval['name'];?>, есть/нет<br>
+                <?= $rval['name'];?>, только, если есть<br>
                 <?
                 $checked = " ";
                 if(isset($_GET['addfield'][$rval['selector']]) && $_GET['addfield'][$rval['selector']] == 1)
@@ -155,7 +155,7 @@
                     $checked = " checked ";
                 }
                 ?>
-                <input <?= $checked;?> type="checkbox" name="addfield[<?= $rval['selector'];?>]" value="1">
+                <input <?= $checked;?> class="fchange" type="checkbox" name="addfield[<?= $rval['selector'];?>]" value="1">
                 </div>
             <?
             break;
@@ -172,5 +172,11 @@
 
     $('.sumoselect').SumoSelect();
     <?= $select_multi_placeholders;?>
+
+    $('.fchange').change(function ()
+    {
+        changeFilterReload('<?= Yii::app()->createUrl('filter/getdatafilter');?>');
+    });
+
 
 </script>

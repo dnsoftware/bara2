@@ -10,15 +10,15 @@ class FilterController extends Controller
         // Местоположение
         $mesto_sql = "1 ";
         //if(isset($_GET['c_id']))
-        if(isset($_GET['mainblock']['c_id']))
+        if(isset($_GET['mainblock']['c_id']) && intval($_GET['mainblock']['c_id']) != 0)
         {
             $mesto_sql = " n.c_id = ".intval($_GET['mainblock']['c_id']);
         }
-        if(isset($_GET['mainblock']['reg_id']))
+        if(isset($_GET['mainblock']['reg_id']) && intval($_GET['mainblock']['reg_id']) != 0)
         {
             $mesto_sql = " n.reg_id = ".intval($_GET['mainblock']['reg_id']);
         }
-        if(isset($_GET['mainblock']['t_id']))
+        if(isset($_GET['mainblock']['t_id']) && intval($_GET['mainblock']['t_id']) != 0)
         {
             $mesto_sql = " n.t_id = ".intval($_GET['mainblock']['t_id']);
         }
@@ -48,7 +48,7 @@ class FilterController extends Controller
 
         $rubriks_props = RubriksProps::model()->findAll(array(
             'select'=>'*',
-            'condition'=>$rubrik_sql." AND hierarhy_tag = 1 ",
+            'condition'=>$rubrik_sql." AND use_in_filter = 1 ",
             'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
             //'limit'=>'10'
             )
@@ -66,6 +66,7 @@ class FilterController extends Controller
         $rubriks_poryadok_props_array = array();
         $i=2;
         $pubriks_props_array = array();
+        $pubriks_props_by_selector_array = array();
         foreach ($rubriks_props as $rkey=>$rval)
         {
             $rubriks_props_poryadok_array[$rval->rp_id] = $i++;
@@ -73,6 +74,7 @@ class FilterController extends Controller
             $rubriks_poryadok_props_array[$i-1] = $rval->rp_id;
             $rp_ids[$rval->rp_id] = $rval->rp_id;
             $pubriks_props_array[$rval->rp_id] = $rval;
+            $pubriks_props_by_selector_array[$rval->selector] = $rval;
         }
 
         // Переводим переменные из $_GET['prop'] в $_GET['addfield']
@@ -83,24 +85,39 @@ class FilterController extends Controller
                 $rp_selector = $pubriks_props_array[$rubriks_poryadok_props_array[$gpkey]]->selector;
                 if($prop_row = PropsSprav::model()->findByAttributes(array('rp_id'=>$rubriks_poryadok_props_array[$gpkey], 'transname'=>$gpval)))
                 {
-                    $_GET['addfield'][$rp_selector] = $prop_row->ps_id;
+                    if($pubriks_props_array[$rubriks_poryadok_props_array[$gpkey]]->filter_type == 'range')
+                    {
+                        $_GET['addfield'][$rp_selector]['from'] = $prop_row->ps_id;
+                        $_GET['addfield'][$rp_selector]['to'] = $prop_row->ps_id;
+                    }
+                    else
+                    {
+                        $_GET['addfield'][$rp_selector] = $prop_row->ps_id;
+                    }
                 }
             }
     //deb::dump($rubriks_poryadok_props_array);
         }
         // КОНЕЦ Переводим переменные из $_GET['prop'] в $_GET['addfield']
 
+        // Переводим переменные из $_GET['addfield'] в $_GET['prop']
+        // Только для тех кто участвует в иерархии
         if(isset($_GET['addfield']) && count($_GET['addfield']) > 0 )
         {
             foreach($_GET['addfield'] as $akey=>$aval)
             {
                 if(!is_array($aval) && !isset($_GET['prop'][$rubriks_props_poryadok_by_selector_array[$akey]]))
                 {
-                    $prop_row = PropsSprav::model()->findByPk($aval);
-                    $_GET['prop'][$rubriks_props_poryadok_by_selector_array[$akey]] = $prop_row['transname'];
+                    if($pubriks_props_by_selector_array[$akey]->hierarhy_tag)
+                    {
+                        $prop_row = PropsSprav::model()->findByPk($aval);
+                        $_GET['prop'][$rubriks_props_poryadok_by_selector_array[$akey]] = $prop_row['transname'];
+                    }
                 }
             }
         }
+
+        // КОНЕЦ Переводим переменные из $_GET['addfield'] в $_GET['prop']
 
         $search_adverts = array();  // Найденные объявы
 
@@ -232,41 +249,173 @@ class FilterController extends Controller
                 $props_route_items[$rubriks_props_poryadok_array[$pval->rp_id]][$pval->transname] = $pval;
             }
 
-            $props_sql_array = array();
-            $path_ps_id_array = array();
-            $ps_id = 0;
+
             foreach($_GET['prop'] as $pkey=>$pval)
             {
                 if(isset($props_route_items[$pkey][$pval]))
                 {
-                    $props_sql_array[] = $props_route_items[$pkey][$pval];
                     $ps_id = $props_route_items[$pkey][$pval]->ps_id;
-                    $path_ps_id_array[] = $ps_id;
-                }
-                else
-                {
-
                 }
             }
             $current_ps_id = $ps_id;
-
+//deb::dump($current_ps_id);
+//deb::dump($_GET['prop']);
+//deb::dump($props_sql_array);
             // Ищем объявы с совпадением значений всех указанных свойств
-            if(count($_GET['prop']) == count($props_sql_array))
+            //if(count($_GET['prop']) == count($props_sql_array))
+            if(1)
             {
 //deb::dump($_GET);
-                $kol_props = count($props_sql_array);
                 $from_tables_array = array();
                 $from_tables_sql = "";
                 $where_n_array = array();
                 $where_n = "";
                 $where_filter_array = array();
                 $where_filter_sql = "";
+
+                /*
                 for($i=1; $i<=$kol_props; $i++)
                 {
                     $from_tables_array[] = $connection->tablePrefix . "notice_props n".$i;
                     $where_n_array[] = " AND n".$i.".n_id = n".($i+1).".n_id ";
                     $where_filter_array[] = "n".$i.".ps_id = ".$props_sql_array[$i-1]->ps_id;
                 }
+                */
+
+                $i=0;
+                foreach($_GET['addfield'] as $gkey=>$gval)
+                {
+                    $switch_rp_id = $pubriks_props_by_selector_array[$gkey]->rp_id;
+                    $i++;
+                    switch($pubriks_props_by_selector_array[$gkey]->filter_type)
+                    {
+                        case "select_one":
+                            //deb::dump($pubriks_props_by_selector_array[$gkey]);
+                            $from_tables_array[] = $connection->tablePrefix . "notice_props n".$i;
+                            $where_n_array[] = " AND n".$i.".rp_id = ".$switch_rp_id;
+                            $where_n_array[] = " AND n".$i.".n_id = n".($i+1).".n_id ";
+                            $where_filter_array[] = "n".$i.".ps_id = ".intval($gval);
+                        break;
+
+                        case "select_multi":
+                            if(count($gval > 0))
+                            {
+                                foreach($gval as $g2key=>$g2val)
+                                {
+                                    $gval[$g2key] = intval($g2val);
+                                }
+                                $from_tables_array[] = $connection->tablePrefix . "notice_props n".$i;
+                                $where_n_array[] = " AND n".$i.".rp_id = ".$switch_rp_id;
+                                $where_n_array[] = " AND n".$i.".n_id = n".($i+1).".n_id ";
+                                $where_filter_array[] = "n".$i.".ps_id IN (".implode(", ", $gval).")";
+                            }
+                        break;
+
+                        case "range":
+                            // В диапазоне не учтены зависимости, возможно это понадобится
+                            if($pubriks_props_by_selector_array[$gkey]->vibor_type == 'string')
+                            {
+                                $from = $gval['from'];
+                                $to = $gval['to'];
+
+                                $from_tables_array[] = $connection->tablePrefix . "notice_props n".$i;
+                                $where_n_array[] = " AND n".$i.".rp_id = ".$switch_rp_id;
+                                $where_n_array[] = " AND  n".$i.".n_id = n".($i+1).".n_id ";
+
+                                if(isset($from) && $from != ''
+                                    && isset($to) && $to != '' )
+                                {
+                                    $where_filter_array[] = "n".$i.".hand_input_value_digit >= ".$from . "
+                                                            AND n".$i.".hand_input_value_digit <= ".$to."";
+                                }
+                                else
+                                if( (!isset($from) || $from != '')
+                                    && isset($to) && $to != '' )
+                                {
+                                    $where_filter_array[] = "n".$i.".hand_input_value_digit <= ".$to;
+                                }
+                                else
+                                if( isset($from) && $from != ''
+                                    && (!isset($to) || $to != '') )
+                                {
+                                    $where_filter_array[] = "n".$i.".hand_input_value_digit >= ".$from;
+                                }
+                            }
+                            else
+                            {
+                                $from = PropsSprav::model()->findByPk(intval($gval['from']));
+                                $to = PropsSprav::model()->findByPk(intval($gval['to']));
+
+                                $from_tables_array[] = $connection->tablePrefix . "notice_props n".$i;
+                                $from_tables_array[] = $connection->tablePrefix . "props_sprav ps".$i;
+                                $where_n_array[] = " AND n".$i.".ps_id = ps".$i.".ps_id
+                                                     AND n".$i.".rp_id = ".$switch_rp_id;
+                                $where_n_array[] = " AND  n".$i.".n_id = n".($i+1).".n_id ";
+
+                                if(isset($from) && $from->value != ''
+                                    && isset($to) && $to->value != '' )
+                                {
+                                    $where_filter_array[] = "ps".$i.".value >= ".$from->value . "
+                                                            AND ps".$i.".value <= ".$to->value;
+                                }
+
+                                if( (!isset($from) || $from->value != '')
+                                        && isset($to) && $to->value != '' )
+                                {
+                                    $where_filter_array[] = " ps".$i.".value <= ".$to->value;
+                                }
+
+                                if( isset($from) && $from->value != ''
+                                    && (!isset($to) || $to->value != '') )
+                                {
+                                    $where_filter_array[] = " ps".$i.".value >= ".$from->value;
+                                }
+
+                            }
+/*
+                            $from = PropsSprav::model()->findByPk(intval($_GET['addfield'][$parent_selector]['from']));
+                            $to = PropsSprav::model()->findByPk(intval($_GET['addfield'][$parent_selector]['to']));
+                            $sql = "SELECT *
+                                    FROM ". $connection->tablePrefix . "props_sprav ps
+                                    WHERE ps.rp_id = ".$rubriks_props_array[$parent_ps_id]->rp_id . "
+                                        AND ps.value >= " . intval($from->value) . " AND ps.value <= " . intval($to->value);
+*/
+
+                        break;
+
+                        case "checkbox_list":
+                            //deb::dump($gval);
+                            $temp = array();
+                            foreach($gval as $g3key=>$g3val)
+                            {
+                                $from_tables_array[] = $connection->tablePrefix . "notice_props n".$i;
+                                $where_n_array[] = " AND n".$i.".rp_id = ".$switch_rp_id;
+                                $where_n_array[] = " AND n".$i.".n_id = n".($i+1).".n_id ";
+                                $where_filter_array[] = "n".$i.".ps_id = ".$g3val;
+                                $i++;
+                            }
+                            $i--;
+
+                        break;
+
+                        case "is_prop":
+                            $from_tables_array[] = $connection->tablePrefix . "notice_props n".$i;
+                            $where_n_array[] = " AND n".$i.".rp_id = ".$switch_rp_id;
+                            $where_n_array[] = " AND n".$i.".n_id = n".($i+1).".n_id ";
+                            if($pubriks_props_by_selector_array[$gkey]->vibor_type == 'string')
+                            {
+                                $where_filter_array[] = "n".$i.".hand_input_value != '' ";
+                            }
+                            else
+                            {
+                                $where_filter_array[] = "n".$i.".ps_id > 0 ";
+                            }
+                        break;
+
+                    }
+
+                }
+
                 $from_tables_sql = implode(", ", $from_tables_array);
                 unset($where_n_array[count($where_n_array)-1]);
                 $where_n = implode(" ", $where_n_array);
@@ -275,7 +424,7 @@ class FilterController extends Controller
                 //deb::dump($where_n);
 
                 $rubrik_prop_sql = str_replace("r_id", "n.r_id", $rubrik_sql);
-                $sql = "SELECT n.*, t.name town_name, t.transname town_transname
+                $sql = "SELECT DISTINCT n.*, t.name town_name, t.transname town_transname
                         FROM ". $connection->tablePrefix . "notice n,
                         ".$from_tables_sql.",
                         ". $connection->tablePrefix . "towns t
@@ -287,12 +436,16 @@ class FilterController extends Controller
                         AND n.t_id = t.t_id ";
                 //deb::dump($sql);
                 $command=$connection->createCommand($sql);
+               $start_time = microtime();
                 $dataReader=$command->query();
+               $stop_time = microtime();
+               $query_delta = $stop_time - $start_time;
+
                 while(($row = $dataReader->read())!==false)
                 {
                     $search_adverts[$row['n_id']] = $row;
                 }
-
+//deb::dump($search_adverts);
 
                 // Формирование данных для ссылок на подгруппы
                 $rubrik_groups = array();
@@ -553,6 +706,51 @@ class FilterController extends Controller
 
         /**************************************************************************/
         // Формирование данных для фильтра по свойствам
+        $ret = $this->MakeDataFilter();
+        $props_sprav_sorted_array = $ret['props_sprav_sorted_array'];
+        $rubriks_props_array = $ret['rubriks_props_array'];
+        /*************** END формирование данных ********************************/
+
+        $rub_array = Rubriks::get_rublist();
+
+		$this->render('index', array(
+            'rubrik_groups'=>$rubrik_groups,
+            'search_adverts'=>$search_adverts,
+            'props_array'=>$props_array,
+            'rub_array'=>$rub_array,
+            'props_sprav_sorted_array'=>$props_sprav_sorted_array,
+            'rubriks_props_array'=>$rubriks_props_array,
+            'query_delta'=>$query_delta,
+        ));
+	}
+
+
+    public function actionGetdatafilter()
+    {
+        $ret = $this->MakeDataFilter();
+        //deb::dump($ret);
+        $props_sprav_sorted_array = $ret['props_sprav_sorted_array'];
+        $rubriks_props_array = $ret['rubriks_props_array'];
+
+        $this->renderPartial('_props_form_search', array(
+            //'rubrik_groups'=>$rubrik_groups,
+            //'search_adverts'=>$search_adverts,
+            //'props_array'=>$props_array,
+            //'rub_array'=>$rub_array,
+            'props_sprav_sorted_array'=>$props_sprav_sorted_array,
+            'rubriks_props_array'=>$rubriks_props_array,
+        ));
+
+    }
+
+    // Формирование данных для построения формы фильтра
+    public function MakeDataFilter()
+    {
+        $connection=Yii::app()->db;
+        $ret['props_sprav_sorted_array'] = array();
+        $ret['rubriks_props_array'] = array();
+
+
         if(isset($_GET['mainblock']['r_id']) && intval($_GET['mainblock']['r_id']) > 0)
         {
             $r_id = intval($_GET['mainblock']['r_id']);
@@ -631,8 +829,8 @@ class FilterController extends Controller
                 $parent_ps_id = $props_id_hierarhy[$mval->rp_id]['parent_ps_id'];
                 //$parent_ps_id = 0;
                 $parent_ps_id_array = array();
-              //deb::dump($props_id_hierarhy);
-              //deb::dump($_GET['addfield'][$parent_selector]);
+                //deb::dump($props_id_hierarhy);
+                //deb::dump($_GET['addfield'][$parent_selector]);
                 if(isset($parent_selector) && isset($_GET['addfield'][$parent_selector]))
                 {
                     //$parent_ps_id = intval($_GET['addfield'][$parent_selector]);
@@ -675,28 +873,28 @@ class FilterController extends Controller
                             $sql = "SELECT *
                                     FROM ". $connection->tablePrefix . "props_sprav ps
                                     WHERE ps.rp_id = ".$rubriks_props_array[$parent_ps_id]->rp_id . "
-                                        AND ps.value >= " . intval($from->value) . " AND ps.value <= " . intval($to->value);
+                                        AND ps.value >= " . $from->value . " AND ps.value <= " . $to->value;
                         }
                         else
-                        if(isset($_GET['addfield'][$parent_selector]['from'])
-                            && $_GET['addfield'][$parent_selector]['from'] != '')
-                        {
-                            $from = PropsSprav::model()->findByPk(intval($_GET['addfield'][$parent_selector]['from']));
-                            $sql = "SELECT *
+                            if(isset($_GET['addfield'][$parent_selector]['from'])
+                                && $_GET['addfield'][$parent_selector]['from'] != '')
+                            {
+                                $from = PropsSprav::model()->findByPk(intval($_GET['addfield'][$parent_selector]['from']));
+                                $sql = "SELECT *
                                 FROM ". $connection->tablePrefix . "props_sprav ps
                                 WHERE ps.rp_id = ".$rubriks_props_array[$parent_ps_id]->rp_id . "
-                                    AND ps.value >= " . intval($from->value) ;
-                        }
-                        else
-                        if(isset($_GET['addfield'][$parent_selector]['to'])
-                            && $_GET['addfield'][$parent_selector]['from'] != '')
-                        {
-                            $to = PropsSprav::model()->findByPk(intval($_GET['addfield'][$parent_selector]['to']));
-                            $sql = "SELECT *
+                                    AND ps.value >= " . $from->value ;
+                            }
+                            else
+                                if(isset($_GET['addfield'][$parent_selector]['to'])
+                                    && $_GET['addfield'][$parent_selector]['from'] != '')
+                                {
+                                    $to = PropsSprav::model()->findByPk(intval($_GET['addfield'][$parent_selector]['to']));
+                                    $sql = "SELECT *
                             FROM ". $connection->tablePrefix . "props_sprav ps
                             WHERE ps.rp_id = ".$rubriks_props_array[$parent_ps_id]->rp_id . "
-                                AND ps.value <= " . intval($to->value);
-                        }
+                                AND ps.value <= " . $to->value;
+                                }
 
 
 
@@ -711,9 +909,6 @@ class FilterController extends Controller
                     }
 
                 }
-                //deb::dump($mval->selector);
-                //deb::dump($parent_ps_id_array);
-                //deb::dump($props_id_hierarhy);
 
                 if($props_id_hierarhy[$mval->rp_id]['parent_ps_id'] > 0
                     && $mval->all_values_in_filter == 0
@@ -750,7 +945,6 @@ class FilterController extends Controller
                 $props_sprav_array[$pval['rp_id']][$pval['ps_id']] = $pval;
                 $props_sprav_index_array[$pval['rp_id']] = $pval;
             }
-//deb::dump($props_sprav_array);
 
             $props_sprav_sorted_array = array();
             foreach($props_sprav_array as $pkey=>$pval)
@@ -770,21 +964,20 @@ class FilterController extends Controller
                     $sort_number_array[$p2key] = $p2val['sort_number'];
                 }
 
-                // $rubriks_props_array
-                //deb::dump($rubriks_props_array[$pkey]['sort_props_sprav']);
+
                 switch($rubriks_props_array[$pkey]['sort_props_sprav'])
                 {
                     case "asc":
                         array_multisort($value_array, SORT_ASC, $pval);
-                    break;
+                        break;
 
                     case "desc":
                         array_multisort($value_array, SORT_DESC, $pval);
-                    break;
+                        break;
 
                     case "sort_number":
                         array_multisort($sort_number_array, SORT_ASC, $pval);
-                    break;
+                        break;
                 }
 
                 foreach($pval as $sortkey=>$sortval)
@@ -792,34 +985,18 @@ class FilterController extends Controller
                     $props_sprav_sorted_array[$sortval['rp_id']][$sortval['ps_id']] = $sortval;
                 }
 
-                //deb::dump($pval);
-                //deb::dump($sort_number_array);
-
             }
 
+            $ret['props_sprav_sorted_array'] = $props_sprav_sorted_array;
+            $ret['rubriks_props_array'] = $rubriks_props_array;
 
-            //deb::dump($props_sprav_sorted_array);
-            //deb::dump($rubriks_props_array);
         }
 
         unset($props_sprav_array);
 
-        // END формирование данных
+        return $ret;
 
-
-
-        $rub_array = Rubriks::get_rublist();
-
-		$this->render('index', array(
-            'rubrik_groups'=>$rubrik_groups,
-            'search_adverts'=>$search_adverts,
-            'props_array'=>$props_array,
-            'rub_array'=>$rub_array,
-            'props_sprav_sorted_array'=>$props_sprav_sorted_array,
-            'rubriks_props_array'=>$rubriks_props_array,
-        ));
-	}
-
+    }
 
     public function  actionSearch()
     {
