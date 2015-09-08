@@ -42,9 +42,42 @@ class AdvertController extends Controller
 
 
         $country_array = Countries::getCountryList();
+        $user_phone = new UserPhones;
+
+        // Страны
+        $countries = Countries::model()->findAll(array('order'=>'sort_number'));
+        $countries_array = array();
+        $mask_array = array();
+        foreach($countries as $country)
+        {
+            $countries_array[$country->c_id] = $country->name . " (+".$country->phone_kod.")";
+            if(strlen($country->phone_kod) == 3)
+            {
+                $mask_array[$country->c_id] = "99 999-99-99";
+            }
+            if(strlen($country->phone_kod) == 2)
+            {
+                $mask_array[$country->c_id] = "999 999-99-99";
+            }
+            if(strlen($country->phone_kod) == 1)
+            {
+                $mask_array[$country->c_id] = "999 999-99-99";
+            }
+            if(strlen($country->phone_kod) == 4)
+            {
+                $mask_array[$country->c_id] = "999-99-99";
+            }
+        }
+
+        // Сброс проверенности телефона
+        Yii::app()->session['usercheckphone_tag'] = 0;
+
 
         $this->render('addadvert', array('rub_array'=>$rub_array, 'model'=>$model,
-                    'mainblock'=>$mainblock, 'n_id'=>$n_id, 'country_array'=>$country_array));
+                    'mainblock'=>$mainblock, 'n_id'=>$n_id, 'country_array'=>$country_array,
+                    'user_phone'=>$user_phone, 'countries_array'=>$countries_array,
+                    'mask_array'=>$mask_array
+        ));
 
     }
 
@@ -334,7 +367,7 @@ class AdvertController extends Controller
                 $props_hierarhy[$model_items_array[$mval->parent_id]->selector]['childs_selector'][$mval->selector] = $mval->selector;
             }
         }
-deb::dump($props_hierarhy);
+//deb::dump($props_hierarhy);
 
         /////////// Для режима редактирования получаем свойства и их значения
         if($n_id > 0)
@@ -1412,7 +1445,6 @@ deb::dump($props_hierarhy);
             //echo "Ура!";
 
             // Заносим данные в базу
-
             $newmodel = $this->MakeNoticeAttributes($mainblock_array);
             $newmodel->u_id = $newnot_user_id;
 
@@ -1440,6 +1472,33 @@ deb::dump($props_hierarhy);
 
             // Генерируем xml данные свойств
             self::PropsXmlGenerate($newmodel->n_id);
+
+            // Занесение проверенного телефона в базу
+            if(!$userphones = UserPhones::model()->findByAttributes(array(
+                'u_id'=>$newmodel->u_id,
+                'c_id'=>$newmodel->client_phone_c_id,
+                'phone'=>$newmodel->client_phone
+            )))
+            {
+                $userphones = new UserPhones();
+                $userphones->u_id = $newmodel->u_id;
+                $userphones->c_id = $newmodel->client_phone_c_id;
+                $userphones->phone = $newmodel->client_phone;
+                $userphones->date_add = time();
+                $userphones->verify_kod = Yii::app()->session['usercheckphone_code'];
+                $userphones->verify_tag = Yii::app()->session['usercheckphone_tag'];
+                $userphones->message_id = Yii::app()->session['usercheckphone_message_id'];
+
+                $userphones->save();
+            }
+
+            unset(Yii::app()->session['usercheckphone']);
+            unset(Yii::app()->session['usercheckphone_code']);
+            unset(Yii::app()->session['usercheckphone_tag']);
+            unset(Yii::app()->session['usercheckphone_time']);
+            unset(Yii::app()->session['usercheckphone_message_id']);
+
+
 
             $user_url = $this->createAbsoluteUrl('/usercab/adverts');
             $this->redirect($user_url);

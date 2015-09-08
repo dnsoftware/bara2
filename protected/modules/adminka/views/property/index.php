@@ -23,6 +23,11 @@ $this->breadcrumbs=array(
 
 </style>
 
+<div style="float: right;">
+    <a href="<?= Yii::app()->createUrl('/adminka/property/importauto');?>">Импорт автомобилей</a>&nbsp;
+
+</div>
+
 <select id="r_id" class="selrub" onchange="">
     <option>--- выберите подрубрику ---</option>
 <?

@@ -3,7 +3,9 @@
     Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/jquery.uploadfile.js');
     Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/jquery.md5.js');
     Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/uploadfile.css');
+    Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/jquery.maskedinput.min.js');
 ?>
+
 
 <style>
     .radio-listitem
@@ -141,17 +143,6 @@ if(Yii::app()->controller->action->id == 'advert_edit')
         <?
         }
         ?>
-        </div>
-        <div class="input-error-msg"></div>
-    </div>
-</div>
-
-<div class="form-row">
-    <label id="lbl-client_phone" class="add-form-label"><?= Notice::model()->getAttributeLabel('client_phone');?>: </label>
-
-    <div class="add-input-block">
-        <div class="input-field-border" id="input-error-client_phone">
-        <input class="form-input-text" type="text" name="mainblock[client_phone]" id="client_phone" value="<?= htmlspecialchars($this->getMainblockValue($model, 'client_phone'), ENT_COMPAT);?>">
         </div>
         <div class="input-error-msg"></div>
     </div>
@@ -355,6 +346,178 @@ $r_id = $this->getMainblockValue($model, 'r_id')
         <div class="input-error-msg"></div>
     </div>
 </div>
+
+
+<div class="form-row" style="margin-top: 30px; width: 300px;">
+    <label id="lbl-client_phone" class="add-form-label"><?= Notice::model()->getAttributeLabel('client_phone');?>: </label>
+
+    <div class="add-input-block">
+        <div class="input-field-border" id="input-error-client_phone">
+<?
+//deb::dump(Yii::app()->controller->action->id);
+?>
+            <table>
+            <tr>
+                <td>
+                <select id="select_country_code" name="mainblock[client_phone_c_id]">
+                <?
+                $client_phone_c_id = $this->getMainblockValue($model, 'client_phone_c_id');
+                foreach($countries_array as $ckey=>$cval)
+                {
+                ?>
+                    <option <?= $this->getSelectedAttr($client_phone_c_id, $ckey);?> value="<?= $ckey;?>"><?= $cval;?></option>
+                <?
+                }
+                ?>
+                </select>
+                </td>
+                <td>
+                    <input class="form-input-text" style="width: 100px;" type="text" name="mainblock[client_phone]" id="client_phone" value="<?= htmlspecialchars($this->getMainblockValue($model, 'client_phone'), ENT_COMPAT);?>">
+                </td>
+                <td>
+                    <input type="button" id="send_check_phone_button" onclick="SendCheckPhone();" value="Подтвердить телефон">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div id="send_check_phone_error" style="color: #f00;"></div>
+                    <div id="send_check_phone_ok" style="color: #299e12;"></div>
+
+                    <div id="send_check_code" style="border: #999 solid 1px; display: none; padding: 5px;">
+                        На указанный номер отправлено СМС  с кодом подтверждения<br>
+                        <input type="text" id="check_code_field">
+                        <input type="button" value="OK" onclick="SendCheckPhoneKod();">
+                    </div>
+
+                    <div id="send_check_phone_change">
+                        <input type="button" value="Изменить номер телефона" onclick="SendCheckPhoneChange();">
+                    </div>
+                </td>
+            </tr>
+            </table>
+
+        </div>
+        <div class="input-error-msg"></div>
+    </div>
+
+
+
+
+</div>
+
+
+<script type="text/javascript">
+    jQuery(function($){
+//        $("#client_phone").mask("999 999-99-99");
+        $("#client_phone").mask(mask_array[$('#select_country_code').val()]);
+    });
+
+    var mask_array = new Array();
+    <?
+    foreach($mask_array as $mkey=>$mask)
+    {
+    ?>
+    mask_array[<?= $mkey;?>] = '<?= $mask;?>';
+    <?
+    }
+    ?>
+
+    $('#select_country_code').change(function()
+    {
+        $("#client_phone").mask(mask_array[$('#select_country_code').val()]);
+    });
+
+
+    function SendCheckPhone()
+    {
+        $.ajax({
+            type: "POST",
+            url: '<?= Yii::app()->createUrl('user/registration/checkphonesms');?>',
+            data: 'c_id='+$('#select_country_code').val()+'&phone='+$('#client_phone').val(),
+            //dataType: 'json',
+            error: function(msg) {
+
+            },
+            success: function(msg) {
+                if(msg == 'empty')
+                {
+                    $('#send_check_phone_error').html('Укажите номер телефона!');
+                    $('#send_check_code').css('display', 'none');
+                }
+                else if(msg == 'inbase')
+                {
+                    $('#send_check_phone_error').html('Укажите другой телефон. Такой телефон уже есть в базе!');
+                    $('#send_check_code').css('display', 'none');
+
+                }
+                else if(msg == 'send')
+                {
+                    $('#send_check_phone_ok').html('');
+                    $('#send_check_phone_error').html('');
+                    $('#send_check_code').css('display', 'block');
+
+                    $('#select_country_code').css('background-color', '#ccc');
+                    $('#client_phone').css('background-color', '#ccc');
+
+                    $('#send_check_phone_button').css('display', 'none');
+
+
+                }
+                else if(msg.indexOf('timeout-') + 1)
+                {
+                    $('#send_check_phone_error').html('Запросить код повторно можно будет через '+msg.replace('timeout-', '')+' секунд. ');
+                }
+                else if(msg == 'bytehand_error')
+                {
+                    $('#send_check_phone_error').html('Проблема с отправкой SMS!');
+                }
+            }
+        });
+    }
+
+    function SendCheckPhoneKod()
+    {
+        $.ajax({
+            type: "POST",
+            url: '<?= Yii::app()->createUrl('user/registration/checkphonekod');?>',
+            data: 'phone='+$('#client_phone').val()+'&code='+$('#check_code_field').val(),
+            //dataType: 'json',
+            error: function(msg) {
+
+            },
+            success: function(msg) {
+                if(msg == 'ok')
+                {
+                    $('#send_check_phone_error').html('');
+                    $('#send_check_phone_ok').html('Номер телефона подтвержден!');
+
+                    $('#select_country_code').css('background-color', '#ccc');
+                    $('#client_phone').css('background-color', '#ccc');
+
+                    $('#send_check_code').css('display', 'none');
+                    $('#send_check_phone_button').css('display', 'none');
+                }
+
+                if(msg == 'bad')
+                {
+                    $('#send_check_phone_ok').html('');
+                    $('#send_check_phone_error').html('Неверный код!');
+                }
+            }
+        });
+    }
+
+
+    function SendCheckPhoneChange()
+    {
+        $('#select_country_code').css('background-color', '#fff');
+        $('#client_phone').css('background-color', '#fff');
+
+        $('#send_check_code').css('display', 'none');
+        $('#send_check_phone_button').css('display', 'block');
+    }
+
+</script>
 
 
 <div id="status" style="clear: both;"></div>

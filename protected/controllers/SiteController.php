@@ -28,13 +28,17 @@ class SiteController extends Controller
         //deb::dump($row);
 
 
+        /*
         // Генерация xml для всех фото
         $notices = Notice::model()->findAll();
         foreach($notices as $nkey=>$nval)
         {
             AdvertController::PropsXmlGenerate($nval->n_id);
         }
+        */
 
+deb::dump(Yii::app()->session['usercheckphone_code']);
+deb::dump(Yii::app()->session['usercheckphone_message_id']);
 
         $countries = Countries::model()->findAll();
         $regions = Regions::model()->findAll(array(

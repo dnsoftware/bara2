@@ -1,0 +1,112 @@
+<?php
+
+/**
+ * This is the model class for table "{{user_phones}}".
+ *
+ * The followings are the available columns in table '{{user_phones}}':
+ * @property integer $ph_id
+ * @property integer $u_id
+ * @property integer $c_id
+ * @property string $phone
+ * @property string $date_add
+ * @property integer $verify_kod
+ * @property integer $verify_tag
+ * @property string $message_id
+ */
+class UserPhones extends CActiveRecord
+{
+	/**
+	 * @return string the associated database table name
+	 */
+	public function tableName()
+	{
+		return '{{user_phones}}';
+	}
+
+	/**
+	 * @return array validation rules for model attributes.
+	 */
+	public function rules()
+	{
+		// NOTE: you should only define rules for those attributes that
+		// will receive user inputs.
+		return array(
+			array('u_id, c_id, phone, date_add, verify_kod, verify_tag, message_id', 'required'),
+			array('u_id, c_id, verify_kod, verify_tag', 'numerical', 'integerOnly'=>true),
+			array('phone', 'length', 'max'=>16),
+			array('date_add', 'length', 'max'=>14),
+			// The following rule is used by search().
+			// @todo Please remove those attributes that should not be searched.
+			array('ph_id, u_id, c_id, phone, date_add, verify_kod, verify_tag', 'safe', 'on'=>'search'),
+		);
+	}
+
+	/**
+	 * @return array relational rules.
+	 */
+	public function relations()
+	{
+		// NOTE: you may need to adjust the relation name and the related
+		// class name for the relations automatically generated below.
+		return array(
+		);
+	}
+
+	/**
+	 * @return array customized attribute labels (name=>label)
+	 */
+	public function attributeLabels()
+	{
+		return array(
+			'ph_id' => 'Ph',
+			'u_id' => 'U',
+			'c_id' => 'Страна',
+			'phone' => 'Phone',
+			'date_add' => 'Date Add',
+			'verify_kod' => 'Verify Kod',
+			'verify_tag' => 'Verify Tag',
+		);
+	}
+
+	/**
+	 * Retrieves a list of models based on the current search/filter conditions.
+	 *
+	 * Typical usecase:
+	 * - Initialize the model fields with values from filter form.
+	 * - Execute this method to get CActiveDataProvider instance which will filter
+	 * models according to data in model fields.
+	 * - Pass data provider to CGridView, CListView or any similar widget.
+	 *
+	 * @return CActiveDataProvider the data provider that can return the models
+	 * based on the search/filter conditions.
+	 */
+	public function search()
+	{
+		// @todo Please modify the following code to remove attributes that should not be searched.
+
+		$criteria=new CDbCriteria;
+
+		$criteria->compare('ph_id',$this->ph_id);
+		$criteria->compare('u_id',$this->u_id);
+		$criteria->compare('c_id',$this->c_id);
+		$criteria->compare('phone',$this->phone,true);
+		$criteria->compare('date_add',$this->date_add,true);
+		$criteria->compare('verify_kod',$this->verify_kod);
+		$criteria->compare('verify_tag',$this->verify_tag);
+
+		return new CActiveDataProvider($this, array(
+			'criteria'=>$criteria,
+		));
+	}
+
+	/**
+	 * Returns the static model of the specified AR class.
+	 * Please note that you should have this exact method in all your CActiveRecord descendants!
+	 * @param string $className active record class name.
+	 * @return UserPhones the static model class
+	 */
+	public static function model($className=__CLASS__)
+	{
+		return parent::model($className);
+	}
+}

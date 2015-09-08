@@ -22,7 +22,11 @@ class BaraholkaUrlRule extends CBaseUrlRule
 
     public function parseUrl($manager,$request,$pathInfo,$rawPathInfo)
     {
-        $query = parse_url($request->requestUri)['query'];
+        $query = null;
+        if(isset(parse_url($request->requestUri)['query']))
+        {
+            $query = parse_url($request->requestUri)['query'];
+        }
         parse_str($query, $query_array);
         //deb::dump($query_array);
         //deb::dump($request);

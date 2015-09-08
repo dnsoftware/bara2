@@ -27,7 +27,7 @@ class FilterController extends Controller
         // $rubrik_sql формируется в BaraholkaUrlRule
 
         $rubrik_sql = " 1 ";
-        if(!isset($_GET['parent_r_id']) && isset($_GET['mainblock']['r_id']))
+        if(!isset($_GET['parent_r_id']) && isset($_GET['mainblock']['r_id']) && $_GET['mainblock']['r_id'] != '')
         {
               $rubrik_sql = " r_id = ".intval($_GET['mainblock']['r_id']);
         }
@@ -287,6 +287,7 @@ class FilterController extends Controller
                 {
                     $switch_rp_id = $pubriks_props_by_selector_array[$gkey]->rp_id;
                     $i++;
+
                     switch($pubriks_props_by_selector_array[$gkey]->filter_type)
                     {
                         case "select_one":
@@ -298,6 +299,7 @@ class FilterController extends Controller
                         break;
 
                         case "select_multi":
+                            //deb::dump($gval);
                             if(count($gval > 0))
                             {
                                 foreach($gval as $g2key=>$g2val)
@@ -445,16 +447,17 @@ class FilterController extends Controller
                 {
                     $search_adverts[$row['n_id']] = $row;
                 }
-//deb::dump($search_adverts);
+//deb::dump($sql);
 
                 // Формирование данных для ссылок на подгруппы
                 $rubrik_groups = array();
 
                 $subprop_rp_id = $rubriks_poryadok_props_array[count($_GET['prop'])+2];
-                if(isset($subprop_rp_id))
+                $subprop_rp_row = RubriksProps::model()->findByPk($subprop_rp_id);
+//deb::dump($subprop_rp_row);
+                if(isset($subprop_rp_id) && $subprop_rp_row->hierarhy_tag)
                 {
                     $subprops = PropsRelations::model()->findAll(array('condition'=>'parent_ps_id = '.$current_ps_id));
-
                     $sql = "SELECT nsub.ps_id, ps.value, ps.transname, count(nsub.ps_id) cnt
                             FROM ". $connection->tablePrefix . "notice n,
                             ".$from_tables_sql.",
@@ -473,12 +476,12 @@ class FilterController extends Controller
                     $dataReader=$command->query();
                     while(($row = $dataReader->read())!==false)
                     {
-                        //deb::dump($row);
                         $row['path'] = Yii::app()->getRequest()->getPathInfo()."/".$row['transname'];
                         $row['name'] = $row['value'];
                         $rubrik_groups[] = $row;
 
                     }
+
                 }
 
 //deb::dump($rubrik_groups);
@@ -501,7 +504,7 @@ class FilterController extends Controller
                     'condition'=>$mesto_rub_sql." AND ".$rubrik_sql.$q_sql
                 )
             );
-//deb::dump(count($adverts));
+
             foreach ($adverts as $akey=>$aval)
             {
                 //deb::dump($aval->town['name']);
@@ -539,8 +542,9 @@ class FilterController extends Controller
                 //deb::dump($rubrik_groups);
             }
             // Если выбранный раздел является подрубрикой
-            else if (isset($_GET['mainblock']['r_id']) && !isset($_GET['mainblock']['parent_r_id']) )
+            else if (isset($_GET['mainblock']['r_id']) && $_GET['mainblock']['r_id'] != '' && !isset($_GET['mainblock']['parent_r_id']) )
             {
+//deb::dump($_GET['mainblock']['r_id']);
                 $props_sprav = PropsSprav::model()->findAll(array('condition'=>'rp_id = '.$rubriks_props[0]->rp_id));
 
                 $props_groups = array();
