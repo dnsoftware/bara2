@@ -45,6 +45,8 @@ class BaraholkaUrlRule extends CBaseUrlRule
             $_GET['mainblock']['t_id'] = $town->t_id;
             $_GET['mainblock']['reg_id'] = $town->reg_id;
             $_GET['mainblock']['c_id'] = $town->c_id;
+
+            $_GET['mesto_id'] = 't_'.$town->t_id;
         }
         else
         if($region = Regions::model()->findByAttributes(array('transname'=>$parts[0])))
@@ -52,13 +54,24 @@ class BaraholkaUrlRule extends CBaseUrlRule
             //$_GET['reg_id'] = $region->reg_id;
             $_GET['mainblock']['reg_id'] = $region->reg_id;
             $_GET['mainblock']['c_id'] = $region->c_id;
+
+            $_GET['mesto_id'] = 'reg_'.$region->reg_id;
         }
         else
         if($country = Countries::model()->findByAttributes(array('transname'=>$parts[0])))
         {
             //$_GET['c_id'] = $country->c_id;
             $_GET['mainblock']['c_id'] = $country->c_id;
+
+            $_GET['mesto_id'] = 'c_'.$country->c_id;
         }
+        /*
+        // Патч, Россия если не определен регион
+        else if ($parts[0] == 'allregions')
+        {
+            $_GET['mainblock']['c_id'] = 185;
+        }
+        */
         else
         {
             return false;

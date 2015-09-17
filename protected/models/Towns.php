@@ -13,6 +13,15 @@
  */
 class Towns extends CActiveRecord
 {
+    public static $alter_regions = array(
+        // Москва и Московская область
+        '524901'=>'524925',
+        // Санкт-Петербург и Ленинградская область
+        '498817'=>'536199'
+
+    );
+
+
 	/**
 	 * @return string the associated database table name
 	 */
@@ -45,7 +54,7 @@ class Towns extends CActiveRecord
     {
         $model = self::model()->findAll(array(
             'select'=>'*',
-            'condition'=>'reg_id='.$reg_id,
+            'condition'=>'reg_id='.$reg_id." AND double_tag = 0",
             'order'=>'name ASC'
         ));
 

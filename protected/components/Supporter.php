@@ -51,6 +51,7 @@ class Supporter {
     // $pk - primary key
     public function MakeTranslitForGeoplace($table, $rusname, $pk)
     {
+
         $transname = $this->TranslitForUrl($rusname);
 
         $row_country = Countries::model()->findByAttributes(array('transname'=>$transname),
@@ -76,7 +77,7 @@ class Supporter {
                     case "regions":
                         $model_region = Regions::model()->findByPk($pk);
 //                    deb::dump($model_region->transname." - ".$transname);
-                        $model_region->transname = $transname."_region".$model_region->c_id;
+                        $model_region->transname = $transname."_region".$model_region->reg_id;
                         $model_region->save();
                     break;
 

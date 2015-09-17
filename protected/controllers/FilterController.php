@@ -7,9 +7,131 @@ class FilterController extends Controller
 
         $connection=Yii::app()->db;
 
+
+        $cookie['mytown'] = Yii::app()->request->cookies->contains('geo_mytown') ?
+            Yii::app()->request->cookies['geo_mytown']->value : 0;
+        $cookie['myregion'] = Yii::app()->request->cookies->contains('geo_myregion') ?
+            Yii::app()->request->cookies['geo_myregion']->value : 0;
+        $cookie['mycountry'] = Yii::app()->request->cookies->contains('geo_mycountry') ?
+            Yii::app()->request->cookies['geo_mycountry']->value : 0;
+
+        $parts = array();
+        if(isset($_GET['mesto_id'])) // $_POST['region_id'] может содержать город, страну или регион
+        {
+            $parts = explode("_", $_GET['mesto_id']);
+        }
+
+        $mesto_isset_tag = 0;
+        $mselector = '';
+        $m_id = 0;
+        if(count($parts) == 2 && intval($parts[1]) > 0)
+        {
+            $mesto_isset_tag = 1;
+            $mselector = $parts[0];
+            $m_id = intval($parts[1]);
+        }
+
+        // Куки местоположения
+        if(isset($_GET['filter_submit_button']))
+        {
+            self::unsetRegionCookies();
+            self::SetGeolocatorCookie('geo_mytown_handchange_tag', 1, 86400*30);
+
+            if($mesto_isset_tag && $mselector == 't')
+            {
+                $town = Towns::model()->findByPk($m_id);
+
+                $_GET['mainblock']['t_id'] = $town->t_id;
+                $_GET['mainblock']['reg_id'] = $town->reg_id;
+                $_GET['mainblock']['c_id'] = $town->c_id;
+
+                self::SetGeolocatorCookie('geo_mytown', $town->t_id, 86400*30);
+                self::SetGeolocatorCookie('geo_mytown_name', $town->name, 86400*30);
+
+            }
+
+            if($mesto_isset_tag && $mselector == 'reg')
+            {
+                $region = Regions::model()->findByPk($m_id);
+
+                $_GET['mainblock']['reg_id'] = $region->reg_id;
+                $_GET['mainblock']['c_id'] = $region->c_id;
+
+                self::SetGeolocatorCookie('geo_myregion', $region->reg_id, 86400*30);
+                self::SetGeolocatorCookie('geo_myregion_name', $region->name, 86400*30);
+
+            }
+
+            if($mesto_isset_tag && $mselector == 'c')
+            {
+                $country = Countries::model()->findByPk($m_id);
+
+                $_GET['mainblock']['c_id'] = $country->c_id;
+
+                self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
+                self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
+
+            }
+
+        }
+
+
+        /*
+        if($cookie['mytown'] == 0 && $cookie['myregion'] == 0 && $cookie['mycountry'] == 0
+            && isset($_GET['filter_submit_button'])
+        {
+
+            if(isset($_GET['mainblock']['t_id']) && intval($_GET['mainblock']['t_id']) != 0)
+            {
+                $town = Towns::model()->findByPk($_GET['mainblock']['t_id']);
+
+                self::SetGeolocatorCookie('geo_mytown', $town->t_id, 86400*30);
+                self::SetGeolocatorCookie('geo_mytown_name', $town->name, 86400*30);
+
+            }
+
+            if(isset($_GET['mainblock']['reg_id']) && intval($_GET['mainblock']['reg_id']) != 0)
+            {
+                $region = Regions::model()->findByPk($_GET['mainblock']['reg_id']);
+
+                self::SetGeolocatorCookie('geo_myregion', $region->reg_id, 86400*30);
+                self::SetGeolocatorCookie('geo_myregion_name', $region->name, 86400*30);
+
+            }
+
+            if(isset($_GET['mainblock']['c_id']) && intval($_GET['mainblock']['c_id']) != 0)
+            {
+                $country = Countries::model()->findByPk($_GET['mainblock']['c_id']);
+
+                self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
+                self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
+
+            }
+
+
+        }
+        */
+
+
+
         // Местоположение
         $mesto_sql = "1 ";
-        //if(isset($_GET['c_id']))
+
+        if($mesto_isset_tag && $mselector == 'c')
+        {
+            $mesto_sql = " n.c_id = ".intval($m_id);
+        }
+        if($mesto_isset_tag && $mselector == 'reg')
+        {
+            $mesto_sql = " n.reg_id = ".intval($m_id);
+        }
+        if($mesto_isset_tag && $mselector == 't')
+        {
+            $mesto_sql = " n.t_id = ".intval($m_id);
+        }
+//deb::dump($mesto_sql);
+
+        /*
         if(isset($_GET['mainblock']['c_id']) && intval($_GET['mainblock']['c_id']) != 0)
         {
             $mesto_sql = " n.c_id = ".intval($_GET['mainblock']['c_id']);
@@ -22,6 +144,7 @@ class FilterController extends Controller
         {
             $mesto_sql = " n.t_id = ".intval($_GET['mainblock']['t_id']);
         }
+        */
 
         //Рубрика
         // $rubrik_sql формируется в BaraholkaUrlRule
@@ -1009,6 +1132,7 @@ class FilterController extends Controller
         {
             $town = Towns::model()->findByPk($t_id);
             $url_parts[0] = $town->transname;
+
         }
         else if (($reg_id = intval($_POST['mainblock']['reg_id'])) > 0)
         {
@@ -1022,7 +1146,7 @@ class FilterController extends Controller
         }
         else
         {
-            $url_parts[0] = 'rossiya';
+            $url_parts[0] = 'russia';
         }
 
         if(($r_id = intval($_POST['mainblock']['r_id'])) > 0)
@@ -1047,6 +1171,290 @@ class FilterController extends Controller
         //echo($content);
         //deb::dump($_POST);
     }
+
+    // Получение списка регионов (городов, регионов, стран) по подстроке
+    public function actionGetRegionList()
+    {
+        $countries_array = Countries::getCountryListLight();
+        $regions_array = Regions::getRegionListLight();
+
+        $searchstr = $_POST['searchstr'];
+
+        $return_array['reglist'] = array();
+
+
+        // Сначала российские города и российские регионы
+        $from_towns = Towns::model()->findAll(array(
+            'select'=>'t_id, reg_id, c_id, name',
+            'condition'=>"double_tag = 0 AND c_id = :russia_id AND name LIKE :name ",
+            'order'=>'name ASC',
+            'params'=>array(':name'=>'%'.$searchstr.'%', ':russia_id'=>Yii::app()->params['russia_id'])
+        ));
+        foreach($from_towns as $fkey=>$fval)
+        {
+            $return_array['reglist']['t_'.$fval->t_id]['id'] = 't_'.$fval->t_id;
+            $return_array['reglist']['t_'.$fval->t_id]['name_ru'] = $fval->name . ", " . $regions_array[$fval->reg_id] . ", " . $countries_array[$fval->c_id];
+        }
+
+
+        $from_regions = Regions::model()->findAll(array(
+            'select'=>'reg_id, c_id, name',
+            'condition'=>"c_id = :russia_id AND name LIKE :name ",
+            'order'=>'name ASC',
+            'params'=>array(':name'=>'%'.$searchstr.'%', ':russia_id'=>Yii::app()->params['russia_id'])
+        ));
+        foreach($from_regions as $fkey=>$fval)
+        {
+            $return_array['reglist']['reg_'.$fval->reg_id]['id'] = 'reg_'.$fval->reg_id;
+            $return_array['reglist']['reg_'.$fval->reg_id]['name_ru'] = $fval->name . ", " . $countries_array[$fval->c_id];
+        }
+
+        // Потом остальные города и остальные регионы
+        $from_towns = Towns::model()->findAll(array(
+            'select'=>'t_id, reg_id, c_id, name',
+            'condition'=>"double_tag = 0 AND c_id <> :russia_id AND name LIKE :name ",
+            'order'=>'name ASC',
+            'params'=>array(':name'=>'%'.$searchstr.'%', ':russia_id'=>Yii::app()->params['russia_id'])
+        ));
+        foreach($from_towns as $fkey=>$fval)
+        {
+            $return_array['reglist']['t_'.$fval->t_id]['id'] = 't_'.$fval->t_id;
+            $return_array['reglist']['t_'.$fval->t_id]['name_ru'] = $fval->name . ", " . $regions_array[$fval->reg_id] . ", " . $countries_array[$fval->c_id];
+        }
+
+
+        $from_regions = Regions::model()->findAll(array(
+            'select'=>'reg_id, c_id, name',
+            'condition'=>"c_id <> :russia_id AND name LIKE :name ",
+            'order'=>'name ASC',
+            'params'=>array(':name'=>'%'.$searchstr.'%', ':russia_id'=>Yii::app()->params['russia_id'])
+        ));
+        foreach($from_regions as $fkey=>$fval)
+        {
+            $return_array['reglist']['reg_'.$fval->reg_id]['id'] = 'reg_'.$fval->reg_id;
+            $return_array['reglist']['reg_'.$fval->reg_id]['name_ru'] = $fval->name . ", " . $countries_array[$fval->c_id];
+        }
+
+
+
+
+        $from_countries = Countries::model()->findAll(array(
+            'select'=>'c_id, name',
+            'condition'=>"name LIKE :name ",
+            'order'=>'name ASC',
+            'params'=>array(':name'=>'%'.$searchstr.'%')
+        ));
+
+
+        foreach($from_countries as $fkey=>$fval)
+        {
+            $return_array['reglist']['c_'.$fval->c_id]['id'] = 'c_'.$fval->c_id;
+            $return_array['reglist']['c_'.$fval->c_id]['name_ru'] = $fval->name;
+        }
+
+        //deb::dump($from_towns);
+        echo json_encode($return_array);
+
+    }
+
+    // Установка куки выбранного региона и редирект на соответствующую страницу
+    public function  actionSetRegionCookie()
+    {
+        $parts = array();
+        if(isset($_POST['region_id'])) // $_POST['region_id'] может содержать город, страну или регион
+        {
+            $parts = explode("_", $_POST['region_id']);
+        }
+
+        if(isset($_POST['region_id']) && count($parts) == 2 && intval($parts[1]) > 0)
+        {
+            self::unsetRegionCookies();
+
+            $region_id = intval($parts[1]);
+
+            self::SetGeolocatorCookie('geo_mytown_handchange_tag', 1, 86400*30);
+
+            if($parts[0] == 't')
+            {
+                $town = Towns::model()->findByPk($region_id);
+                $region = Regions::model()->findByPk($town->reg_id);
+                $country = Countries::model()->findByPk($town->c_id);
+
+                self::SetGeolocatorCookie('geo_mytown', $town->t_id, 86400*30);
+                self::SetGeolocatorCookie('geo_mytown_name', $town->name, 86400*30);
+
+                self::SetGeolocatorCookie('geo_myregion', $region->reg_id, 86400*30);
+                self::SetGeolocatorCookie('geo_myregion_name', $region->name, 86400*30);
+
+                self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
+                self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
+
+            }
+
+            if($parts[0] == 'reg')
+            {
+                $region = Regions::model()->findByPk($region_id);
+                $country = Countries::model()->findByPk($region->c_id);
+
+                self::SetGeolocatorCookie('geo_myregion', $region->reg_id, 86400*30);
+                self::SetGeolocatorCookie('geo_myregion_name', $region->name, 86400*30);
+
+                self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
+                self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
+            }
+
+            if($parts[0] == 'c')
+            {
+                $country = Countries::model()->findByPk($region_id);
+
+                self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
+                self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
+            }
+
+            //deb::dump($town);
+            //die();
+
+            header('Location: /'.$town->transname);
+
+        }
+        else
+        {
+            header('Location: /russia');
+        }
+
+    }
+
+
+    // Установка кук геолокации
+    public static function SetGeolocatorCookie($name, $value, $period)
+    {
+        $cookie = new CHttpCookie($name, $value);
+        $cookie->expire = time() + $period;
+        Yii::app()->request->cookies[$name] = $cookie;
+    }
+
+
+
+    // Обнуление кук выбора региона
+    public static  function unsetRegionCookies()
+    {
+
+        unset(Yii::app()->request->cookies['geo_mytown']);
+        unset(Yii::app()->request->cookies['geo_myregion']);
+        unset(Yii::app()->request->cookies['geo_mycountry']);
+        unset(Yii::app()->request->cookies['geo_mytown_name']);
+        unset(Yii::app()->request->cookies['geo_myregion_name']);
+        unset(Yii::app()->request->cookies['geo_mycountry_name']);
+
+    }
+
+
+    // Формирование списка выбора местоположения в фильтре поиска объявлений
+    public function actionMestolistgenerate()
+    {
+        $parts = array();
+        if(isset($_POST['mesto_id'])) // $_POST['region_id'] может содержать город, страну или регион
+        {
+            $parts = explode("_", $_POST['mesto_id']);
+        }
+
+        $ret = array();
+        if(isset($_POST['mesto_id']) && count($parts) == 2 && intval($parts[1]) > 0)
+        {
+            $mesto_selector = $parts[0];
+            $mesto_id = intval($parts[1]);
+
+            $data = self::ListMestoForSearch($mesto_selector, $mesto_id);
+
+            $ret['status']['code'] = 'ok';
+            $ret['status']['message'] = '';
+            $ret['data'] = $data;
+        }
+        else
+        {
+            $ret['status']['code'] = 'error';
+            $ret['status']['message'] = 'Некорректные входные параметры';
+        }
+
+        echo json_encode($ret, JSON_UNESCAPED_SLASHES);
+
+    }
+
+
+
+    // Генерация списка выбора местоположения для формы поиска
+    public static function ListMestoForSearch($mesto_selector, $mesto_id)
+    {
+        $data = '';
+
+        switch($mesto_selector)
+        {
+            case "t":
+                $town = Towns::model()->findByPk($mesto_id);
+
+                if(isset(Towns::$alter_regions[$town->t_id]))
+                {
+                    $region = Regions::model()->findByPk(Towns::$alter_regions[$town->t_id]);
+                }
+                else
+                {
+                    $region = Regions::model()->findByPk($town->reg_id);
+                }
+
+                $country = Countries::model()->findByPk($town->c_id);
+
+                ob_start();
+                ?>
+                <option value="c_<?= $country->c_id;?>"><?= $country->name;?></option>
+                <option selected value="t_<?= $town->t_id;?>"><?= $town->name;?></option>
+                <option value="reg_<?= $region->reg_id;?>"><?= $region->name;?></option>
+                <option value="other">Выбрать другой...</option>
+                <?
+                $data = ob_get_contents();
+                ob_end_clean();
+
+                break;
+
+            case "reg":
+                $region = Regions::model()->findByPk($mesto_id);
+                $country = Countries::model()->findByPk($region->c_id);
+
+                ob_start();
+                ?>
+                <option value="c_<?= $country->c_id;?>"><?= $country->name;?></option>
+                <option selected value="reg_<?= $region->reg_id;?>"><?= $region->name;?></option>
+                <option value="other">Выбрать другой...</option>
+                <?
+                $data = ob_get_contents();
+                ob_end_clean();
+
+                break;
+
+            case "c":
+                $country = Countries::model()->findByPk($mesto_id);
+
+                ob_start();
+                ?>
+                <option selected value="c_<?= $country->c_id;?>"><?= $country->name;?></option>
+                <option value="other">Выбрать другой...</option>
+                <?
+                $data = ob_get_contents();
+                ob_end_clean();
+
+                break;
+
+        }
+
+        return $data;
+    }
+
+
+
+
+
+
+
+
 
 
 

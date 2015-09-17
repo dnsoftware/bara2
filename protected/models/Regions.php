@@ -56,6 +56,25 @@ class Regions extends CActiveRecord
 
     }
 
+    // Получение списка регионов (облегченный вариан), код - название из поля name
+    public static function getRegionListLight()
+    {
+        $model = self::model()->findAll(array(
+            'select'=>'reg_id, name',
+            'condition'=>'1',
+            'order'=>'name ASC'
+        ));
+
+        $region_array = array();
+        foreach($model as $mval)
+        {
+            $region_array[$mval->reg_id] = $mval->name;
+        }
+
+        return $region_array;
+
+    }
+
     // Получение списка регионов для select
     public static function displayRegionList($c_id, $selected_id = 0, $null_value = 'Выберите регион')
     {

@@ -30,7 +30,7 @@ class SxgeoRegions extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('id, iso, country, name_ru, name_en, timezone, okato', 'required'),
+			array('id', 'required'),
 			array('id', 'numerical', 'integerOnly'=>true),
 			array('iso', 'length', 'max'=>7),
 			array('country', 'length', 'max'=>2),

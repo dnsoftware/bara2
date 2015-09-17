@@ -191,11 +191,22 @@ class SupporterController extends Controller
                 $tbl->name = $cval->name_ru;
                 $tbl->name_en = $cval->name_en;
                 $tbl->transname = $supporter->TranslitForUrl($cval->name_en);
+                if($transcheck = Regions::model()->findByAttributes(array('transname'=>$tbl->transname)))
+                {
+                    $tbl->transname .= '_'.$cval->id;
+                }
+
                 $tbl->iso = $cval->iso;
                 $tbl->country = $cval->country;
                 $tbl->timezone = $cval->timezone;
                 $tbl->okato = $cval->okato;
                 $tbl->save();
+
+                if($tbl->hasErrors())
+                {
+                    deb::dump($tbl->getErrors());
+                }
+
 
             }
 
@@ -219,8 +230,9 @@ class SupporterController extends Controller
         }
         */
 
+
         /*
-        // Простановка актуальных кодов стран
+        // Простановка актуальных кодов стран и регионов
         $towns = Towns::model()->findAll();
         foreach ($towns as $ckey=>$cval)
         {
@@ -234,6 +246,7 @@ class SupporterController extends Controller
 
 
 
+        /*
         // Перенос данных
         $supporter = new Supporter();
         $towns = SxgeoCities::model()->findAll();
@@ -247,7 +260,6 @@ class SupporterController extends Controller
                 $tbl->t_id = $cval->id;
                 $tbl->name_en = $cval->name_en;
                 $tbl->transname = $supporter->TranslitForUrl($cval->name_en);
-                $tbl->name_en = $cval->name_en;
                 $tbl->lat = $cval->lat;
                 $tbl->lon = $cval->lon;
                 $tbl->okato = $cval->okato;
@@ -255,16 +267,162 @@ class SupporterController extends Controller
             }
             else
             {
+                $tbl = new Towns();
+
+                $tbl->t_id = $cval->id;
+                $tbl->reg_id = $cval->region_id;
+
+                $regrow = Regions::model()->findByPk($cval->region_id);
+                $tbl->c_id = $regrow->c_id;
+
+                $tbl->name = $cval->name_ru;
+                $tbl->name_en = $cval->name_en;
+
+                $tbl->transname = $supporter->TranslitForUrl($cval->name_en);
+                if($transcheck = Towns::model()->findByAttributes(array('transname'=>$tbl->transname)))
+                {
+                    $tbl->transname .= '_'.$cval->id;
+                }
+
+                $tbl->inname = "in ".$cval->name_en;
+                $tbl->lat = $cval->lat;
+                $tbl->lon = $cval->lon;
+                $tbl->okato = $cval->okato;
+                $tbl->save();
+
+                if($tbl->hasErrors())
+                {
+                    deb::dump($tbl->getErrors());
+                }
 
             }
 
         }
+        */
 
 
 
         ///////////////////////////////// КОНЕЦ Импорт городов sypexgeo /////////////////////////////////
 
     }
+
+
+    public function actionCheckDoubles()
+    {
+        return false;   // Удалить когда понадобится
+
+        $countries = Countries::getCountryListLight();
+        $regions = Regions::getRegionListLight();
+
+        $towns = Towns::model()->findAll(array(
+            'select'=>'t_id, reg_id, c_id, name',
+            'order'=>'t_id'
+        ));
+
+        foreach($towns as $tkey=>$tval)
+        {
+            $dub = Towns::model()->findAll(array(
+                'select'=>'*',
+                'condition'=>'name = :name AND t_id > :t_id AND c_id = :c_id
+                                    AND reg_id = :reg_id AND double_tag = 0',
+                'params'=>array(':name'=>$tval->name, ':t_id'=>$tval->t_id,
+                                ':c_id'=>$tval->c_id, ':reg_id'=>$tval->reg_id
+                )
+            ));
+
+            if(count($dub) > 0)
+            {
+            ?>
+            <div>
+                <?
+                echo $tval->t_id.", ".$tval->name.", ".$countries[$tval->c_id].", ".$regions[$tval->reg_id].", ".$tval->reg_id."<br>";
+                $j=0;
+                foreach($dub as $dkey=>$dval)
+                {
+                    echo " --==-- ";
+                    echo $dval->t_id.", ".$dval->name.", ".$countries[$dval->c_id].", ".$regions[$dval->reg_id].", ".$dval->reg_id."<br>";
+
+                    $dval->double_tag = 1;
+                    $dval->save();
+                }
+                ?>
+                <br>
+            </div>
+            <?
+            }
+        }
+    }
+
+
+/*
+    // Патч таблицы объявлений. Старые коды стран и регионов заменяем на актуальные для кода города
+    public function actionPatchCountryRegions()
+    {
+        $nots = Notice::model()->findAll();
+
+        foreach($nots as $nkey=>$nval)
+        {
+            $town = Towns::model()->findByPk($nval->t_id);
+            $nval->reg_id = $town->reg_id;
+            $nval->c_id = $town->c_id;
+            $nval->save();
+        }
+    }
+*/
+
+
+
+    // Поиск дублей, где регион равен городу
+    public function actionCheckRegTownDouble()
+    {
+        $countries = Countries::getCountryListLight();
+
+        $regions = Regions::model()->findAll();
+        foreach($regions as $rkey=>$rval)
+        {
+            if($town = Towns::model()->findByAttributes(array('reg_id'=>$rval->reg_id, 'name'=>$rval->name)))
+            {
+                $subtowns = Towns::model()->findAllByAttributes(array('reg_id'=>$rval->reg_id));
+                //deb::dump($subtowns);
+            ?>
+                <div style="margin-bottom: 20px;">
+                    <b><?= $town->name;?>, <?= $countries[$town->c_id];?></b>
+                    <br>
+                    <?
+                    foreach($subtowns as $skey=>$sval)
+                    {
+                        echo $sval->name.", ".$countries[$sval->c_id]."<br>";
+                    }
+                    ?>
+                </div>
+            <?
+            }
+
+        }
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 	// Uncomment the following methods and override them if needed

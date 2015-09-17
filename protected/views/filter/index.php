@@ -60,8 +60,42 @@ $this->breadcrumbs=array(
 
                 </td>
 
-                <td  style="margin: 0px; padding: 0px;">
-                    <select class="sumo_simple" style="width: 120px;" name="mainblock[c_id]" id="select_country">
+
+
+
+                <td>
+                    <select name="mesto_id" id="mesto_id">
+                    <?
+                    $data = '';
+                    if(isset($_GET['mainblock']['t_id']) && intval($_GET['mainblock']['t_id']) > 0)
+                    {
+                        $data = FilterController::ListMestoForSearch('t', intval($_GET['mainblock']['t_id']));
+                    }
+                    else
+                    if(isset($_GET['mainblock']['reg_id']) && intval($_GET['mainblock']['reg_id']) > 0)
+                    {
+                        $data = FilterController::ListMestoForSearch('reg', intval($_GET['mainblock']['reg_id']));
+                    }
+                    else
+                    if(isset($_GET['mainblock']['c_id']) && intval($_GET['mainblock']['c_id']) > 0)
+                    {
+                        $data = FilterController::ListMestoForSearch('c', intval($_GET['mainblock']['c_id']));
+                    }
+                    echo $data;
+                    ?>
+                    </select>
+
+                </td>
+
+
+
+
+                <?
+                /*
+                ?>
+                <td  style="margin: 0px; padding: 0px; ">
+
+                    <select class="sumo_simple" style="width: 50px;" name="mainblock[c_id]" id="select_country">
                         <?
                         //$c_id = intval(AdvertController::getMainblockValue(null, 'c_id'));
                         Countries::displayCountryList(intval($_GET['mainblock']['c_id']));
@@ -70,7 +104,7 @@ $this->breadcrumbs=array(
                     </select>
                 </td>
                 <td>
-                    <select class="_sumoselect" style="width: 150px;" name="mainblock[reg_id]" id="select_region">
+                    <select class="_sumoselect" style="width: 50px;" name="mainblock[reg_id]" id="select_region">
                         <?
                         //$reg_id = intval(AdvertController::getMainblockValue(null, 'reg_id'));
                         Regions::displayRegionList(intval($_GET['mainblock']['c_id']), intval($_GET['mainblock']['reg_id']));
@@ -78,18 +112,25 @@ $this->breadcrumbs=array(
                     </select>
                 </td>
                 <td>
-                    <select class="_sumoselect" style="width: 140px;" name="mainblock[t_id]" id="select_town" >
+                    <select class="_sumoselect" style="width: 50px; " name="mainblock[t_id]" id="select_town" >
                         <?
                         //$t_id = intval(AdvertController::getMainblockValue(null, 't_id'));
                         Towns::displayTownList(intval($_GET['mainblock']['reg_id']), intval($_GET['mainblock']['t_id']));
                         ?>
                     </select>
                 </td>
+                <?
+                */
+                ?>
                 <td>
-                    <input type="submit" value="Найти">
+                    <input type="submit" name="filter_submit_button" value="Найти">
                 </td>
             </tr>
         </table>
+
+
+
+
 
         <div id="form_search_filter">
         <?
@@ -108,7 +149,88 @@ $this->breadcrumbs=array(
 
     </form>
 
-    <div id="search_data">
+
+<div id="div_searchreg_name" style="position: absolute;">
+<input type="text" name="searchreg_name" id="searchreg_name" value="" style="width: 335px;" placeholder="начните набирать название своего города или региона" >
+</div>
+
+
+<script>
+
+    $('#div_searchreg_name').offset({
+        left: $('#mesto_id').offset().left,
+        top: $('#mesto_id').offset().top+30
+    });//$('#mesto_id').offset().left;
+
+    $('#searchreg_name').autocomplete({
+        position:{my:"left top", at:"left bottom"},
+        minLength: 3,
+        source: function(request, response){
+
+            $.ajax({
+                url: "<?= Yii::app()->createUrl('/filter/getregionlist');?>",
+                method: "post",
+                dataType: "json",
+                // параметры запроса, передаваемые на сервер:
+                data:{
+                    searchstr: request.term
+                },
+                // обработка успешного выполнения запроса
+                success: function(data){
+                    $('#ajax_debug').html(data);
+                    // приведем полученные данные к необходимому формату и передадим в предоставленную функцию response
+                    response($.map(data.reglist, function(item){
+                        console.log(item);
+
+                        return{
+                            label: item.name_ru,
+                            value: item.id
+                        }
+
+                    }));
+
+                }
+
+
+            });
+        },
+        focus: function( event, ui ) {
+            $('#searchname_name').val( ui.item.label );
+            return false;
+
+        },
+        select: function(event, ui) {
+            /*ui.item будет содержать выбранный элемент*/
+            //console.log(ui.item);
+            //$('#searchreg_id').val(ui.item.value);
+
+            $.ajax({
+                url: "<?= Yii::app()->createUrl('/filter/mestolistgenerate');?>",
+                method: "post",
+                dataType: "json",
+                // параметры запроса, передаваемые на сервер:
+                data:{
+                    mesto_id: ui.item.value
+                },
+                // обработка успешного выполнения запроса
+                success: function(data){
+                    $('#mesto_id').html(data['data']);
+
+                }
+            });
+
+
+            return false;
+        }
+
+    });
+
+</script>
+
+
+
+
+<div id="search_data">
 
     </div>
 

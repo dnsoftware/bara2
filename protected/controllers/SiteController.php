@@ -37,8 +37,9 @@ class SiteController extends Controller
         }
         */
 
-deb::dump(Yii::app()->session['usercheckphone_code']);
-deb::dump(Yii::app()->session['usercheckphone_message_id']);
+//deb::dump(Yii::app()->session['usercheckphone_code']);
+//deb::dump(Yii::app()->session['usercheckphone_message_id']);
+
 
         $countries = Countries::model()->findAll();
         $regions = Regions::model()->findAll(array(
@@ -46,7 +47,30 @@ deb::dump(Yii::app()->session['usercheckphone_message_id']);
             'order'=>'name'
         ));
 
+        /*
+        $path = Yii::getPathOfAlias('webroot');
+        $SxGeo = new SxGeo($path.'/sypexgeo/SxGeoCity.dat');
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $geodata = $SxGeo->getCityFull($ip);
+        //deb::dump($geodata);
+
+        if(isset($geodata['city']))
+        {
+            if($city = Towns::model()->findByPk($geodata['city']['id']))
+            {
+                header('Location: /'.$city->transname);
+            }
+
+        }
+        else
+        {
+            $this->render('index', array('countries'=>$countries, 'regions'=>$regions));
+        }
+        */
+
+
         $this->render('index', array('countries'=>$countries, 'regions'=>$regions));
+
     }
 
 

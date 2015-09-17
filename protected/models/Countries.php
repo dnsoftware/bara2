@@ -56,6 +56,25 @@ class Countries extends CActiveRecord
 
     }
 
+    // Получение списка стран (облегченный вариан), код - название из поля name
+    public static function getCountryListLight()
+    {
+        $model = self::model()->findAll(array(
+            'select'=>'c_id, name',
+            'condition'=>'1',
+            'order'=>'name ASC'
+        ));
+
+        $country_array = array();
+        foreach($model as $mval)
+        {
+            $country_array[$mval->c_id] = $mval->name;
+        }
+
+        return $country_array;
+
+    }
+
     // Получение списка стран для select
     public static function displayCountryList($selected_id = 0, $null_value = 'Выберите страну')
     {

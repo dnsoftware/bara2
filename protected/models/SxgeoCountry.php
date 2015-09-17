@@ -31,11 +31,11 @@ class SxgeoCountry extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('id, iso, continent, name_ru, name_en, lat, lon, timezone', 'required'),
+			array('id, iso, continent, name_ru, name_en, lat, lon', 'required'),
 			array('id', 'numerical', 'integerOnly'=>true),
 			array('iso, continent', 'length', 'max'=>2),
 			array('name_ru, name_en', 'length', 'max'=>128),
-			array('lat, lon', 'length', 'max'=>6),
+			array('lat, lon', 'length', 'max'=>10),
 			array('timezone', 'length', 'max'=>30),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.

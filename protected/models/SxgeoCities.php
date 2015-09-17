@@ -30,7 +30,7 @@ class SxgeoCities extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('id, region_id, name_ru, name_en, lat, lon, okato', 'required'),
+			array('id', 'required'),
 			array('id, region_id', 'numerical', 'integerOnly'=>true),
 			array('name_ru, name_en', 'length', 'max'=>128),
 			array('lat, lon', 'length', 'max'=>10),

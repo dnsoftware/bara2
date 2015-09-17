@@ -1,0 +1,20 @@
+.regselect_arrow
+{
+    background: transparent url("/images/arrdown.gif") no-repeat scroll 0px 0px;
+    width: 5px;
+    height: 7px;
+    margin-left: 1px;
+    display: inline-block;
+}
+
+#region_change
+{
+    position: absolute;
+    margin-top: 2px;
+    background-color: #fff;
+    border: #ccc solid 1px;
+    float: right;
+    clear: both;
+    padding: 5px;
+    visibility: hidden;
+}
