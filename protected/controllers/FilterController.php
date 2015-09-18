@@ -40,33 +40,34 @@ class FilterController extends Controller
             if($mesto_isset_tag && $mselector == 't')
             {
                 $town = Towns::model()->findByPk($m_id);
-
-                $_GET['mainblock']['t_id'] = $town->t_id;
-                $_GET['mainblock']['reg_id'] = $town->reg_id;
-                $_GET['mainblock']['c_id'] = $town->c_id;
+                $region = Regions::model()->findByPk($town->reg_id);
+                $country = Countries::model()->findByPk($town->c_id);
 
                 self::SetGeolocatorCookie('geo_mytown', $town->t_id, 86400*30);
                 self::SetGeolocatorCookie('geo_mytown_name', $town->name, 86400*30);
 
+                self::SetGeolocatorCookie('geo_myregion', $region->reg_id, 86400*30);
+                self::SetGeolocatorCookie('geo_myregion_name', $region->name, 86400*30);
+
+                self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
+                self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
             }
 
             if($mesto_isset_tag && $mselector == 'reg')
             {
                 $region = Regions::model()->findByPk($m_id);
-
-                $_GET['mainblock']['reg_id'] = $region->reg_id;
-                $_GET['mainblock']['c_id'] = $region->c_id;
+                $country = Countries::model()->findByPk($region->c_id);
 
                 self::SetGeolocatorCookie('geo_myregion', $region->reg_id, 86400*30);
                 self::SetGeolocatorCookie('geo_myregion_name', $region->name, 86400*30);
 
+                self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
+                self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
             }
 
             if($mesto_isset_tag && $mselector == 'c')
             {
                 $country = Countries::model()->findByPk($m_id);
-
-                $_GET['mainblock']['c_id'] = $country->c_id;
 
                 self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
                 self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
@@ -848,6 +849,8 @@ class FilterController extends Controller
             'props_sprav_sorted_array'=>$props_sprav_sorted_array,
             'rubriks_props_array'=>$rubriks_props_array,
             'query_delta'=>$query_delta,
+            'mselector'=>$mselector,
+            'm_id'=>$m_id,
         ));
 	}
 
@@ -1192,6 +1195,11 @@ class FilterController extends Controller
         ));
         foreach($from_towns as $fkey=>$fval)
         {
+            if(isset(Towns::$alter_regions[$fval->t_id]))
+            {
+                continue;
+            }
+
             $return_array['reglist']['t_'.$fval->t_id]['id'] = 't_'.$fval->t_id;
             $return_array['reglist']['t_'.$fval->t_id]['name_ru'] = $fval->name . ", " . $regions_array[$fval->reg_id] . ", " . $countries_array[$fval->c_id];
         }
@@ -1218,6 +1226,11 @@ class FilterController extends Controller
         ));
         foreach($from_towns as $fkey=>$fval)
         {
+            if(isset(Towns::$alter_regions[$fval->t_id]))
+            {
+                continue;
+            }
+
             $return_array['reglist']['t_'.$fval->t_id]['id'] = 't_'.$fval->t_id;
             $return_array['reglist']['t_'.$fval->t_id]['name_ru'] = $fval->name . ", " . $regions_array[$fval->reg_id] . ", " . $countries_array[$fval->c_id];
         }
@@ -1387,6 +1400,8 @@ class FilterController extends Controller
     {
         $data = '';
 
+        ob_start();
+
         switch($mesto_selector)
         {
             case "t":
@@ -1403,15 +1418,11 @@ class FilterController extends Controller
 
                 $country = Countries::model()->findByPk($town->c_id);
 
-                ob_start();
                 ?>
                 <option value="c_<?= $country->c_id;?>"><?= $country->name;?></option>
                 <option selected value="t_<?= $town->t_id;?>"><?= $town->name;?></option>
                 <option value="reg_<?= $region->reg_id;?>"><?= $region->name;?></option>
-                <option value="other">Выбрать другой...</option>
                 <?
-                $data = ob_get_contents();
-                ob_end_clean();
 
                 break;
 
@@ -1419,31 +1430,37 @@ class FilterController extends Controller
                 $region = Regions::model()->findByPk($mesto_id);
                 $country = Countries::model()->findByPk($region->c_id);
 
-                ob_start();
                 ?>
                 <option value="c_<?= $country->c_id;?>"><?= $country->name;?></option>
                 <option selected value="reg_<?= $region->reg_id;?>"><?= $region->name;?></option>
-                <option value="other">Выбрать другой...</option>
                 <?
-                $data = ob_get_contents();
-                ob_end_clean();
+                if(isset(Regions::$alter_regions[$region->reg_id]))
+                {
+                    $region2 = Regions::model()->findByPk(Regions::$alter_regions[$region->reg_id]);
+                    ?>
+                    <option value="reg_<?= $region2->reg_id;?>"><?= $region2->name;?></option>
+                <?
+                }
 
                 break;
 
             case "c":
                 $country = Countries::model()->findByPk($mesto_id);
 
-                ob_start();
                 ?>
                 <option selected value="c_<?= $country->c_id;?>"><?= $country->name;?></option>
-                <option value="other">Выбрать другой...</option>
                 <?
-                $data = ob_get_contents();
-                ob_end_clean();
 
                 break;
 
         }
+
+        ?>
+        <option value="other" >Выбрать другой...</option>
+        <?
+
+        $data = ob_get_contents();
+        ob_end_clean();
 
         return $data;
     }

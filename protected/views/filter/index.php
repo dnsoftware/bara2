@@ -9,10 +9,8 @@ $this->breadcrumbs=array(
 	'Filter',
 );
 ?>
-<h1><?php echo $this->id . '/' . $this->action->id; ?></h1>
 
-
-<div id="form_search" style="margin-bottom: 25px;">
+<div id="form_search" style="margin-bottom: 25px; ">
 
 <?
 //deb::dump($query_delta);
@@ -24,10 +22,10 @@ $this->breadcrumbs=array(
             Фильтр
         </span>
 
-        <table  style="display: inline;">
-            <tr>
-                <td>
-                    <select class="_sumoselect fchange" name="mainblock[r_id]" id="r_id" class="" onchange="">
+        <table  style="display: inline; width: 100%;">
+            <tr style="background-color: #eee;">
+                <td style="border: #000020 solid 0px; padding: 0px 0px 0px 5px;">
+                    <select class="filterselect fchange" name="mainblock[r_id]" id="r_id" style="margin: 0px;">
                         <option value="">--- выберите категорию  ---</option>
                         <?
                         foreach ($rub_array as $rkey=>$rval)
@@ -55,31 +53,31 @@ $this->breadcrumbs=array(
                         ?>
                     </select>
                 </td>
-                <td>
-                    <input style="width: 200px; border: 1px solid #A4A4A4; min-height: 14px; background-color: #fff;border-radius:2px;margin:0px; padding: 5px;" type="text" name="params[q]" placeholder="Поиск по объявлениям" value="<?= htmlspecialchars($_GET['params']['q']);?>">
+                <td style="width: 100%; border: #000020 solid 0px;">
+                    <input style="width: 100%; border: 1px solid #A4A4A4; min-height: 14px; background-color: #fff;border-radius:2px;margin:0px; padding: 5px;" type="text" name="params[q]" placeholder="Поиск по объявлениям" value="<?= htmlspecialchars($_GET['params']['q']);?>">
 
                 </td>
 
-
-
-
-                <td>
-                    <select name="mesto_id" id="mesto_id">
+                <td style="border: #000020 solid 0px; padding-right: 0px;">
+                    <select class="filterselect" name="mesto_id" id="mesto_id" onchange="displaySearchReg();">
                     <?
                     $data = '';
-                    if(isset($_GET['mainblock']['t_id']) && intval($_GET['mainblock']['t_id']) > 0)
+                    //if(isset($_GET['mainblock']['t_id']) && intval($_GET['mainblock']['t_id']) > 0)
+                    if($mselector == 't' && $m_id > 0)
                     {
-                        $data = FilterController::ListMestoForSearch('t', intval($_GET['mainblock']['t_id']));
+                        $data = FilterController::ListMestoForSearch('t', $m_id);
                     }
                     else
-                    if(isset($_GET['mainblock']['reg_id']) && intval($_GET['mainblock']['reg_id']) > 0)
+                    //if(isset($_GET['mainblock']['reg_id']) && intval($_GET['mainblock']['reg_id']) > 0)
+                    if($mselector == 'reg' && $m_id > 0)
                     {
-                        $data = FilterController::ListMestoForSearch('reg', intval($_GET['mainblock']['reg_id']));
+                        $data = FilterController::ListMestoForSearch('reg', $m_id);
                     }
                     else
-                    if(isset($_GET['mainblock']['c_id']) && intval($_GET['mainblock']['c_id']) > 0)
+                    //if(isset($_GET['mainblock']['c_id']) && intval($_GET['mainblock']['c_id']) > 0)
+                    if($mselector == 'c' && $m_id > 0)
                     {
-                        $data = FilterController::ListMestoForSearch('c', intval($_GET['mainblock']['c_id']));
+                        $data = FilterController::ListMestoForSearch('c', $m_id);
                     }
                     echo $data;
                     ?>
@@ -122,8 +120,8 @@ $this->breadcrumbs=array(
                 <?
                 */
                 ?>
-                <td>
-                    <input type="submit" name="filter_submit_button" value="Найти">
+                <td style="padding-right: 5px;">
+                    <input style=" padding: 3px;" type="submit" name="filter_submit_button" value="Найти">
                 </td>
             </tr>
         </table>
@@ -150,16 +148,21 @@ $this->breadcrumbs=array(
     </form>
 
 
-<div id="div_searchreg_name" style="position: absolute;">
-<input type="text" name="searchreg_name" id="searchreg_name" value="" style="width: 335px;" placeholder="начните набирать название своего города или региона" >
+<div id="div_searchreg_name" style="display: none; position: absolute; background-color: #ddd; padding: 5px; border:#000020 solid 0px; padding-top: 30px; opacity: 0.9">
+
+    <div >
+    <input type="text" name="searchreg_name" id="searchreg_name" value="" style="width: 335px;" placeholder="начните набирать название своего города или региона" >
+    </div>
+
+
 </div>
 
 
 <script>
 
     $('#div_searchreg_name').offset({
-        left: $('#mesto_id').offset().left,
-        top: $('#mesto_id').offset().top+30
+        left: $('#mesto_id').offset().left-10,
+        top: $('#mesto_id').offset().top-5
     });//$('#mesto_id').offset().left;
 
     $('#searchreg_name').autocomplete({
@@ -215,6 +218,7 @@ $this->breadcrumbs=array(
                 // обработка успешного выполнения запроса
                 success: function(data){
                     $('#mesto_id').html(data['data']);
+                    $('#div_searchreg_name').css('display', 'none');
 
                 }
             });
@@ -224,6 +228,16 @@ $this->breadcrumbs=array(
         }
 
     });
+
+    function displaySearchReg()
+    {
+        if($('#mesto_id').val() == 'other')
+        {
+            $('#div_searchreg_name').css('display', 'block');
+            $('#searchreg_name').focus();
+        }
+
+    }
 
 </script>
 

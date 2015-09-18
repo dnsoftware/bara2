@@ -430,6 +430,11 @@ class SypexgeoController extends Controller
                 if($to = Regions::model()->findByPk($fval->id))
                 {
                     $to->c_id = $countries_bykod[$fval->country]->c_id;
+                    // Патч Крыма и т.п.
+                    if(isset(Regions::$change_country[$fval->id]))
+                    {
+                        $to->c_id = Regions::$change_country[$fval->id];
+                    }
                     $to->name = $fval->name_ru;
                     $to->name_en = $fval->name_en;
                     //$to->transname = $supporter->TranslitForUrl($fval->name_en);;
@@ -446,6 +451,11 @@ class SypexgeoController extends Controller
                     $to = new Regions();
                     $to->reg_id = $fval->id;
                     $to->c_id = $countries_bykod[$fval->country]->c_id;
+                    // Патч Крыма и т.п.
+                    if(isset(Regions::$change_country[$fval->id]))
+                    {
+                        $to->c_id = Regions::$change_country[$fval->id];
+                    }
                     $to->name = $fval->name_ru;
                     $to->name_en = $fval->name_en;
                     $to->transname = $supporter->TranslitForUrl($fval->name_en);;
@@ -476,7 +486,7 @@ class SypexgeoController extends Controller
         // Обновление городов
         if($selector == 'towns_update')
         {
-            $block_count = 1000;   // Погружаем блоками в $block_count строк
+            $block_count = 2000;   // Погружаем блоками в $block_count строк
             $from_id = intval($_GET['from_id']);
 
 
@@ -503,6 +513,12 @@ class SypexgeoController extends Controller
                     {
                         $to->reg_id = $fval->region_id;
                         $to->c_id = $regions_bykod[$fval->region_id];
+                        // Патч Крымских городов и т.п.
+                        if(isset(Regions::$change_country[$fval->region_id]))
+                        {
+                            $to->c_id = Regions::$change_country[$fval->region_id];
+                        }
+
                         $to->name = $fval->name_ru;
                         $to->name_en = $fval->name_en;
                         //$to->transname = $supporter->TranslitForUrl($fval->name_en);;
@@ -521,6 +537,12 @@ class SypexgeoController extends Controller
                             $to->t_id = $fval->id;
                             $to->reg_id = $fval->region_id;
                             $to->c_id = $regions_bykod[$fval->region_id];
+                            // Патч Крымских городов и т.п.
+                            if(isset(Regions::$change_country[$fval->region_id]))
+                            {
+                                $to->c_id = Regions::$change_country[$fval->region_id];
+                            }
+
                             $to->name = $fval->name_ru;
                             $to->name_en = $fval->name_en;
                             $to->transname = $supporter->TranslitForUrl($fval->name_en);;

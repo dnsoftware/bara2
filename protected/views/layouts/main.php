@@ -36,7 +36,7 @@ header("Content-type: text/html; charset=utf-8");
 
 <body>
 
-<div class="container" id="page">
+<div class="container" id="page" style="border: #000020 solid 0px;">
 	<div id="header">
         <table cellpadding="0" cellspacing="0" style="margin: 0px; padding: 0px; width: 100%;">
 		<tr>
@@ -105,11 +105,6 @@ border-radius: 3px;">
             ),
 		)); ?>
 	</div><!-- mainmenu -->
-	<?php if(isset($this->breadcrumbs)):?>
-		<?php $this->widget('zii.widgets.CBreadcrumbs', array(
-			'links'=>$this->breadcrumbs,
-		)); ?><!-- breadcrumbs -->
-	<?php endif?>
 
 	<?php echo $content; ?>
 

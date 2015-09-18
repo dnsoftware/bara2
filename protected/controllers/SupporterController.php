@@ -404,6 +404,38 @@ class SupporterController extends Controller
 
 
 
+    // Поиск и корректировка городов со скобками, типа Красноармейск (Московская область)
+    public function actionSkobkaTowns()
+    {
+        $towns = Towns::model()->findAll(array(
+            'condition'=>'name LIKE "%(%" AND (c_id=185 OR c_id=222)'
+        ));
+
+        foreach($towns as $tkey=>$tval)
+        {
+            $clear = trim(preg_replace('|\(.+\)|siU', '', $tval->name));
+            deb::dump($clear);
+            $tval->name = $clear;
+            $tval->save();
+        ?>
+
+            <?= $tval->t_id;?> <b><?= $tval->name;?></b> <?= $tval->reg_id;?> <b><?= ($tval->t_id == $tval->old_t_id);?></b><br>
+        <?
+            if($dubtowns = Towns::model()->findAllByAttributes(array(
+                'name'=>$clear,
+                'reg_id'=>$tval->reg_id
+            )))
+            {
+                foreach($dubtowns as $dkey=>$dval)
+                {
+                    echo $dval->name."<br>";
+                }
+            }
+
+            echo "<br><br>";
+        }
+
+    }
 
 
 
