@@ -30,7 +30,7 @@
 </div>
 
 <div id="region_change" style="">
-    <form id="form_region_change" action="<?= Yii::app()->createUrl('/filter/setregioncookie');?>" method="post">
+    <form id="form_region_change" action="<?= Yii::app()->createUrl('/filter/setregioncookie');?>" method="post" onsubmit="if($('#geo_region_id').val() == '') return false;">
     <input type="hidden" name="region_id" id="geo_region_id" value="" >
     <input type="text" name="region_name" id="geo_region_name" value="" style="width: 335px;" placeholder="начните набирать название своего города или региона">
     </form>
@@ -113,7 +113,7 @@
             });
         },
         focus: function( event, ui ) {
-            $('#geo_region_name').val( ui.item.label );
+            //$('#geo_region_name').val( ui.item.label );
             return false;
 
         },

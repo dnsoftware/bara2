@@ -4,13 +4,10 @@
 Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/jquery.sumoselect.min.js');
 Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/sumoselect.css');
 
-
-$this->breadcrumbs=array(
-	'Filter',
-);
 ?>
 
 <div id="form_search" style="margin-bottom: 25px; ">
+
 
 <?
 //deb::dump($query_delta);
@@ -79,6 +76,10 @@ $this->breadcrumbs=array(
                     {
                         $data = FilterController::ListMestoForSearch('c', $m_id);
                     }
+                    else
+                    {
+                        $data = FilterController::ListMestoForSearch('none', 0);
+                    }
                     echo $data;
                     ?>
                     </select>
@@ -127,9 +128,6 @@ $this->breadcrumbs=array(
         </table>
 
 
-
-
-
         <div id="form_search_filter">
         <?
         $this->renderPartial('_props_form_search', array(
@@ -146,6 +144,35 @@ $this->breadcrumbs=array(
 
 
     </form>
+
+<div style="margin: 5px; 0px 5px 0px">
+    <?
+    $url_parts = array();
+    $url = '';
+    $bread_count = count($this->breadcrumbs);
+    $i=0;
+    foreach ($this->breadcrumbs as $bkey=>$bval)
+    {
+        $i++;
+        if($bval['type']=='subrubrik')
+        {
+            $url_parts[$bkey-1] = $bval['transname'];
+        }
+        else
+        {
+            $url_parts[$bkey] = $bval['transname'];
+        }
+        $url = implode("/", $url_parts);;
+        ?>
+        <a  class="baralink" href="/<?= $url;?>"><?= $bval['name'];?></a>
+        <?
+        if($i != $bread_count)
+        {
+            echo "<span class='baralink'> > </span>";
+        }
+    }
+    ?>
+</div>
 
 
 <div id="div_searchreg_name" style="display: none; position: absolute; background-color: #ddd; padding: 5px; border:#000020 solid 0px; padding-top: 30px; opacity: 0.9">
@@ -198,7 +225,7 @@ $this->breadcrumbs=array(
             });
         },
         focus: function( event, ui ) {
-            $('#searchname_name').val( ui.item.label );
+            //$('#searchreg_name').val( ui.item.label );
             return false;
 
         },
@@ -219,7 +246,6 @@ $this->breadcrumbs=array(
                 success: function(data){
                     $('#mesto_id').html(data['data']);
                     $('#div_searchreg_name').css('display', 'none');
-
                 }
             });
 
@@ -319,7 +345,7 @@ foreach ($rubrik_groups as $rkey=>$rval)
 {
 
 ?>
-    <a href="<?= Yii::app()->createUrl($rval['path']);?>"><?= $rval['name'];?></a> (<?= $rval['cnt'];?>)
+    <a class="baralink_plus" href="<?= Yii::app()->createUrl($rval['path']);?>"><?= $rval['name'];?></a> <span class="notcount"><?= $rval['cnt'];?></span>
 <?
 }
 

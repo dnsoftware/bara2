@@ -28,3 +28,23 @@
     margin: 0px;
     padding: 4px;
 }
+
+.baralink
+{
+    color: #008cc3;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.baralink_plus
+{
+    color: #008cc3;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.notcount
+{
+    color: #aaaaaa;
+    font-size: 13px;
+}

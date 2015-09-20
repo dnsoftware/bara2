@@ -39,9 +39,11 @@ class BaraholkaUrlRule extends CBaseUrlRule
         }
 
         $params = array();
+
         if($town = Towns::model()->findByAttributes(array('transname'=>$parts[0])))
         {
             //$_GET['t_id'] = $town->t_id;
+
             /*
             $_GET['mainblock']['t_id'] = $town->t_id;
             $_GET['mainblock']['reg_id'] = $town->reg_id;

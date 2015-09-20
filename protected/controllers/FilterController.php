@@ -2,9 +2,12 @@
 
 class FilterController extends Controller
 {
+    public $breadcrumbs = array();  // Хлебные крошки
+                                    // array('Номер по порядку'=>array('transname'=>'часть пути', 'type'=>'страна, регион, город, рубрика, подрубр., св-во', 'url'=>'', 'name'=>'Название ссылки, анкор'))
+
+
 	public function actionIndex()
 	{
-
         $connection=Yii::app()->db;
 
 
@@ -368,11 +371,12 @@ class FilterController extends Controller
         {
             $props_sprav = PropsSprav::model()->findAll(array('condition'=>'rp_id IN ('.implode(", ", $rp_ids).')'));
             $props_route_items = array();
+            $props_route_items_by_id = array();
             foreach($props_sprav as $pkey=>$pval)
             {
                 $props_route_items[$rubriks_props_poryadok_array[$pval->rp_id]][$pval->transname] = $pval;
+                $props_route_items_by_id[$pval->ps_id] = $pval;
             }
-
 
             foreach($_GET['prop'] as $pkey=>$pval)
             {
@@ -841,6 +845,112 @@ class FilterController extends Controller
 
         $rub_array = Rubriks::get_rublist();
 
+        // *************************** Формирование хлебных крошек
+
+        //Местоположение
+        $bread_number = 0;  // индекс в массиве $this->breadcrumbs
+        if($mesto_isset_tag && $mselector == 't')
+        {
+            if(!isset($town))
+            {
+                $town = Towns::model()->findByPk($m_id);
+            }
+
+            $bread_number++;
+            $this->breadcrumbs[$bread_number]['transname'] = $town->transname;
+            $this->breadcrumbs[$bread_number]['type'] = 'town';
+            $this->breadcrumbs[$bread_number]['name'] = $town->name . ": все объявления";
+        }
+        else
+        if($mesto_isset_tag && $mselector == 'reg')
+        {
+            if(!isset($region))
+            {
+                $region = Regions::model()->findByPk($m_id);
+            }
+
+            $bread_number++;
+            $this->breadcrumbs[$bread_number]['transname'] = $region->transname;
+            $this->breadcrumbs[$bread_number]['type'] = 'region';
+            $this->breadcrumbs[$bread_number]['name'] = $region->name . ": все объявления";
+        }
+        else
+        if($mesto_isset_tag && $mselector == 'c')
+        {
+            if(!isset($country))
+            {
+                $country = Countries::model()->findByPk($m_id);
+            }
+
+            $bread_number++;
+            $this->breadcrumbs[$bread_number]['transname'] = $country->transname;
+            $this->breadcrumbs[$bread_number]['type'] = 'country';
+            $this->breadcrumbs[$bread_number]['name'] = $country->name . ": все объявления";
+        }
+
+        //Рубрикация
+        if(isset($_GET['mainblock']['r_id']) && ($bread_r_id = intval($_GET['mainblock']['r_id'])) > 0)
+        {
+            $bread_rubrik = Rubriks::model()->findByPk($bread_r_id);
+            if($bread_rubrik->parent_id > 0)
+            {
+                $bread_parent_rubrik = Rubriks::model()->findByPk($bread_rubrik->parent_id);
+
+                $bread_number++;
+                $this->breadcrumbs[$bread_number]['transname'] = $bread_parent_rubrik->transname;
+                $this->breadcrumbs[$bread_number]['type'] = 'rubrik';
+                $this->breadcrumbs[$bread_number]['name'] = $bread_parent_rubrik->name;
+
+                $bread_number++;
+                $this->breadcrumbs[$bread_number]['transname'] = $bread_rubrik->transname;
+                $this->breadcrumbs[$bread_number]['type'] = 'subrubrik';
+                $this->breadcrumbs[$bread_number]['name'] = $bread_rubrik->name;
+            }
+            else
+            {
+                $bread_number++;
+                $this->breadcrumbs[$bread_number]['transname'] = $bread_rubrik->transname;
+                $this->breadcrumbs[$bread_number]['type'] = 'rubrik';
+                $this->breadcrumbs[$bread_number]['name'] = $bread_rubrik->name;
+            }
+
+        }
+
+//deb::dump($this->breadcrumbs);
+//deb::dump($_GET);
+//deb::dump($rubriks_props_array);
+//deb::dump($props_route_items);
+//deb::dump($rubriks_props_poryadok_by_selector_array);
+//deb::dump($pubriks_props_by_selector_array);
+//deb::dump($props_route_items_by_id);
+
+        if(isset($_GET['addfield']) && count($_GET['addfield']) > 0)
+        {
+            foreach($_GET['addfield'] as $pkey=>$pval)
+            {
+                if(is_array($pval))
+                {
+                    break;
+                }
+
+                //$ankor = $pubriks_props_by_selector_array[$pkey]['name'];
+                $ankor = $props_route_items_by_id[$pval]['value'];
+                $transname = $props_route_items_by_id[$pval]['transname'];
+
+                $bread_number++;
+                $this->breadcrumbs[$bread_number]['transname'] = $transname;
+                $this->breadcrumbs[$bread_number]['type'] = 'prop';
+                $this->breadcrumbs[$bread_number]['name'] = $ankor;
+            }
+        }
+
+//deb::dump($this->breadcrumbs);
+
+        // *************************** КОНЕЦ Формирование хлебных крошек
+
+
+//deb::dump($props_sprav_sorted_array);
+//deb::dump($rub_array);
 		$this->render('index', array(
             'rubrik_groups'=>$rubrik_groups,
             'search_adverts'=>$search_adverts,
@@ -861,7 +971,7 @@ class FilterController extends Controller
         //deb::dump($ret);
         $props_sprav_sorted_array = $ret['props_sprav_sorted_array'];
         $rubriks_props_array = $ret['rubriks_props_array'];
-
+//deb::dump($props_sprav_sorted_array);
         $this->renderPartial('_props_form_search', array(
             //'rubrik_groups'=>$rubrik_groups,
             //'search_adverts'=>$search_adverts,
@@ -1130,21 +1240,41 @@ class FilterController extends Controller
 
     public function  actionSearch()
     {
-        $url_parts = array();
-        if(($t_id = intval($_POST['mainblock']['t_id'])) > 0)
+
+        //////////////////////
+        $parts = array();
+        if(isset($_POST['mesto_id']))
         {
-            $town = Towns::model()->findByPk($t_id);
+            $parts = explode("_", $_POST['mesto_id']);
+        }
+
+        $mesto_isset_tag = 0;
+        $mselector = '';
+        $m_id = 0;
+        if(count($parts) == 2 && intval($parts[1]) > 0)
+        {
+            $mesto_isset_tag = 1;
+            $mselector = $parts[0];
+            $m_id = intval($parts[1]);
+        }
+        /////////////////////
+
+        $url_parts = array();
+        //if(($t_id = intval($_POST['mainblock']['t_id'])) > 0)
+        if($mesto_isset_tag == 1 && $mselector == 't' && $m_id > 0)
+        {
+            $town = Towns::model()->findByPk($m_id);
             $url_parts[0] = $town->transname;
 
         }
-        else if (($reg_id = intval($_POST['mainblock']['reg_id'])) > 0)
+        else if ($mesto_isset_tag == 1 && $mselector == 'reg' && $m_id > 0)
         {
-            $region = Regions::model()->findByPk($reg_id);
+            $region = Regions::model()->findByPk($m_id);
             $url_parts[0] = $region->transname;
         }
-        else if (($c_id = intval($_POST['mainblock']['c_id'])) > 0)
+        else if ($mesto_isset_tag == 1 && $mselector == 'c' && $m_id > 0)
         {
-            $country = Countries::model()->findByPk($c_id);
+            $country = Countries::model()->findByPk($m_id);
             $url_parts[0] = $country->transname;
         }
         else
@@ -1204,7 +1334,6 @@ class FilterController extends Controller
             $return_array['reglist']['t_'.$fval->t_id]['name_ru'] = $fval->name . ", " . $regions_array[$fval->reg_id] . ", " . $countries_array[$fval->c_id];
         }
 
-
         $from_regions = Regions::model()->findAll(array(
             'select'=>'reg_id, c_id, name',
             'condition'=>"c_id = :russia_id AND name LIKE :name ",
@@ -1217,10 +1346,25 @@ class FilterController extends Controller
             $return_array['reglist']['reg_'.$fval->reg_id]['name_ru'] = $fval->name . ", " . $countries_array[$fval->c_id];
         }
 
-        // Потом остальные города и остальные регионы
+        $from_countries = Countries::model()->findAll(array(
+            'select'=>'c_id, name',
+            'condition'=>"c_id = :russia_id AND name LIKE :name ",
+            'order'=>'name ASC',
+            'params'=>array(':name'=>'%'.$searchstr.'%', ':russia_id'=>Yii::app()->params['russia_id'])
+        ));
+        foreach($from_countries as $fkey=>$fval)
+        {
+            $return_array['reglist']['c_'.$fval->c_id]['id'] = 'c_'.$fval->c_id;
+            $return_array['reglist']['c_'.$fval->c_id]['name_ru'] = $fval->name;
+        }
+
+
+
+        // Потом города и регионы СССР
+        $ussr_list = implode(", ", Yii::app()->params['ussr_countries_ids']);
         $from_towns = Towns::model()->findAll(array(
             'select'=>'t_id, reg_id, c_id, name',
-            'condition'=>"double_tag = 0 AND c_id <> :russia_id AND name LIKE :name ",
+            'condition'=>"double_tag = 0 AND c_id <> :russia_id AND c_id IN (".$ussr_list.") AND name LIKE :name ",
             'order'=>'name ASC',
             'params'=>array(':name'=>'%'.$searchstr.'%', ':russia_id'=>Yii::app()->params['russia_id'])
         ));
@@ -1238,7 +1382,7 @@ class FilterController extends Controller
 
         $from_regions = Regions::model()->findAll(array(
             'select'=>'reg_id, c_id, name',
-            'condition'=>"c_id <> :russia_id AND name LIKE :name ",
+            'condition'=>"c_id <> :russia_id AND c_id IN (".$ussr_list.") AND name LIKE :name ",
             'order'=>'name ASC',
             'params'=>array(':name'=>'%'.$searchstr.'%', ':russia_id'=>Yii::app()->params['russia_id'])
         ));
@@ -1249,20 +1393,67 @@ class FilterController extends Controller
         }
 
 
-
-
         $from_countries = Countries::model()->findAll(array(
             'select'=>'c_id, name',
-            'condition'=>"name LIKE :name ",
+            'condition'=>"c_id <> :russia_id AND c_id IN (".$ussr_list.") AND name LIKE :name ",
             'order'=>'name ASC',
-            'params'=>array(':name'=>'%'.$searchstr.'%')
+            'params'=>array(':name'=>'%'.$searchstr.'%', ':russia_id'=>Yii::app()->params['russia_id'])
         ));
-
-
         foreach($from_countries as $fkey=>$fval)
         {
             $return_array['reglist']['c_'.$fval->c_id]['id'] = 'c_'.$fval->c_id;
             $return_array['reglist']['c_'.$fval->c_id]['name_ru'] = $fval->name;
+        }
+
+
+        // Потом все остальные
+        $from_towns = Towns::model()->findAll(array(
+            'select'=>'t_id, reg_id, c_id, name',
+            'condition'=>"double_tag = 0 AND c_id <> :russia_id AND c_id NOT IN (".$ussr_list.") AND name LIKE :name ",
+            'order'=>'name ASC',
+            'params'=>array(':name'=>'%'.$searchstr.'%', ':russia_id'=>Yii::app()->params['russia_id'])
+        ));
+        foreach($from_towns as $fkey=>$fval)
+        {
+            if(isset(Towns::$alter_regions[$fval->t_id]))
+            {
+                continue;
+            }
+
+            $return_array['reglist']['t_'.$fval->t_id]['id'] = 't_'.$fval->t_id;
+            $return_array['reglist']['t_'.$fval->t_id]['name_ru'] = $fval->name . ", " . $regions_array[$fval->reg_id] . ", " . $countries_array[$fval->c_id];
+        }
+
+
+        $from_regions = Regions::model()->findAll(array(
+            'select'=>'reg_id, c_id, name',
+            'condition'=>"c_id <> :russia_id AND c_id NOT IN (".$ussr_list.") AND name LIKE :name ",
+            'order'=>'name ASC',
+            'params'=>array(':name'=>'%'.$searchstr.'%', ':russia_id'=>Yii::app()->params['russia_id'])
+        ));
+        foreach($from_regions as $fkey=>$fval)
+        {
+            $return_array['reglist']['reg_'.$fval->reg_id]['id'] = 'reg_'.$fval->reg_id;
+            $return_array['reglist']['reg_'.$fval->reg_id]['name_ru'] = $fval->name . ", " . $countries_array[$fval->c_id];
+        }
+
+
+        $from_countries = Countries::model()->findAll(array(
+            'select'=>'c_id, name',
+            'condition'=>"c_id <> :russia_id AND c_id NOT IN (".$ussr_list.") AND name LIKE :name ",
+            'order'=>'name ASC',
+            'params'=>array(':name'=>'%'.$searchstr.'%', ':russia_id'=>Yii::app()->params['russia_id'])
+        ));
+        foreach($from_countries as $fkey=>$fval)
+        {
+            $return_array['reglist']['c_'.$fval->c_id]['id'] = 'c_'.$fval->c_id;
+            $return_array['reglist']['c_'.$fval->c_id]['name_ru'] = $fval->name;
+        }
+
+        if(count($return_array['reglist']) == 0)
+        {
+            $return_array['reglist']['none_0']['id'] = 'none_0';
+            $return_array['reglist']['none_0']['name_ru'] = 'нет совпадений';
         }
 
         //deb::dump($from_towns);
@@ -1279,7 +1470,7 @@ class FilterController extends Controller
             $parts = explode("_", $_POST['region_id']);
         }
 
-        if(isset($_POST['region_id']) && count($parts) == 2 && intval($parts[1]) > 0)
+        if(isset($_POST['region_id']) && count($parts) == 2 && intval($parts[1]) >= 0)
         {
             self::unsetRegionCookies();
 
@@ -1302,6 +1493,8 @@ class FilterController extends Controller
                 self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
                 self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
 
+                header('Location: /'.$town->transname);
+
             }
 
             if($parts[0] == 'reg')
@@ -1314,6 +1507,9 @@ class FilterController extends Controller
 
                 self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
                 self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
+
+                header('Location: /'.$region->transname);
+
             }
 
             if($parts[0] == 'c')
@@ -1322,12 +1518,14 @@ class FilterController extends Controller
 
                 self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
                 self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
+
+                header('Location: /'.$country->transname);
             }
 
-            //deb::dump($town);
-            //die();
-
-            header('Location: /'.$town->transname);
+            if($parts[0] == 'none')
+            {
+                header('Location: /russia');
+            }
 
         }
         else
@@ -1372,7 +1570,7 @@ class FilterController extends Controller
         }
 
         $ret = array();
-        if(isset($_POST['mesto_id']) && count($parts) == 2 && intval($parts[1]) > 0)
+        if(isset($_POST['mesto_id']) && count($parts) == 2 && intval($parts[1]) >= 0)
         {
             $mesto_selector = $parts[0];
             $mesto_id = intval($parts[1]);
@@ -1452,6 +1650,12 @@ class FilterController extends Controller
                 <?
 
                 break;
+
+            case "none":
+                ?>
+                <option selected value="none_0">регион не определен</option>
+                <?
+            break;
 
         }
 

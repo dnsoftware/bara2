@@ -60,13 +60,13 @@ header("Content-type: text/html; charset=utf-8");
             if(Yii::app()->user->isGuest)
             {
             ?>
-                <a style="text-decoration: none; font-size: 12px;" href="/user/login">Вход или регистрация</a>
+                <a class="baralink" href="/user/login">Вход или регистрация</a>
             <?
             }
             else
             {
             ?>
-                <a style="text-decoration: none; font-size: 12px;" href="/user/logout">Выход</a>
+                <a class="baralink" href="/user/logout">Выход</a>
             <?
             }
             ?>
