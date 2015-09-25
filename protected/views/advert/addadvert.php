@@ -409,7 +409,15 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 <script type="text/javascript">
     jQuery(function($){
 //        $("#client_phone").mask("999 999-99-99");
+
+        $.mask.definitions['x'] = "[0-9]";
+        $.mask.definitions['9'] = "";
         $("#client_phone").mask(mask_array[$('#select_country_code').val()]);
+        if($('#select_country_code').val() == <?= Yii::app()->params['russia_id'];?>)
+        {
+            $("#client_phone").mask('9xx xxx-xx-xx');
+        }
+        //$("#client_phone").attr({'placeholder':'9__ ___ __ __'});
     });
 
     var mask_array = new Array();
@@ -425,6 +433,10 @@ $r_id = $this->getMainblockValue($model, 'r_id')
     $('#select_country_code').change(function()
     {
         $("#client_phone").mask(mask_array[$('#select_country_code').val()]);
+        if($('#select_country_code').val() == <?= Yii::app()->params['russia_id'];?>)
+        {
+            $("#client_phone").mask('9xx xxx-xx-xx');
+        }
     });
 
 

@@ -175,6 +175,16 @@ Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/sum
 </div>
 
 
+<div style="text-align: left; padding-left: 14px;">
+    <?
+    include(Yii::getPathOfAlias('webroot')."/banners/yandex/top_horizont.php");
+    ?>
+</div>
+
+
+
+
+
 <div id="div_searchreg_name" style="display: none; position: absolute; background-color: #ddd; padding: 5px; border:#000020 solid 0px; padding-top: 30px; opacity: 0.9">
 
     <div >
@@ -350,34 +360,97 @@ foreach ($rubrik_groups as $rkey=>$rval)
 }
 
 ?>
-<table>
-<?
-//deb::dump(count($search_adverts));
-foreach($search_adverts as $key=>$val)
-{
-?>
-<tr style="">
-    <td style="width: 125px;">
-    <?
-    if(count($props_array[$key]['photos']) > 0)
-    {
-    ?>
-        <img width="120" src="/photos/<?= $props_array[$key]['photos'][0];?>">
-    <?
-    }
-    ?>
+<table style="" cellpadding="0" cellspacing="0" >
+<tr>
+    <td style="vertical-align: top;  border: #000020 solid 0px; width: 720px; padding: 0;">
+        <table style="">
+        <?
+        //deb::dump(count($search_adverts));
+        foreach($search_adverts as $key=>$val)
+        {
+        ?>
+        <tr style="">
+            <td style="width: 125px;">
+            <?
+            if(count($props_array[$key]['photos']) > 0)
+            {
+            ?>
+                <img width="120" src="/photos/<?= $props_array[$key]['photos'][0];?>">
+            <?
+            }
+            ?>
+            </td>
+            <td>
+            <?= $props_array[$key]['props_display'];?>
+            </td>
+        </tr>
+        <?
+        }
+        ?>
+        </table>
     </td>
-    <td>
-    <?= $props_array[$key]['props_display'];?>
+    <td style="vertical-align: top; height: 1000px;  border: #000020 solid 0px; width: 300px; padding: 0">
+        <aside>
+            <div style="width: 300px; height: 600px; border: #000020 solid 0px;">
+                <!-- Яндекс.Директ -->
+                <script type="text/javascript">
+                    yandex_partner_id = 150187;
+                    yandex_site_bg_color = 'FFFFF';
+                    yandex_ad_format = 'direct';
+                    yandex_font_size = 1;
+                    yandex_direct_type = 'vertical';
+                    yandex_direct_limit = 3;
+                    yandex_direct_title_font_size = 3;
+                    yandex_direct_links_underline = true;
+                    yandex_direct_header_bg_color = 'FEEAC7';
+                    yandex_direct_title_color = '0000CC';
+                    yandex_direct_url_color = '006600';
+                    yandex_direct_text_color = '000000';
+                    yandex_direct_hover_color = '0066FF';
+                    yandex_direct_sitelinks_color = '0000CC';
+                    yandex_direct_favicon = true;
+                    yandex_no_sitelinks = false;
+                    document.write('<scr'+'ipt type="text/javascript" src="//an.yandex.ru/system/context.js"></scr'+'ipt>');
+                </script>
+            </div>
+        </aside>
+
     </td>
 </tr>
-<?
-}
-?>
 </table>
+
+
 <?
 
 //deb::dump($search_adverts);
 //deb::dump($rubrik_groups);
 
 ?>
+<style>
+    .prilip {
+        position: fixed;
+        z-index: 101;
+    }
+    .stop {
+        position: relative;
+    }
+</style>
+
+<script>
+    // document.documentElement.scrollHeight - высота веб-документа;
+    // aside.offsetHeight - высота элемента
+    var aside = document.querySelector('aside'),
+        t0 = aside.getBoundingClientRect().top - document.documentElement.getBoundingClientRect().top,
+        t1 = document.documentElement.scrollHeight - 0 - aside.offsetHeight;
+
+    function asideScroll() {
+        if (window.pageYOffset > t1) {
+            aside.className = 'stop';
+            aside.style.top = t1 - t0 + 'px';
+        } else {
+            aside.className = (t0 < window.pageYOffset ? 'prilip' : '');
+            aside.style.top = '0';
+        }
+    }
+    window.addEventListener('scroll', asideScroll, false);
+</script>

@@ -15,11 +15,16 @@
         {
             $props = array();
         }
+        if(count($props) == 0 && $rval->hide_if_no_elems_tag)
+        {
+            continue;
+        }
 
         switch($rval->filter_type)
         {
             case "select_one":
                 ?>
+
                 <select class="sumoselect fchange" id="<?= $rval['selector'];?>" name="addfield[<?= $rval['selector'];?>]">
                     <option value="0" disabled selected><?= $rval['name'];?></option>
                     <?

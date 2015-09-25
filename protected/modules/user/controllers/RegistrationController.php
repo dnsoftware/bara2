@@ -11,9 +11,14 @@ class RegistrationController extends Controller
 	{
 		return array(
 			'captcha'=>array(
-				'class'=>'CCaptchaAction',
+				'class'=>'RegCCaptchaAction',
 				'backColor'=>0xFFFFFF,
-			),
+                'height'=>35,
+                'padding'=>0,
+                'transparent'=>true,
+                //'fontFile'=>'./fonts/agaaler.ttf'
+
+            ),
 		);
 	}
 	/**
@@ -23,11 +28,24 @@ class RegistrationController extends Controller
         $model = new RegistrationForm;
         $profile=new Profile;
         $profile->regMode = true;
+        $modelphone = new UserPhones;
+
+        // Страны
+        $countries = Countries::model()->findAll(array('order'=>'sort_number'));
+        $countries_array = array();
+        $mask_array = array();
+        foreach($countries as $country)
+        {
+            $countries_array[$country->c_id] = $country->name . " (+".$country->phone_kod.")";
+            $mask_array[$country->c_id] = UserPhones::PhoneMaskGenerate($country->phone_kod);
+        }
+
+        //$this->createAction('captcha')->getVerifyCode(true);
 
         // ajax validator
         if(isset($_POST['ajax']) && $_POST['ajax']==='registration-form')
         {
-            echo UActiveForm::validate(array($model,$profile));
+            echo UActiveForm::validate(array($model,$profile,$modelphone));
             Yii::app()->end();
         }
 
@@ -36,7 +54,12 @@ class RegistrationController extends Controller
         } else {
             if(isset($_POST['RegistrationForm'])) {
                 $model->attributes=$_POST['RegistrationForm'];
+                /* Патч исключения логина из данных подаваемых при регистрации*/
+                $model->username = str_replace("@", "_", $model->email);
+                /************* Конец патча исключения логина **************/
+
                 $profile->attributes=((isset($_POST['Profile'])?$_POST['Profile']:array()));
+                $modelphone->attributes=$_POST['UserPhones'];
                 if($model->validate()&&$profile->validate())
                 {
                     $soucePassword = $model->password;
@@ -46,9 +69,18 @@ class RegistrationController extends Controller
                     $model->superuser=0;
                     $model->status=((Yii::app()->controller->module->activeAfterRegister)?User::STATUS_ACTIVE:User::STATUS_NOACTIVE);
 
-                    if ($model->save()) {
-                        $profile->user_id=$model->id;
+                    if ($model->save())
+                    {
+                        $profile->user_id = $model->id;
                         $profile->save();
+
+                        if(strlen($modelphone->phone) >= 10)
+                        {
+                            $modelphone->u_id = $model->id;
+                            $modelphone->date_add = time();
+                            $modelphone->save();
+                        }
+
                         if (Yii::app()->controller->module->sendActivationMail) {
                             $activation_url = $this->createAbsoluteUrl('/user/activation/activation',array("activkey" => $model->activkey, "email" => $model->email));
                             UserModule::sendMail($model->email,UserModule::t("You registered from {site_name}",array('{site_name}'=>Yii::app()->name)),UserModule::t("Please activate you account go to {activation_url}",array('{activation_url}'=>$activation_url)));
@@ -74,8 +106,41 @@ class RegistrationController extends Controller
                     }
                 } else $profile->validate();
             }
-            $this->render('/user/registration',array('model'=>$model,'profile'=>$profile));
+
+            if($model->user_type == '')
+            {
+                $model->user_type = 'p';
+            }
+
+            $this->render('/user/registration',array('model'=>$model,'profile'=>$profile,
+                'mask_array'=>$mask_array, 'countries_array'=>$countries_array, 'modelphone'=>$modelphone));
         }
+    }
+
+
+    // Если при регистрации введен телефон проверяем его наличие в базе
+    public function checkPhoneNoempty($c_id, $phone)
+    {
+        if(strlen(trim($phone)) > 10)
+        {
+            // проверяем наличие в базе
+            // если в базе - сообщаем что телефон уже в базе, выход
+            if($phonerow = UserPhones::model()->findByAttributes(array(
+                'c_id'=>$c_id,
+                'phone'=>$phone,
+                'verify_tag'=>1
+            )))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        return false;
+
     }
 
     // Подтверждение телефона - отправка

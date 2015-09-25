@@ -558,7 +558,7 @@ class FilterController extends Controller
                         FROM ". $connection->tablePrefix . "notice n,
                         ".$from_tables_sql.",
                         ". $connection->tablePrefix . "towns t
-                        WHERE
+                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND
                         $mesto_sql AND $rubrik_prop_sql AND
                         $where_filter_sql
                         ".$where_n.$q_sql."
@@ -629,7 +629,8 @@ class FilterController extends Controller
             $adverts = Notice::model()->with('town')->findAll(
                 array(
                     'select'=>'*, town.name as town_name, town.transname as town_transname',
-                    'condition'=>$mesto_rub_sql." AND ".$rubrik_sql.$q_sql
+                    'condition'=>' active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND '.
+                                $mesto_rub_sql." AND ".$rubrik_sql.$q_sql
                 )
             );
 
@@ -652,7 +653,7 @@ class FilterController extends Controller
                         FROM
                         ". $connection->tablePrefix . "notice n,
                         ". $connection->tablePrefix . "rubriks r
-                        WHERE
+                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND
                         ".$mesto_sql." AND ".$rubrik_simple_sql."
                         AND r.parent_id <> 0 AND n.r_id = r.r_id
                         GROUP BY r.name, r.transname ";
@@ -689,7 +690,7 @@ class FilterController extends Controller
                         ". $connection->tablePrefix . "notice n,
                         ". $connection->tablePrefix . "rubriks r,
                         ". $connection->tablePrefix . "notice_props p
-                        WHERE
+                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND
                         n.r_id = ".intval($_GET['mainblock']['r_id'])."
                         AND $mesto_simple_sql
                         AND n.r_id = r.r_id AND n.n_id = p.n_id
@@ -721,7 +722,7 @@ class FilterController extends Controller
                         ". $connection->tablePrefix . "notice n,
                         ". $connection->tablePrefix . "rubriks r,
                         ". $connection->tablePrefix . "rubriks r2
-                        WHERE
+                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND
                         ".$mesto_sql." AND r.parent_id = 0 AND r2.parent_id = r.r_id
                         AND n.r_id = r2.r_id
                         GROUP BY r.name, r.transname ";
@@ -812,11 +813,12 @@ class FilterController extends Controller
             //$short_advert_display = str_replace('[[advert_page_url]]');
             $short_advert_display = str_replace('[[mestopolozhenie]]', $val['town_name'], $short_advert_display);
             $date_add_str = date('d-m-Y H:i', $val['date_add']);
-            if(time() - $val['date_add'] < 86400)
+            $start_time = mktime(0,0,0,intval(date("m", $val['date_add'])), intval(date("d", $val['date_add'])), intval(date("Y", $val['date_add'])));
+            if((time() - $start_time) < 86400)
             {
                 $date_add_str = date('Сегодня H:i', $val['date_add']);
             }
-            if((time() - $val['date_add'] > 86400) && (time() - $val['date_add'] < 86400*2))
+            if(((time() - $start_time) > 86400) && (time() - $start_time < 86400*2))
             {
                 $date_add_str = date('Вчера H:i', $val['date_add']);
             }
@@ -1478,6 +1480,41 @@ class FilterController extends Controller
 
             self::SetGeolocatorCookie('geo_mytown_handchange_tag', 1, 86400*30);
 
+            /********** Подготовка на возврат к странице предыдущего поиска, но с новым регионом **********/
+            $path_replace_tag = 0;
+            $redirect_url = $_SERVER['HTTP_REFERER'];
+            $url_parts = parse_url($_SERVER['HTTP_REFERER']);
+            $path_parts = explode("/", $url_parts['path']);
+
+            if(strlen($url_parts['path']) > 1)
+            {
+                $path_parts = explode("/", $url_parts['path']);
+                $transname = $path_parts[1];
+                $path_parts[1] = '<--placeholder-->';
+                $redirect_url = $url_parts['scheme']."://".$url_parts['host'].implode("/", $path_parts);
+                if(isset($url_parts['query']))
+                {
+                    $redirect_url .= "?".$url_parts['query'];
+                }
+
+                if($town_r = Towns::model()->findByAttributes(array('transname'=>$transname)))
+                {
+                    $path_replace_tag = 1;
+                }
+                else if($region_r = Regions::model()->findByAttributes(array('transname'=>$transname)))
+                {
+                    $path_replace_tag = 1;
+                }
+                else if($country_r = Countries::model()->findByAttributes(array('transname'=>$transname)))
+                {
+                    $path_replace_tag = 1;
+                }
+
+
+            }
+
+            /******* КОНЕЦ Подготовка на возврат к странице предыдущего поиска, но с новым регионом ********/
+
             if($parts[0] == 't')
             {
                 $town = Towns::model()->findByPk($region_id);
@@ -1493,8 +1530,16 @@ class FilterController extends Controller
                 self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
                 self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
 
-                header('Location: /'.$town->transname);
-
+                if($path_replace_tag == 1)
+                {
+                    $redirect_url = str_replace('<--placeholder-->', $town->transname, $redirect_url);
+                    $redirect_url = preg_replace('|mesto_id=[a-z]+_[\d]+&|siU', 'mesto_id=t_'.$town->t_id.'&', $redirect_url);
+                    header('Location: '.$redirect_url);
+                }
+                else
+                {
+                    header('Location: /'.$town->transname);
+                }
             }
 
             if($parts[0] == 'reg')
@@ -1508,7 +1553,16 @@ class FilterController extends Controller
                 self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
                 self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
 
-                header('Location: /'.$region->transname);
+                if($path_replace_tag == 1)
+                {
+                    $redirect_url = str_replace('<--placeholder-->', $region->transname, $redirect_url);
+                    $redirect_url = preg_replace('|mesto_id=[a-z]+_[\d]+&|siU', 'mesto_id=reg_'.$region->reg_id.'&', $redirect_url);
+                    header('Location: '.$redirect_url);
+                }
+                else
+                {
+                    header('Location: /'.$region->transname);
+                }
 
             }
 
@@ -1519,8 +1573,18 @@ class FilterController extends Controller
                 self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
                 self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
 
-                header('Location: /'.$country->transname);
+                if($path_replace_tag == 1)
+                {
+                    $redirect_url = str_replace('<--placeholder-->', $country->transname, $redirect_url);
+                    $redirect_url = preg_replace('|mesto_id=[a-z]+_[\d]+&|siU', 'mesto_id=c_'.$country->c_id.'&', $redirect_url);
+                    header('Location: '.$redirect_url);
+                }
+                else
+                {
+                    header('Location: /'.$country->transname);
+                }
             }
+
 
             if($parts[0] == 'none')
             {

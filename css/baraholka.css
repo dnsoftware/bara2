@@ -43,8 +43,79 @@
     font-size: 13px;
 }
 
+a.hoverunderline
+{
+    color: #008cc3;
+    text-decoration: none;
+}
+a:hover.hoverunderline
+{
+    text-decoration: underline;
+}
+
 .notcount
 {
     color: #aaaaaa;
     font-size: 13px;
+}
+
+.f11
+{
+    font-size: 11px;
+}
+
+.f12b
+{
+    font-size: 12px; font-weight: bold;
+}
+
+.not_text
+{
+    border-left: #999 solid 1px;
+}
+
+.not_act
+{
+    border-left: #999 solid 1px;
+}
+
+.not_ver
+{
+    border-left: #999 solid 1px;
+}
+
+.not_del
+{
+    border-left: #999 solid 1px;
+}
+
+.not_delplus
+{
+    border-left: #999 solid 1px;
+}
+
+tr.trbotline td
+{
+    border-bottom: #999 solid 1px;
+}
+
+.not_rub
+{
+    float: right;
+    font-size: 11px;
+}
+
+.not_title
+{
+    font-size: 11px; color: #000099; font-weight: bold;
+}
+
+.not_desc
+{
+    font-size: 11px; margin-top: 5px;
+}
+
+.imgnot_act, .imgnot_ver, .imgnot_del, .imgnot_delplus
+{
+    cursor: pointer;
 }

@@ -23,6 +23,43 @@ class UserPhones extends CActiveRecord
 		return '{{user_phones}}';
 	}
 
+
+
+    // Генерация массива масок телефонных номеров в зависимости от страны
+    // $country - запись ActiveRecord таблицы стран
+    public static function PhoneMaskGenerate($country_phone_kod)
+    {
+        $mask = '';
+        if(strlen($country_phone_kod) == 3)
+        {
+            $mask = "xxxxx-xx-xx";
+        }
+        if(strlen($country_phone_kod) == 2)
+        {
+            $mask = "xxxxxx-xx-xx";
+        }
+        if(strlen($country_phone_kod) == 1)
+        {
+            $mask = "xxxxxx-xx-xx";
+        }
+        if(strlen($country_phone_kod) == 4)
+        {
+            $mask = "xxx-xx-xx";
+        }
+
+
+        return $mask;
+    }
+
+
+
+
+
+
+
+
+
+
 	/**
 	 * @return array validation rules for model attributes.
 	 */
@@ -31,17 +68,43 @@ class UserPhones extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('u_id, c_id, phone, date_add, verify_kod, verify_tag, message_id', 'required'),
+			array('u_id, c_id, date_add', 'required'),
 			array('u_id, c_id, verify_kod, verify_tag', 'numerical', 'integerOnly'=>true),
 			array('phone', 'length', 'max'=>16),
 			array('date_add', 'length', 'max'=>14),
-			// The following rule is used by search().
+
+            array('phone', 'validatephone'),
+
+            // The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('ph_id, u_id, c_id, phone, date_add, verify_kod, verify_tag', 'safe', 'on'=>'search'),
 		);
 	}
 
-	/**
+    // Проверка корректности ввода телефона
+    public function validatephone($attr, $params)
+    {
+        // если регистрация, то или пустое поле или заполненное но отсутствующее в базе
+        if(Yii::app()->controller->action->id == 'registration')
+        {
+            if($phonerow = self::model()->findByAttributes(array('phone'=>$this->phone)))
+            {
+                $this->addError($attr, 'Указанный телефон уже присутствует в базе!');
+            }
+
+        }
+        else
+        {
+            // Проверка на обязательное поле, если экшн - не регистрация
+            if(strlen($this->phone) < 10)
+            {
+                $this->addError($attr, 'Необходимо заполнить поле Телефон');
+            }
+        }
+    }
+
+
+    /**
 	 * @return array relational rules.
 	 */
 	public function relations()

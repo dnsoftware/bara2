@@ -69,8 +69,9 @@ class Notice extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('u_id, r_id, parent_r_id, t_id, reg_id, c_id, date_add, date_lastedit, expire_period, date_expire, client_name, client_email, client_phone_c_id, client_phone, title, notice_text, active_tag, verify_tag, checksum,  views_count, moder_counted_tag, cost, cost_valuta',  'required'),
-			array('u_id, r_id, t_id, reg_id, c_id, expire_period, active_tag, verify_tag, deactive_moder_id, moder_tag, moder_id, views_count, deleted_tag, otkaz_id, moder_counted_tag', 'numerical', 'integerOnly'=>true),
+            array('u_id, r_id, parent_r_id, t_id, reg_id, c_id, date_add, date_lastedit, expire_period, date_expire, client_name, client_email, client_phone_c_id, client_phone, title, notice_text, active_tag, verify_tag, checksum,  views_count, moder_counted_tag, cost, cost_valuta',  'required'),
+
+            array('u_id, r_id, t_id, reg_id, c_id, expire_period, active_tag, verify_tag, deactive_moder_id, moder_tag, moder_id, views_count, deleted_tag, otkaz_id, moder_counted_tag', 'numerical', 'integerOnly'=>true),
 			array('date_add, date_lastedit, date_expire, date_deactive, date_moder, date_delete, date_sort', 'length', 'max'=>14),
 			array('client_name, client_email, client_phone, phone_search, title, reject_reason', 'length', 'max'=>256),
 			array('notice_type_id, from_ip', 'length', 'max'=>16),

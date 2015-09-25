@@ -5,32 +5,40 @@ $this->breadcrumbs=array(
 );
 ?>
 
-<h1><?php echo UserModule::t("Change Password"); ?></h1>
+<div style="text-align: center; margin-top: 100px; margin-bottom: 140px;">
+
+    <div style="background-color: #efefef; margin: 0 auto; width: 580px; padding: 20px;">
 
 
-<div class="form">
-<?php echo CHtml::beginForm(); ?>
+    <h1 style="font-size: 20px; margin-bottom: 10px;">Сменить пароль</h1>
 
-	<p class="note"><?php echo UserModule::t('Fields with <span class="required">*</span> are required.'); ?></p>
-	<?php echo CHtml::errorSummary($form); ?>
-	
-	<div class="row">
-	<?php echo CHtml::activeLabelEx($form,'password'); ?>
-	<?php echo CHtml::activePasswordField($form,'password'); ?>
-	<p class="hint">
-	<?php echo UserModule::t("Minimal password length 4 symbols."); ?>
-	</p>
-	</div>
-	
-	<div class="row">
-	<?php echo CHtml::activeLabelEx($form,'verifyPassword'); ?>
-	<?php echo CHtml::activePasswordField($form,'verifyPassword'); ?>
-	</div>
-	
-	
-	<div class="row submit">
-	<?php echo CHtml::submitButton(UserModule::t("Save")); ?>
-	</div>
 
-<?php echo CHtml::endForm(); ?>
-</div><!-- form -->
+    <div class="form">
+    <?php echo CHtml::beginForm(); ?>
+
+        <?php echo CHtml::errorSummary($form); ?>
+
+        <div class="row">
+        <?php echo CHtml::activePasswordField($form,'password', array(
+            'placeholder'=>'Пароль',
+            'style'=>'font-size:18px; width: 350px;'
+        )); ?>
+        </div>
+
+        <div class="row">
+        <?php echo CHtml::activePasswordField($form,'verifyPassword', array(
+            'placeholder'=>'Подтверждение пароля',
+            'style'=>'font-size:18px; width: 350px;'
+        )); ?>
+        </div>
+
+
+        <div class="row submit">
+        <?php echo CHtml::submitButton(UserModule::t("Save")); ?>
+        </div>
+
+    <?php echo CHtml::endForm(); ?>
+    </div><!-- form -->
+
+    </div>
+</div>

@@ -8,6 +8,13 @@
 
 ?>
 
+<div style="margin: 5px;">
 <a href="<?= Yii::app()->createUrl('/adminka/');?>">Админка</a>
 &nbsp;
+
+<a href="<?= Yii::app()->createUrl('/adminka/adminadvert/index');?>">Объявления</a>
+&nbsp;
+
 <a href="<?= Yii::app()->createUrl('/adminka/sypexgeo/index');?>">Обновление Sypexgeo</a>
+
+</div>

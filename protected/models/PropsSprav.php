@@ -144,6 +144,7 @@ class PropsSprav extends CActiveRecord
                         //'limit'=>'10'
                     )
                 );
+
             }
             else
             {
@@ -154,6 +155,7 @@ class PropsSprav extends CActiveRecord
         {
 
             $prop = PropsSprav::model()->findByPk($parent_ps_id);
+
             $props_sprav_records = $prop->childs(array('condition'=>'rp_id = :rp_id', 'params'=>array(':rp_id'=>$rp_id)));
 
             //deb::dump($prop);

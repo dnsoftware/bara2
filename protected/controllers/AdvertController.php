@@ -51,22 +51,7 @@ class AdvertController extends Controller
         foreach($countries as $country)
         {
             $countries_array[$country->c_id] = $country->name . " (+".$country->phone_kod.")";
-            if(strlen($country->phone_kod) == 3)
-            {
-                $mask_array[$country->c_id] = "99 999-99-99";
-            }
-            if(strlen($country->phone_kod) == 2)
-            {
-                $mask_array[$country->c_id] = "999 999-99-99";
-            }
-            if(strlen($country->phone_kod) == 1)
-            {
-                $mask_array[$country->c_id] = "999 999-99-99";
-            }
-            if(strlen($country->phone_kod) == 4)
-            {
-                $mask_array[$country->c_id] = "999-99-99";
-            }
+            $mask_array[$country->c_id] = UserPhones::PhoneMaskGenerate($country->phone_kod);
         }
 
         // Сброс проверенности телефона
@@ -1620,6 +1605,7 @@ class AdvertController extends Controller
                             $newprop->ps_id = $addfield_array[$rkey];
                             $newprop->save();
                             //deb::dump($newprop->errors);
+
                         }
                         break;
 
@@ -1650,6 +1636,8 @@ class AdvertController extends Controller
                     case "photoblock":
 
                         $files_str = trim($addfield_array[$rkey]['hand_input_value']);
+                        //echo $addfield_array[$rkey]['ps_id'];
+
                         if($files_str != '')
                         {
                             if($files_str[strlen($files_str)-1] == ';')
@@ -1963,25 +1951,27 @@ class AdvertController extends Controller
     // Просмотр страницы с объявлением
     public function actionViewadvert($daynumber_id)
     {
-        $advert = Notice::model()->findByAttributes(array('daynumber_id'=>$daynumber_id));
-        //deb::dump($advert);
-//        $mainblock = Yii::app()->session['mainblock'];
-//        $addfield = Yii::app()->session['addfield'];
-
-        $props_relate = RubriksProps::model()->with('notice_props')->findAll(array(
+        if($advert = Notice::model()->find(array(
             'select'=>'*',
-            'condition'=>'r_id='.$advert->r_id . " AND n_id=".$advert->n_id,
-            'order'=>'t.hierarhy_tag DESC, t.hierarhy_level ASC, t.display_sort, t.rp_id'
-        ));
+            'condition'=>'active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND daynumber_id = '.$daynumber_id
+        )))
+        {
+            $props_relate = RubriksProps::model()->with('notice_props')->findAll(array(
+                'select'=>'*',
+                'condition'=>'r_id='.$advert->r_id . " AND n_id=".$advert->n_id,
+                'order'=>'t.hierarhy_tag DESC, t.hierarhy_level ASC, t.display_sort, t.rp_id'
+            ));
 
-        $this->MakeAddfieldData($props_relate);
+            $this->MakeAddfieldData($props_relate);
 
-        $mainblock = $advert->attributes;
-        $addfield = $this->addfield_array;
+            $mainblock = $advert->attributes;
+            $addfield = $this->addfield_array;
 
 //deb::dump(Yii::app()->session['addfield']);
 
-        $this->MakeDataForView($mainblock, $addfield);
+            $this->MakeDataForView($mainblock, $addfield);
+        }
+
 
         $this->render('viewadvert', array(
             'mainblock'=>$mainblock,

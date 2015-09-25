@@ -1,7 +1,14 @@
+<div style="text-align: left; padding-left: 14px;">
+<?
+include(Yii::getPathOfAlias('webroot')."/banners/yandex/top_horizont.php");
+?>
+</div>
+
 <h1 style="clear: both;"><?= $mainblock['title'];?></h1>
 
 
 <?
+
 $this->renderPartial('_advertpage', array(
     'mainblock'=>$mainblock,
     'addfield'=>$addfield,
