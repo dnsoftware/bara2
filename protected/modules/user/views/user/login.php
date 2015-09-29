@@ -15,7 +15,6 @@ $this->breadcrumbs=array(
 
 
     <?php echo CHtml::beginForm(); ?>
-
 	<?php echo CHtml::errorSummary($model); ?>
 	
 	<div class="row">
@@ -53,6 +52,7 @@ $this->breadcrumbs=array(
 </div>
 
 <?
+
 /*
 ?>
 <h2>Вы уже имеете аккаунт на этих сайтах? Кликните на логотип сайта, чтобы войти с его помощью:</h2>
@@ -63,3 +63,4 @@ $this->widget('application.extensions.eauth.EAuthWidget', array('action' => '/us
 
 
 </div>
+

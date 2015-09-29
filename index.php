@@ -1,5 +1,5 @@
 <?php
-//error_reporting(E_ALL & ~E_NOTICE);
+error_reporting(E_ALL & ~E_NOTICE);
 date_default_timezone_set('Europe/Moscow');
 
 // remove the following lines when in production mode
@@ -13,4 +13,7 @@ $config=dirname(__FILE__).'/protected/config/main.php';
 
 
 require_once($yii);
-Yii::createWebApplication($config)->run();
+//Yii::createWebApplication($config)->run();
+
+// Класс BaraholkaWebApplication положил в /yii/BaraholkaWebApplication.php
+Yii::createApplication('BaraholkaWebApplication', $config)->run();

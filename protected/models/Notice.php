@@ -41,6 +41,18 @@
  */
 class Notice extends CActiveRecord
 {
+    const BASE_KOEFF_WATER_SCALE = 0.43;    // Базовый коэффициент масштабирования водяного знака для 600px по ширине
+
+    const HUGE_WIDTH = 1000;                // Максимальный размер горизонтальной большой фотки по ширине
+    const HUGE_HEIGHT = 800;                // Максимальный размер вертикальной большой фотки по высоте
+
+    const BIG_PREVIEW_WIDTH = 600;          // Максимальный размер горизонтальной большой превьшки по ширине
+    const BIG_PREVIEW_HEIGHT = 480;         // Максимальный размер вертикальной большой превьшки по высоте
+
+    const PREVIEW_WIDTH = 140;              // Максимальный размер горизонтальной превьюшки по ширине
+    const PREVIEW_HEIGHT = 112;             // Максимальный размер вертикальной превьюшки по высоте
+
+
     public static $expire_period = [
         '30'=>'дней',
         '21'=>'день',
@@ -73,7 +85,8 @@ class Notice extends CActiveRecord
 
             array('u_id, r_id, t_id, reg_id, c_id, expire_period, active_tag, verify_tag, deactive_moder_id, moder_tag, moder_id, views_count, deleted_tag, otkaz_id, moder_counted_tag', 'numerical', 'integerOnly'=>true),
 			array('date_add, date_lastedit, date_expire, date_deactive, date_moder, date_delete, date_sort', 'length', 'max'=>14),
-			array('client_name, client_email, client_phone, phone_search, title, reject_reason', 'length', 'max'=>256),
+			array('client_name, client_email, client_phone, phone_search, reject_reason', 'length', 'max'=>256),
+            array('title', 'length', 'max'=>80),
 			array('notice_type_id, from_ip', 'length', 'max'=>16),
 			array('checksum', 'length', 'max'=>32),
 
@@ -132,6 +145,38 @@ class Notice extends CActiveRecord
         }
 
     }
+
+
+    // Вычисление цены в указанной валюте и генерация отображения <цена> <символ валюты>
+    // $advert_valuta - код валюты объявления
+    // $advert_cost - цена в валюте объявления
+    // $to_view_valuta - код валюты в которой надо отображать
+    public static function costCalcAndView($advert_valuta, $advert_cost, $to_view_valuta)
+    {
+        if($to_view_valuta == 'RUB')
+        {
+            $to_view_cost = round($advert_cost * Yii::app()->params['options']['kurs_'.strtolower($advert_valuta)]);
+        }
+        else
+        {
+            if($advert_valuta == 'RUB')
+            {
+                $to_view_cost = round($advert_cost / Yii::app()->params['options']['kurs_'.strtolower($to_view_valuta)], 2);
+            }
+            else
+            {
+                $cross_kurs = Yii::app()->params['options']['kurs_'.strtolower($advert_valuta)] / Yii::app()->params['options']['kurs_'.strtolower($to_view_valuta)];
+                $to_view_cost = round($advert_cost * $cross_kurs , 2);
+            }
+        }
+
+        return $to_view_cost;
+    }
+
+
+
+
+
 
     /*
         public static function getImageArray($uploadfiles, $uploadmainfile)

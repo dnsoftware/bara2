@@ -4,10 +4,10 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
 
 <table>
     <tr>
-        <td style="width: 500px; vertical-align: top;">
+        <td style="vertical-align: top;">
 
-            <div id="notice" style="width: 500px;">
-                <div class="galleria">
+            <div id="notice" style="" >
+                <div class="galleria" id="galleria">
                     <?
                     //deb::dump($uploadfiles_array);
                     $part_path = '/photos/';
@@ -16,14 +16,21 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                         $part_path = '/tmp/';
                     }
 
+                    $i=0;
                     foreach($uploadfiles_array as $ukey=>$uval)
                     {
+                        $i++;
                         ?>
-                        <img src="<?= $part_path.$uval;?>" data-title="My title" data-description="My description">
+                        <img src="<?= $part_path.$uval;?>" data-title="<?= htmlspecialchars($mainblock['title']). " - ".$i;?>" data-description="<?= htmlspecialchars($mainblock['title']);?>">
                         <?
                     }
                     ?>
+
                 </div>
+            </div>
+
+            <div id="gallery_fullview" style="z-index: 10; position: absolute; top: 10px; right: 10px; cursor: pointer; ">
+                <div style="background-image: url('/images/lupa_s.png'); background-position: 0px 0px; width: 20px; height: 20px;"></div>
             </div>
 
             <div style="margin-top: 20px;">
@@ -51,25 +58,6 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
         </td>
         <td style="vertical-align: top;">
 
-
-            <div style="border: #ddd solid 1px; padding: 5px; font-size: 18px; font-weight: bold; display: table-cell;">
-                <?= intval($mainblock['cost']*$options['kurs_'.strtolower($mainblock['cost_valuta'])]);?>
-                <?= "Р"//Options::$valutes[$mainblock['cost_valuta']]['symbol'];?>
-                <div style="font-weight: normal; font-size: 12px;">
-                    <?
-                    foreach(Options::$valutes as $vkey=>$vval)
-                    {
-                        if($mainblock['cost_valuta'] == 'RUB')
-                        {
-                            if($vkey != $mainblock['cost_valuta'])
-                            {
-                                echo round($mainblock['cost']/$options['kurs_'.strtolower($vkey)], 2)." ".$vval['symbol']." ";
-                            }
-                        }
-                    }
-                    ?>
-                </div>
-            </div>
 
             <div id="properties" style="border: #000 solid 0px; margin-top: 5px;">
                 <table>

@@ -10,9 +10,27 @@
 class Options extends CActiveRecord
 {
     public static $valutes = [
-        'RUB'=>array('name'=>'рубль', 'abbr'=>'RUB', 'symbol'=>'Р'),
-        'USD'=>array('name'=>'доллар', 'abbr'=>'USD', 'symbol'=>'$'),
-        'EUR'=>array('name'=>'евро', 'abbr'=>'EUR', 'symbol'=>'€'),
+        'RUB'=>array(
+            'name'=>'рубль',
+            'abbr'=>'RUB',
+            'symbol'=>'<img class="rubsymbol" src="/images/rub_sign.png" width="13px;">',
+            'symbol2'=>'<img class="rubsymbol" src="/images/rub_sign2.png">',
+            'name_rodit'=>'рублей'
+        ),
+        'USD'=>array(
+            'name'=>'доллар',
+            'abbr'=>'USD',
+            'symbol'=>'$',
+            'symbol2'=>'$',
+            'name_rodit'=>'долларов'
+        ),
+        'EUR'=>array(
+            'name'=>'евро',
+            'abbr'=>'EUR',
+            'symbol'=>'€',
+            'symbol2'=>'€',
+            'name_rodit'=>'евро'
+        ),
     ];
 
 

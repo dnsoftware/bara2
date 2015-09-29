@@ -174,7 +174,6 @@
 </div>
 
 <script>
-
     $('.sumoselect').SumoSelect();
     <?= $select_multi_placeholders;?>
 
@@ -182,6 +181,4 @@
     {
         changeFilterReload('<?= Yii::app()->createUrl('filter/getdatafilter');?>');
     });
-
-
 </script>

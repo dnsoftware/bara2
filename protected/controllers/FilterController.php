@@ -8,8 +8,9 @@ class FilterController extends Controller
 
 	public function actionIndex()
 	{
-        $connection=Yii::app()->db;
+        $query_delta = 0;
 
+        $connection=Yii::app()->db;
 
         $cookie['mytown'] = Yii::app()->request->cookies->contains('geo_mytown') ?
             Yii::app()->request->cookies['geo_mytown']->value : 0;
@@ -80,43 +81,6 @@ class FilterController extends Controller
         }
 
 
-        /*
-        if($cookie['mytown'] == 0 && $cookie['myregion'] == 0 && $cookie['mycountry'] == 0
-            && isset($_GET['filter_submit_button'])
-        {
-
-            if(isset($_GET['mainblock']['t_id']) && intval($_GET['mainblock']['t_id']) != 0)
-            {
-                $town = Towns::model()->findByPk($_GET['mainblock']['t_id']);
-
-                self::SetGeolocatorCookie('geo_mytown', $town->t_id, 86400*30);
-                self::SetGeolocatorCookie('geo_mytown_name', $town->name, 86400*30);
-
-            }
-
-            if(isset($_GET['mainblock']['reg_id']) && intval($_GET['mainblock']['reg_id']) != 0)
-            {
-                $region = Regions::model()->findByPk($_GET['mainblock']['reg_id']);
-
-                self::SetGeolocatorCookie('geo_myregion', $region->reg_id, 86400*30);
-                self::SetGeolocatorCookie('geo_myregion_name', $region->name, 86400*30);
-
-            }
-
-            if(isset($_GET['mainblock']['c_id']) && intval($_GET['mainblock']['c_id']) != 0)
-            {
-                $country = Countries::model()->findByPk($_GET['mainblock']['c_id']);
-
-                self::SetGeolocatorCookie('geo_mycountry', $country->c_id, 86400*30);
-                self::SetGeolocatorCookie('geo_mycountry_name', $country->name, 86400*30);
-
-            }
-
-
-        }
-        */
-
-
 
         // Местоположение
         $mesto_sql = "1 ";
@@ -151,7 +115,6 @@ class FilterController extends Controller
         */
 
         //Рубрика
-        // $rubrik_sql формируется в BaraholkaUrlRule
 
         $rubrik_sql = " 1 ";
         if(!isset($_GET['parent_r_id']) && isset($_GET['mainblock']['r_id']) && $_GET['mainblock']['r_id'] != '')
@@ -366,7 +329,6 @@ class FilterController extends Controller
         }
         */
 
-
         if( /*count($_GET['prop']) > 0 || */(isset($_GET['addfield']) && count($_GET['addfield']) > 0 ) )
         {
             $props_sprav = PropsSprav::model()->findAll(array('condition'=>'rp_id IN ('.implode(", ", $rp_ids).')'));
@@ -393,7 +355,6 @@ class FilterController extends Controller
             //if(count($_GET['prop']) == count($props_sql_array))
             if(1)
             {
-//deb::dump($_GET);
                 $from_tables_array = array();
                 $from_tables_sql = "";
                 $where_n_array = array();
@@ -624,6 +585,7 @@ class FilterController extends Controller
         // Если поиск только по местоположению/рубрике - простой запрос
         else
         {
+
             $mesto_rub_sql = str_replace(" n.", " t.", $mesto_sql);
             $q_sql = str_replace(" n.", " t.", $q_sql);
             $adverts = Notice::model()->with('town')->findAll(
@@ -795,6 +757,11 @@ class FilterController extends Controller
                 }
 //        deb::dump($bval);
             }
+//deb::dump($val['cost']);
+
+            $val['cost'] = Notice::costCalcAndView($val['cost_valuta'], $val['cost'],
+                                Yii::app()->request->cookies['user_valuta_view']->value).
+                                " ".Options::$valutes[Yii::app()->request->cookies['user_valuta_view']->value]['symbol2'];
 
             $short_advert_display = $shablons_display[$val['r_id']];
             foreach($props_display as $pkey=>$pval)
@@ -952,8 +919,9 @@ class FilterController extends Controller
 
 
 //deb::dump($props_sprav_sorted_array);
-//deb::dump($rub_array);
-		$this->render('index', array(
+
+
+        $this->render('index', array(
             'rubrik_groups'=>$rubrik_groups,
             'search_adverts'=>$search_adverts,
             'props_array'=>$props_array,
@@ -964,6 +932,7 @@ class FilterController extends Controller
             'mselector'=>$mselector,
             'm_id'=>$m_id,
         ));
+
 	}
 
 

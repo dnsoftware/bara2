@@ -14,6 +14,11 @@ class SupporterController extends Controller
         $content = iconv('Windows-1251', 'UTF-8', $content);
         //deb::dump($content);
 
+        preg_match('|<ValCurs Date="([^\"]+)"|siU', $content, $match);
+        deb::dump($match);
+        $temp = explode(".", $match[1]);
+        $kurs_date = mktime(12,0,0, intval($temp[1]), intval($temp[0]), intval($temp[2]));
+
         preg_match_all('|<NumCode>([0-9]+)</NumCode>[\n\t\r\s ]*<CharCode>([A-Z]+)</CharCode>[\n\t\r\s ]*<Nominal>([0-9]+)</Nominal>[\n\t\r\s ]*<Name>(.+)</Name>[\n\t\r\s ]*<Value>(.+)</Value>[\n\t\r\s ]*|siU', $content, $matches);
 
         $kurs_array = array();
@@ -23,10 +28,24 @@ class SupporterController extends Controller
         }
         deb::dump($kurs_array);
 
+        Options::setOption('kurs_date', $kurs_date);
         Options::setOption('kurs_usd', str_replace(",", ".", $kurs_array['USD']));
         Options::setOption('kurs_eur', str_replace(",", ".", $kurs_array['EUR']));
 
     }
+
+
+    // Выставление куки валюты отображения цены
+    public function actionSetValutaView()
+    {
+        unset(Yii::app()->request->cookies['user_valuta_view']);
+        $cookie = new CHttpCookie('user_valuta_view', $_GET['valuta_view']);
+        $cookie->expire = time() + 86400*30;
+        Yii::app()->request->cookies['user_valuta_view'] = $cookie;
+
+        header('Location: '. $_SERVER['HTTP_REFERER']);
+    }
+
 
 
     // Отслеживание статуса СМС на bytehand

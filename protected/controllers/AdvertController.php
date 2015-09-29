@@ -1034,6 +1034,7 @@ class AdvertController extends Controller
                 if(@copy ( $_SERVER['DOCUMENT_ROOT']."/photos/".$fval, $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval ))
                 {
                     // Может нужно, а может и нет
+
                 }
             }
         }
@@ -1303,8 +1304,93 @@ class AdvertController extends Controller
             //If Any browser does not support serializing of multiple files using FormData()
             if(!is_array($_FILES["myfile"]["name"])) //single file
             {
-                $fileName = md5(microtime()).mt_rand(0, mt_getrandmax()).".".strtolower(pathinfo($_FILES["myfile"]["name"], PATHINFO_EXTENSION));
+                $filename_root = md5(microtime()).mt_rand(0, mt_getrandmax());
+                $filename_ext = strtolower(pathinfo($_FILES["myfile"]["name"], PATHINFO_EXTENSION));
+                $fileName = $filename_root.".".$filename_ext;
                 move_uploaded_file($_FILES["myfile"]["tmp_name"],$output_dir.$fileName);
+
+                /******************************/
+                $img = new CImageHandler();
+                $full_filename = $output_dir.$fileName;
+                $img->load($full_filename);
+
+                $orient = 'h';
+                if($img->getWidth() < $img->getHeight())
+                {
+                    $orient = 'v';
+                }
+
+                // Резайз до самой большой картинки
+                $smaller_koeff = 1;
+                $img_width = $img->getWidth();
+                $img_height = $img->getHeight();
+                if($orient == 'h')
+                {
+                    $img->resize(Notice::HUGE_WIDTH, false);
+                    if(Notice::HUGE_WIDTH > $img_width)
+                    {
+                        $smaller_koeff = $img_width / Notice::HUGE_WIDTH;
+                    }
+                    $scale_koeff = Notice::HUGE_WIDTH / Notice::BIG_PREVIEW_WIDTH * Notice::BASE_KOEFF_WATER_SCALE;
+                }
+                else
+                {
+                    $img->resize(false, Notice::HUGE_HEIGHT);
+                    if(Notice::HUGE_HEIGHT > $img_height)
+                    {
+                        $smaller_koeff = $img_height / Notice::HUGE_HEIGHT;
+                    }
+                    $scale_koeff = Notice::HUGE_HEIGHT / Notice::BIG_PREVIEW_HEIGHT * Notice::BASE_KOEFF_WATER_SCALE;
+                }
+
+                $img->watermark($_SERVER['DOCUMENT_ROOT']."/images/waterbig.png", 10, 10, CImageHandler::CORNER_RIGHT_BOTTOM, $scale_koeff*$smaller_koeff);
+                $img->save($_SERVER['DOCUMENT_ROOT']."/tmp/".$filename_root."_huge.".$filename_ext);
+
+                // Резайз до средней картинки
+                $img->reload();
+                $smaller_koeff = 1;
+                $img_width = $img->getWidth();
+                $img_height = $img->getHeight();
+                $scale_koeff = Notice::BASE_KOEFF_WATER_SCALE;
+                if($orient == 'h')
+                {
+                    $img->resize(Notice::BIG_PREVIEW_WIDTH, false);
+                    if(Notice::BIG_PREVIEW_WIDTH > $img_width)
+                    {
+                        $smaller_koeff = $img_width / Notice::BIG_PREVIEW_WIDTH;
+                    }
+                }
+                else
+                {
+                    $img->resize(false, Notice::BIG_PREVIEW_HEIGHT);
+                    if(Notice::BIG_PREVIEW_HEIGHT > $img_height)
+                    {
+                        $smaller_koeff = $img_height / Notice::BIG_PREVIEW_HEIGHT;
+                    }
+                }
+
+                $img->watermark($_SERVER['DOCUMENT_ROOT']."/images/waterbig.png", 10, 10, CImageHandler::CORNER_RIGHT_BOTTOM, $scale_koeff*$smaller_koeff);
+                $img->save($_SERVER['DOCUMENT_ROOT']."/tmp/".$filename_root."_big.".$filename_ext);
+
+                // Маленькая превьюшка
+                $img->reload();
+                if($orient == 'h')
+                {
+                    $img->resize(Notice::PREVIEW_WIDTH, false);
+                }
+                else
+                {
+                    $img->resize(false, Notice::PREVIEW_HEIGHT);
+                }
+
+                $img->save($_SERVER['DOCUMENT_ROOT']."/tmp/".$filename_root."_thumb.".$filename_ext);
+
+                // Удаляем исходник
+                unlink();
+
+
+                /*******************************/
+
                 $ret[]= $fileName;
             }
             else  //Multiple files, file[]
@@ -1652,6 +1738,13 @@ class AdvertController extends Controller
                                 if(@copy ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval, $_SERVER['DOCUMENT_ROOT']."/photos/".$fval ))
                                 {
                                     @unlink ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval);
+
+                                    /* Наложение водяного знака и генерация картинок разных размеров */
+
+
+
+                                    /* КОНЕЦ Наложение водяного знака и генерация картинок разных размеров */
+
                                 }
 
                                 $files_assoc_array[$fval] = $fval;
@@ -1944,13 +2037,19 @@ class AdvertController extends Controller
         $this->addfield_data['props_data'] = $props_data;
         $this->addfield_data['props_string_ids']= $props_string_ids;
 
-        $this->options = Options::getAllOptions();
+        $this->options = Yii::app()->params['options']; //Options::getAllOptions();
 
     }
 
     // Просмотр страницы с объявлением
     public function actionViewadvert($daynumber_id)
     {
+        /*********** Для верхней формы поиска ***********/
+        $mesto_isset_tag = 0;
+        $mselector = '';
+        $m_id = 0;
+        /***********************/
+
         if($advert = Notice::model()->find(array(
             'select'=>'*',
             'condition'=>'active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND daynumber_id = '.$daynumber_id
@@ -1970,8 +2069,63 @@ class AdvertController extends Controller
 //deb::dump(Yii::app()->session['addfield']);
 
             $this->MakeDataForView($mainblock, $addfield);
+
+            /*********** Для верхней формы поиска ***********/
+            $mesto_isset_tag = 1;
+            $mselector = 't';
+            $m_id = $advert->t_id;
+            $_GET['mainblock']['r_id'] = $advert->r_id;
+            /***********************/
         }
 
+        $town = Towns::model()->findByPk($advert->t_id);
+        $subrubrik = Rubriks::model()->findByPk($advert->r_id);
+        $rubrik = Rubriks::model()->findByPk($subrubrik->parent_id);
+
+        $breadcrumbs = array();
+        $i=-3;
+        $i++;
+        $breadcrumbs[$i]['type'] = "town";
+        $breadcrumbs[$i]['name'] = $town->name . ": все объявления";
+        $breadcrumbs[$i]['transname'] = $town->transname;
+        $i++;
+        $breadcrumbs[$i]['type'] = "rubrik";
+        $breadcrumbs[$i]['name'] = $rubrik->name;
+        $breadcrumbs[$i]['transname'] = $rubrik->transname;
+        $i++;
+        $breadcrumbs[$i]['type'] = "subrubrik";
+        $breadcrumbs[$i]['name'] = $subrubrik->name;
+        $breadcrumbs[$i]['transname'] = $subrubrik->transname;
+
+
+        $temp = array();
+        foreach($props_relate as $pkey=>$pval)
+        {
+            if($pval->hierarhy_tag == 1)
+            {
+                $temp[$pval->rp_id] = $pval->notice_props[0]->ps_id;
+                $breadcrumbs[$pval->notice_props[0]->ps_id] = '';
+            }
+        }
+
+        $breadprops = PropsSprav::model()->findAll(
+            array(
+                'select'=>'ps_id, value, transname',
+                'condition'=>'ps_id IN ('.implode(", ", $temp).')'
+            )
+        );
+
+
+
+        foreach($breadprops as $bkey=>$bval)
+        {
+            $breadcrumbs[$bval->ps_id]['type'] = "prop";
+            $breadcrumbs[$bval->ps_id]['name'] = $bval->value;
+            $breadcrumbs[$bval->ps_id]['transname'] = $bval->transname;
+        }
+//deb::dump($breadcrumbs);
+
+        $rub_array = Rubriks::get_rublist();
 
         $this->render('viewadvert', array(
             'mainblock'=>$mainblock,
@@ -1980,6 +2134,10 @@ class AdvertController extends Controller
             'mainblock_data'=>$this->mainblock_data,
             'addfield_data'=>$this->addfield_data,
             'options'=>$this->options,
+            'rub_array'=>$rub_array,
+            'mselector'=>$mselector,
+            'm_id'=>$m_id,
+            'breadcrumbs'=>$breadcrumbs
         ));
 
 

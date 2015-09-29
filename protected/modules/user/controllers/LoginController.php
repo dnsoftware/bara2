@@ -7,6 +7,10 @@ class LoginController extends Controller
 	/**
 	 * Displays the login page
 	 */
+    public function _actionLogin()
+    {
+
+    }
 	public function actionLogin()
 	{
         $serviceName = Yii::app()->request->getQuery('service');
@@ -85,6 +89,7 @@ class LoginController extends Controller
 						$this->redirect(Yii::app()->user->returnUrl);
 				}
 			}
+
 			// display the login form
 			$this->render('/user/login',array('model'=>$model));
 		} else
