@@ -69,6 +69,10 @@ Galleria.addTheme({
 
                 if ( e.index === this.getIndex() ) {
                     $(e.thumbTarget).css('opacity',1);
+
+                    /********Патч рамка первого превью**********/
+                    $(e.thumbTarget).parent().css('border','#999 solid 2px');
+                    /**********Конец Патч рамка первого превью************/
                 }
             } else {
                 $(e.thumbTarget).css('opacity', this.getIndex() ? 1 : 0.6).bind('click:fast', function() {

@@ -133,7 +133,7 @@ foreach ($rubrik_groups as $rkey=>$rval)
 {
 
 ?>
-    <a class="baralink_plus" href="<?= Yii::app()->createUrl($rval['path']);?>"><?= $rval['name'];?></a> <span class="notcount"><?= $rval['cnt'];?></span>
+    <a style="margin-left: 10px;" class="baralink_plus" href="<?= Yii::app()->createUrl($rval['path']);?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
 <?
 }
 //deb::dump($props_array);
@@ -153,7 +153,7 @@ foreach ($rubrik_groups as $rkey=>$rval)
             if(count($props_array[$key]['photos']) > 0)
             {
             ?>
-                <img width="120" src="/photos/<?= $props_array[$key]['photos'][0];?>">
+                <img src="/photos/<?= Notice::getPhotoName($props_array[$key]['photos'][0], "_thumb");?>">
             <?
             }
             ?>
@@ -171,26 +171,34 @@ foreach ($rubrik_groups as $rkey=>$rval)
         <aside>
             <div style="width: 300px; height: 600px; border: #000020 solid 0px;">
                 <!-- Яндекс.Директ -->
+                <div id="yandex_ad2" style="float: right;"></div>
                 <script type="text/javascript">
-                    yandex_partner_id = 150187;
-                    yandex_site_bg_color = 'FFFFF';
-                    yandex_ad_format = 'direct';
-                    yandex_font_size = 1;
-                    yandex_direct_type = 'vertical';
-                    yandex_direct_limit = 3;
-                    yandex_direct_title_font_size = 3;
-                    yandex_direct_links_underline = true;
-                    yandex_direct_header_bg_color = 'FEEAC7';
-                    yandex_direct_title_color = '0000CC';
-                    yandex_direct_url_color = '006600';
-                    yandex_direct_text_color = '000000';
-                    yandex_direct_hover_color = '0066FF';
-                    yandex_direct_sitelinks_color = '0000CC';
-                    yandex_direct_favicon = true;
-                    yandex_no_sitelinks = false;
-                    document.write('<scr'+'ipt type="text/javascript" src="//an.yandex.ru/system/context.js"></scr'+'ipt>');
-                </script>
-            </div>
+                    (function(w, d, n, s, t) {
+                        w[n] = w[n] || [];
+                        w[n].push(function() {
+                            Ya.Direct.insertInto(150187, "yandex_ad2", {
+                                ad_format: "direct",
+                                type: "posterVertical",
+                                limit: 3,
+                                title_font_size: 3,
+                                links_underline: false,
+                                site_bg_color: "FFFFFF",
+                                title_color: "008CC3",
+                                url_color: "777777",
+                                text_color: "000000",
+                                hover_color: "008CC3",
+                                favicon: true,
+                                no_sitelinks: true
+                            });
+                        });
+                        t = d.getElementsByTagName("script")[0];
+                        s = d.createElement("script");
+                        s.src = "//an.yandex.ru/system/context.js";
+                        s.type = "text/javascript";
+                        s.async = true;
+                        t.parentNode.insertBefore(s, t);
+                    })(window, document, "yandex_context_callbacks");
+                </script>            </div>
         </aside>
 
     </td>

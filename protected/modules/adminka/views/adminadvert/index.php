@@ -38,7 +38,7 @@ $this->breadcrumbs=array(
                 if(count($props_array[$aval->n_id]['photos']) > 0)
                 {
                     ?>
-                    <img width="100" src="/photos/<?= $props_array[$aval->n_id]['photos'][0];?>">
+                    <img width="100" src="/photos/<?= Notice::getPhotoName($props_array[$aval->n_id]['photos'][0], "_thumb");?>">
                 <?
                 }
                 ?>

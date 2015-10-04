@@ -16,7 +16,7 @@ class SupporterController extends Controller
 
         preg_match('|<ValCurs Date="([^\"]+)"|siU', $content, $match);
         deb::dump($match);
-        $temp = explode(".", $match[1]);
+        $temp = explode("/", $match[1]);
         $kurs_date = mktime(12,0,0, intval($temp[1]), intval($temp[0]), intval($temp[2]));
 
         preg_match_all('|<NumCode>([0-9]+)</NumCode>[\n\t\r\s ]*<CharCode>([A-Z]+)</CharCode>[\n\t\r\s ]*<Nominal>([0-9]+)</Nominal>[\n\t\r\s ]*<Name>(.+)</Name>[\n\t\r\s ]*<Value>(.+)</Value>[\n\t\r\s ]*|siU', $content, $matches);
@@ -458,10 +458,91 @@ class SupporterController extends Controller
 
 
 
+    // Счетчик просмотров
+    public function actionAdvertCounter($n_id)
+    {
+        $advert = Notice::model()->find(array(
+            'select'=>'*',
+            'condition'=>'n_id = :n_id',
+            'params'=>array(':n_id'=>$n_id)
+        ));
+
+        $start_date = mktime(0,0,0,
+                intval(date("m", intval($advert->counter_date))),
+                intval(date("d", intval($advert->counter_date))),
+                intval(date("Y", intval($advert->counter_date))));
+        if(time() - $start_date > 86400)
+        {
+            $advert->counter_daily = 1;
+        }
+        else
+        {
+            $advert->counter_daily++;
+        }
+        $advert->counter_total++;
+
+        $advert->counter_date = time();
+        $advert->save();
+
+        header ("Content-type: image/png");
+        $im = ImageCreate (1, 1)
+            or die ("Ошибка при создании изображения");
+        $couleur_fond = ImageColorAllocate ($im, 255, 255, 255);
+        ImagePng ($im);
 
 
+    }
 
 
+    // Генерация номера телефона
+    public function actionDisplayphone($n_id, $bkey)
+    {
+        $curr_time = time();
+        $start_day = mktime(0,0,0,intval(date("m", $curr_time)), intval(date("d", $curr_time)), intval(date("Y", $curr_time)));
+        $int_key = floor(($curr_time - $start_day) / 1800);
+
+        if($bkey == md5($n_id.Yii::app()->params['security_key'].$int_key)
+            || $bkey == md5($n_id.Yii::app()->params['security_key'].($int_key-1)))
+        {
+            if($advert = Notice::model()->find(array(
+                'select'=>'client_phone, client_phone_c_id',
+                'condition'=>'n_id = :n_id',
+                'params'=>array(':n_id'=>$n_id)
+            )))
+            {
+                $country = Countries::model()->findByPk($advert->client_phone_c_id);
+
+                $width = 115;
+                $return = '+'.$country->phone_kod.' '.$advert->client_phone;
+            }
+            else
+            {
+                $width = 100;
+                $return = 'Ошибка!';
+            }
+        }
+        else
+        {
+            $width = 210;
+            $return = 'Ошибка! Перезагрузите страницу';
+        }
+
+
+        header ("Content-type: image/png");
+        $height = 20;
+        $im = ImageCreate ($width, $height);
+        $colorBack = ImageColorAllocate ($im, 255, 255, 255);
+        imageFilledRectangle($im, 0, 0, $width, $height, $colorBack);
+
+        $colorText = ImageColorAllocate ($im, 0, 0, 0);
+        imagettftext ($im, 10, 0, 3, 13, $colorText, "./fonts/arial.ttf", $return);
+
+        imageColorTransparent($im, $colorBack);
+
+        ImagePng ($im);
+
+
+    }
 
 
 

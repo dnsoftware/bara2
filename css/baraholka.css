@@ -119,3 +119,15 @@ tr.trbotline td
 {
     cursor: pointer;
 }
+
+.span_btn
+{
+    color:#008CC3; padding: 6px 10px; border-radius: 16px; border: #008CC3 solid 1px; background-color: #F5FAFD;
+    text-decoration: #008CC3 dotted underline; cursor: pointer;
+}
+
+.span_lnk
+{
+    color:#008CC3; padding: 6px 0px; border-radius: 0px; border: #008CC3 solid 0px; _background-color: #F5FAFD;
+    cursor: pointer; text-decoration: none;
+}

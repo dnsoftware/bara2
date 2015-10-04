@@ -81,7 +81,7 @@ class Notice extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-            array('u_id, r_id, parent_r_id, t_id, reg_id, c_id, date_add, date_lastedit, expire_period, date_expire, client_name, client_email, client_phone_c_id, client_phone, title, notice_text, active_tag, verify_tag, checksum,  views_count, moder_counted_tag, cost, cost_valuta',  'required'),
+            array('u_id, r_id, parent_r_id, t_id, reg_id, c_id, date_add, date_lastedit, expire_period, date_expire, client_name, client_email, client_phone_c_id, title, notice_text, active_tag, verify_tag, checksum,  views_count, moder_counted_tag, cost, cost_valuta', 'required'),
 
             array('u_id, r_id, t_id, reg_id, c_id, expire_period, active_tag, verify_tag, deactive_moder_id, moder_tag, moder_id, views_count, deleted_tag, otkaz_id, moder_counted_tag', 'numerical', 'integerOnly'=>true),
 			array('date_add, date_lastedit, date_expire, date_deactive, date_moder, date_delete, date_sort', 'length', 'max'=>14),
@@ -90,7 +90,7 @@ class Notice extends CActiveRecord
 			array('notice_type_id, from_ip', 'length', 'max'=>16),
 			array('checksum', 'length', 'max'=>32),
 
-            array('client_phone', 'validatephone'),
+            //array('client_phone', 'validatephone'),
 
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
@@ -172,6 +172,53 @@ class Notice extends CActiveRecord
 
         return $to_view_cost;
     }
+
+
+
+    // Генерация имени файла с суффиксом
+    public static function getPhotoName($photoname, $suffix)
+    {
+        return str_replace(".", $suffix.".", $photoname);
+    }
+
+
+    // Генерация слова "Сегодня" или "вчера" в зависимости от даты
+    public static function TodayStrGenerate($date, $upper_tag)
+    {
+        $start_time = mktime(0,0,0,intval(date("m", $date)), intval(date("d", $date)), intval(date("Y", $date)));
+        if((time() - $start_time) < 86400)
+        {
+            $day_string = "сегодня в ".date("H:i", $date);
+        }
+        else
+        if(((time() - $start_time) > 86400) && (time() - $start_time < 86400*2))
+        {
+            $day_string = "вчера в ".date("H:i", $date);
+        }
+        else
+        {
+            $day_string = intval(date("d", $date))." ".Yii::app()->params['month_padezh'][intval(date("m", $date))]." в ".date("H:i", $date);
+        }
+
+        if($upper_tag)
+        {
+            $day_string[0] = strtoupper($day_string[0]);
+        }
+
+        return $day_string;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

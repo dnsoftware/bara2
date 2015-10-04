@@ -72,7 +72,7 @@ header("Content-type: text/html; charset=utf-8");
             ?>
             </div>
 
-            <a href="/advert/addadvert" style="display: inline-block; padding: 9px 18px; margin-top: 15px; color: #fff; text-decoration: none; background-color: #23BE3E;
+            <a href="/advert/addadvert" style="display: inline-block; padding: 9px 18px; margin-top: 15px; color: #fff; text-decoration: none; background-color: #0D9D0D; font-size: 15px;
 -moz-border-radius: 3px;
 -webkit-border-radius: 3px;
 -khtml-border-radius: 3px;

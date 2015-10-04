@@ -2194,15 +2194,15 @@ Galleria = function() {
                 prefix = 'lightbox-',
                 cssMap = {
                     overlay:    'position:fixed;display:none;opacity:'+op.overlayOpacity+';filter:alpha(opacity='+(op.overlayOpacity*100)+
-                                ');top:0;left:0;width:100%;height:100%;background:'+op.overlayBackground+';z-index:99990',
+                                ');top:0;left:0;width:100%;height:100%;background:'+op.overlayBackground+';z-index:99990; background-image: url("/images/krestik.png"); background-position: top right;background-repeat:no-repeat;',
                     box:        'position:fixed;display:none;width:400px;height:400px;top:50%;left:50%;margin-top:-200px;margin-left:-200px;z-index:99991',
                     shadow:     abs+'background:#000;width:100%;height:100%;',
                     content:    abs+'background-color:#fff;top:10px;left:10px;right:10px;bottom:10px;overflow:hidden',
                     info:       abs+'bottom:10px;left:10px;right:10px;color:#444;font:11px/13px arial,sans-serif;height:13px',
-                    close:      abs+'top:10px;right:10px;height:20px;width:20px;background:#fff;text-align:center;cursor:pointer;color:#444;font:16px/22px arial,sans-serif;z-index:99999',
+                    //close:      abs+'top:0px;right:-10px;height:20px;width:20px;background:#fff;text-align:center;cursor:pointer;color:#444;font:16px/22px arial,sans-serif;z-index:99999',
                     image:      abs+'top:10px;left:10px;right:10px;bottom:30px;overflow:hidden;display:block;',
-                    prevholder: abs+'width:50%;top:0;bottom:40px;cursor:pointer;',
-                    nextholder: abs+'width:50%;top:0;bottom:40px;right:-1px;cursor:pointer;',
+                    prevholder: abs+'width:50%;top:0;bottom:40px;cursor:pointer;margin-left:10px;',
+                    nextholder: abs+'width:50%;top:0;bottom:40px;right:-1px;cursor:pointer;margin-right:10px;margin-top:10px;',
                     prev:       abs+'top:50%;margin-top:-20px;height:40px;width:30px;background:#fff;left:20px;display:none;text-align:center;color:#000;font:bold 16px/36px arial,sans-serif',
                     next:       abs+'top:50%;margin-top:-20px;height:40px;width:30px;background:#fff;right:20px;left:auto;display:none;font:bold 16px/36px arial,sans-serif;text-align:center;color:#000',
                     title:      'float:left',
@@ -2232,9 +2232,14 @@ Galleria = function() {
                 css += '.galleria-'+prefix+key+'{'+value+'}';
             });
 
+            /*
             css += '.galleria-'+prefix+'box.iframe .galleria-'+prefix+'prevholder,'+
                    '.galleria-'+prefix+'box.iframe .galleria-'+prefix+'nextholder{'+
                    'width:100px;height:100px;top:50%;margin-top:-70px}';
+            */
+            css += '.galleria-'+prefix+'box.iframe .galleria-'+prefix+'prevholder,'+
+                '.galleria-'+prefix+'box.iframe .galleria-'+prefix+'nextholder{'+
+                'width:50%;height:100%;top:0;margin-top:10px; margin-right:10px;}';
 
             Utils.insertStyleTag( css, 'galleria-lightbox' );
 

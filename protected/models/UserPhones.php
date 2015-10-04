@@ -73,7 +73,7 @@ class UserPhones extends CActiveRecord
 			array('phone', 'length', 'max'=>16),
 			array('date_add', 'length', 'max'=>14),
 
-            array('phone', 'validatephone'),
+            //array('phone', 'validatephone'),
 
             // The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.

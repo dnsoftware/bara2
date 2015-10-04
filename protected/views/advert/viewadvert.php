@@ -55,7 +55,7 @@ include(Yii::getPathOfAlias('webroot')."/banners/yandex/top_horizont.php");
 
 
 
-<h1 style="display: inline; font-size: 28px; padding: 3px; "><?= $mainblock['title'];?></h1>
+<h1 style="display: inline; font-size: 28px; padding: 3px 3px 3px 0; "><?= $mainblock['title'];?></h1>
 
     <span style=" margin-left: 10px; padding: 5px; padding-left: 6px; padding-right: 6px; display: inline; font-size: 22px; font-weight: normal;  background-color: #0D9D0D; color: #fff; text-align: center; ">
 
@@ -124,9 +124,6 @@ include(Yii::getPathOfAlias('webroot')."/banners/yandex/top_horizont.php");
 
     </div>
 
-
-
-
 <?
 $this->renderPartial('_advertpage', array(
     'mainblock'=>$mainblock,
@@ -137,19 +134,24 @@ $this->renderPartial('_advertpage', array(
     'options'=>$this->options,
 ));
 
+
+
 ?>
 
 
+
 <script>
-    Galleria.loadTheme('/js/galleria/themes/classic/galleria.classic.min.js');
+    Galleria.loadTheme('/js/galleria/themes/classic/galleria.classic.js');
     Galleria.run('#galleria', {
-        width: 670,
-        height: 520,
+        width: 684,
+        height: 484,
         //imageCrop: 'landscape',
         lightbox: true,
         //overlayBackground: '#ffffff'
         showImagenav: true,
         showinfo: false,
+        carousel: false,
+        thumbPosition: 'center',
         extend: function() {
             var gallery = this; // "this" is the gallery instance
             $('#gallery_fullview').prependTo('.galleria-container');
@@ -157,12 +159,20 @@ $this->renderPartial('_advertpage', array(
             $('#gallery_fullview').click(function() {
                 gallery.openLightbox();
             });
+
+            // Задание стиля для активного превью
+            $('.galleria-image').click(function(){
+                $('.galleria-image').css('border', '#fff solid 2px');
+                $(this).css('border', '#999 solid 2px');
+
+                $('.galleria-images > .galleria-image').css('border', '0px');
+
+            });
+
         }
 
     });
 
-//    this.addElement('gallery_fullview');
-//    this.appendChild('galleria','gallery_fullview');
 
 
     $('.fchange').change(function ()
@@ -192,7 +202,26 @@ $this->renderPartial('_advertpage', array(
         $('#div_valute_change').offset({
             left: $('#valute_symbol').offset().left-125,
             top: $('#valute_symbol').offset().top + $('#valute_symbol').height() + 5
-        });//$('#mesto_id').offset().left;
+        });
+
 
     });
+
+    // Отобразить телефон
+    <?
+        // Для формирования ключа
+        $curr_time = time();
+        $start_day = mktime(0,0,0,intval(date("m", $curr_time)), intval(date("d", $curr_time)), intval(date("Y", $curr_time)));
+        $int_key = floor(($curr_time - $start_day) / 1800);
+
+    ?>
+
+    $('#display_phone').click(function(event){
+
+        $('#display_phone').css('display', 'none');
+        $('#img_display_phone').attr('src', '<?= Yii::app()->createUrl('supporter/displayphone', array('n_id'=>$mainblock['n_id'], 'bkey'=>md5($mainblock['n_id'].Yii::app()->params['security_key'].$int_key)));?>')
+        $('#img_display_phone').css('display', 'inline');
+
+    })
+
 </script>

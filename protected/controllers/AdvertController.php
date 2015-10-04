@@ -1196,7 +1196,7 @@ class AdvertController extends Controller
                 showDone: false,
                 returnType:"json",
                 allowedTypes:"jpg,png,gif,jpeg",
-                maxFileCount:5,
+                maxFileCount:7,
                 showFileCounter: false,
                 onSuccess:function(files,data,xhr)
                 {
@@ -1308,89 +1308,6 @@ class AdvertController extends Controller
                 $filename_ext = strtolower(pathinfo($_FILES["myfile"]["name"], PATHINFO_EXTENSION));
                 $fileName = $filename_root.".".$filename_ext;
                 move_uploaded_file($_FILES["myfile"]["tmp_name"],$output_dir.$fileName);
-
-                /******************************/
-                $img = new CImageHandler();
-                $full_filename = $output_dir.$fileName;
-                $img->load($full_filename);
-
-                $orient = 'h';
-                if($img->getWidth() < $img->getHeight())
-                {
-                    $orient = 'v';
-                }
-
-                // Резайз до самой большой картинки
-                $smaller_koeff = 1;
-                $img_width = $img->getWidth();
-                $img_height = $img->getHeight();
-                if($orient == 'h')
-                {
-                    $img->resize(Notice::HUGE_WIDTH, false);
-                    if(Notice::HUGE_WIDTH > $img_width)
-                    {
-                        $smaller_koeff = $img_width / Notice::HUGE_WIDTH;
-                    }
-                    $scale_koeff = Notice::HUGE_WIDTH / Notice::BIG_PREVIEW_WIDTH * Notice::BASE_KOEFF_WATER_SCALE;
-                }
-                else
-                {
-                    $img->resize(false, Notice::HUGE_HEIGHT);
-                    if(Notice::HUGE_HEIGHT > $img_height)
-                    {
-                        $smaller_koeff = $img_height / Notice::HUGE_HEIGHT;
-                    }
-                    $scale_koeff = Notice::HUGE_HEIGHT / Notice::BIG_PREVIEW_HEIGHT * Notice::BASE_KOEFF_WATER_SCALE;
-                }
-
-                $img->watermark($_SERVER['DOCUMENT_ROOT']."/images/waterbig.png", 10, 10, CImageHandler::CORNER_RIGHT_BOTTOM, $scale_koeff*$smaller_koeff);
-                $img->save($_SERVER['DOCUMENT_ROOT']."/tmp/".$filename_root."_huge.".$filename_ext);
-
-                // Резайз до средней картинки
-                $img->reload();
-                $smaller_koeff = 1;
-                $img_width = $img->getWidth();
-                $img_height = $img->getHeight();
-                $scale_koeff = Notice::BASE_KOEFF_WATER_SCALE;
-                if($orient == 'h')
-                {
-                    $img->resize(Notice::BIG_PREVIEW_WIDTH, false);
-                    if(Notice::BIG_PREVIEW_WIDTH > $img_width)
-                    {
-                        $smaller_koeff = $img_width / Notice::BIG_PREVIEW_WIDTH;
-                    }
-                }
-                else
-                {
-                    $img->resize(false, Notice::BIG_PREVIEW_HEIGHT);
-                    if(Notice::BIG_PREVIEW_HEIGHT > $img_height)
-                    {
-                        $smaller_koeff = $img_height / Notice::BIG_PREVIEW_HEIGHT;
-                    }
-                }
-
-                $img->watermark($_SERVER['DOCUMENT_ROOT']."/images/waterbig.png", 10, 10, CImageHandler::CORNER_RIGHT_BOTTOM, $scale_koeff*$smaller_koeff);
-                $img->save($_SERVER['DOCUMENT_ROOT']."/tmp/".$filename_root."_big.".$filename_ext);
-
-                // Маленькая превьюшка
-                $img->reload();
-                if($orient == 'h')
-                {
-                    $img->resize(Notice::PREVIEW_WIDTH, false);
-                }
-                else
-                {
-                    $img->resize(false, Notice::PREVIEW_HEIGHT);
-                }
-
-                $img->save($_SERVER['DOCUMENT_ROOT']."/tmp/".$filename_root."_thumb.".$filename_ext);
-
-                // Удаляем исходник
-                unlink();
-
-
-                /*******************************/
-
                 $ret[]= $fileName;
             }
             else  //Multiple files, file[]
@@ -1733,18 +1650,110 @@ class AdvertController extends Controller
 
                             $files_array = explode(";", $files_str);
                             $files_assoc_array = array();
+                            $output_dir = $_SERVER['DOCUMENT_ROOT']."/photos/";
                             foreach ($files_array as $fkey=>$fval)
                             {
-                                if(@copy ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval, $_SERVER['DOCUMENT_ROOT']."/photos/".$fval ))
+                                if(@copy ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval, $output_dir.$fval ))
                                 {
-                                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval);
+                                    // дублируем в качестве исходника
+                                    $original_photo = 'o_'.$fval;
+                                    @copy ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval, $output_dir.$original_photo );
 
                                     /* Наложение водяного знака и генерация картинок разных размеров */
+                                    $fileName = $original_photo;
+                                    $temp = explode(".", $fval);
+                                    $filename_root = $temp[0];
+                                    $filename_ext = $temp[1];
 
+                                    $img = new CImageHandler();
+                                    $full_filename = $output_dir.$fileName;
+                                    $img->load($full_filename);
 
+                                    $orient = 'h';
+                                    if($img->getWidth() < $img->getHeight())
+                                    {
+                                        $orient = 'v';
+                                    }
+
+                                    // Резайз до самой большой картинки
+                                    $smaller_koeff = 1;
+                                    $img_width = $img->getWidth();
+                                    $img_height = $img->getHeight();
+                                    if($orient == 'h')
+                                    {
+                                        $img->resize(Notice::HUGE_WIDTH, false);
+                                        /*
+                                        if(Notice::HUGE_WIDTH > $img_width)
+                                        {
+                                            $smaller_koeff = $img_width / Notice::HUGE_WIDTH;
+                                        }
+                                        */
+                                        $scale_koeff = Notice::HUGE_WIDTH / Notice::BIG_PREVIEW_WIDTH * Notice::BASE_KOEFF_WATER_SCALE;
+                                    }
+                                    else
+                                    {
+                                        $img->resize(false, Notice::HUGE_HEIGHT);
+                                        /*
+                                        if(Notice::HUGE_HEIGHT > $img_height)
+                                        {
+                                            $smaller_koeff = $img_height / Notice::HUGE_HEIGHT;
+                                        }
+                                        */
+                                        $scale_koeff = Notice::HUGE_HEIGHT / Notice::BIG_PREVIEW_HEIGHT * Notice::BASE_KOEFF_WATER_SCALE;
+                                    }
+
+                                    $img->watermark($_SERVER['DOCUMENT_ROOT']."/images/waterbig.png", 10, 10, CImageHandler::CORNER_RIGHT_BOTTOM, $scale_koeff*$smaller_koeff);
+                                    $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root.".".$filename_ext);
+
+                                    // Резайз до средней картинки
+                                    $img->reload();
+                                    $smaller_koeff = 1.2;
+                                    $img_width = $img->getWidth();
+                                    $img_height = $img->getHeight();
+                                    $scale_koeff = Notice::BASE_KOEFF_WATER_SCALE;
+                                    if($orient == 'h')
+                                    {
+                                        $img->resize(Notice::BIG_PREVIEW_WIDTH, false);
+                                        /*
+                                        if(Notice::BIG_PREVIEW_WIDTH > $img_width)
+                                        {
+                                            $smaller_koeff = $img_width / Notice::BIG_PREVIEW_WIDTH;
+                                        }
+                                        */
+                                    }
+                                    else
+                                    {
+                                        $img->resize(false, Notice::BIG_PREVIEW_HEIGHT);
+                                        /*
+                                        if(Notice::BIG_PREVIEW_HEIGHT > $img_height)
+                                        {
+                                            $smaller_koeff = $img_height / Notice::BIG_PREVIEW_HEIGHT;
+                                        }
+                                        */
+                                    }
+
+                                    $img->watermark($_SERVER['DOCUMENT_ROOT']."/images/waterbig.png", 10, 10, CImageHandler::CORNER_RIGHT_BOTTOM, $scale_koeff*$smaller_koeff);
+                                    $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root."_big.".$filename_ext);
+
+                                    // Маленькая превьюшка
+                                    $img->reload();
+                                    if($orient == 'h')
+                                    {
+                                        $img->resize(Notice::PREVIEW_WIDTH, false);
+                                    }
+                                    else
+                                    {
+                                        $img->resize(false, Notice::PREVIEW_HEIGHT);
+                                    }
+
+                                    $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root."_thumb.".$filename_ext);
 
                                     /* КОНЕЦ Наложение водяного знака и генерация картинок разных размеров */
 
+
+
+                                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval);
+                                    @unlink($full_filename);
                                 }
 
                                 $files_assoc_array[$fval] = $fval;
@@ -1771,7 +1780,13 @@ class AdvertController extends Controller
                                 if(!isset($files_assoc_array[$ival]))
                                 {
                                     //var_dump($ival);
+                                    $filename_huge = str_replace(".", ".", $ival);
+                                    $filename_big = str_replace(".", "_big.", $ival);
+                                    $filename_thumb = str_replace(".", "_thumb.", $ival);
                                     @unlink ( $_SERVER['DOCUMENT_ROOT']."/photos/".$ival);
+                                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/photos/".$filename_huge);
+                                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/photos/".$filename_big);
+                                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/photos/".$filename_thumb);
                                 }
                             }
                         }
@@ -2066,6 +2081,9 @@ class AdvertController extends Controller
             $mainblock = $advert->attributes;
             $addfield = $this->addfield_array;
 
+            $user = Users::model()->findByPk($advert->u_id);
+
+            $mainblock['user_date_reg'] = $user->create_at;
 //deb::dump(Yii::app()->session['addfield']);
 
             $this->MakeDataForView($mainblock, $addfield);
@@ -2367,6 +2385,85 @@ class AdvertController extends Controller
 
     }
 
+
+    // Отправка сообщения пользователю
+    public function actionWriteAuthor()
+    {
+        $writeauthor = new FormWriteAuthor();
+
+        // ajax validator
+        if(isset($_POST['ajax']) && $_POST['ajax']==='writeauthor-form')
+        {
+            $writeauthor->attributes = $_POST['FormWriteAuthor'];
+            if(!$writeauthor->validate(array('name', 'email', 'message')))
+            {
+                echo CActiveForm::validate(array($writeauthor), array('name', 'email', 'message'));
+            }
+            else
+            {
+                $retvalidate = CActiveForm::validate(array($writeauthor), array('verifyCode'));
+
+                if($retvalidate != '[]')
+                {
+                    echo $retvalidate;
+                }
+                else
+                {
+                    $advert = Notice::model()->findByPk($writeauthor->n_id);
+                    $town = Towns::model()->findByPk($advert->t_id);
+                    $rubrik = Rubriks::model()->findByPk($advert->r_id);
+
+                    // Генерация ссылки на объяву
+                    $transliter = new Supporter();
+                    $trans_title = $transliter->TranslitForUrl($advert->title);
+                    $advert_page_url = $town->transname."/".$rubrik->transname."/".$trans_title."_".$advert->daynumber_id;
+
+                    ob_start();
+                    ?>
+                    <p>Здравствуйте, <?= $advert->client_name;?>!</p>
+
+                    <p>
+                        Появился новый вопрос по вашему объявлению <a href="http://<?= $_SERVER['HTTP_HOST'];?>/<?= $advert_page_url;?>"><?= $advert->title;?></a>
+                    </p>
+
+                    <p>
+                        От <?= $writeauthor->name;?> <a href="mailto: <?= $writeauthor->email;?>"><?= $writeauthor->email;?></a>
+                    </p>
+
+                    <p>
+                        <?= $writeauthor->message;?>
+                    </p>
+                    <?
+                    $emessage = ob_get_contents();
+                    ob_end_clean();
+
+                    if(UserModule::sendMail($advert->client_email, 'Вопрос по вашему объявлению "'.addslashes($advert->title).'"', $emessage))
+                    {
+                        $result = array('status'=>'ok');
+                        echo function_exists('json_encode') ? json_encode($result) : CJSON::encode($result);
+                    }
+
+                }
+
+
+            }
+
+            Yii::app()->end();
+        }
+
+
+    }
+
+
+    public function actions()
+    {
+        return array(
+            'captcha'=>array(
+                'class'=>'RegCCaptchaAction',
+                'testLimit'=>2
+            ),
+        );
+    }
 
 
 	// Uncomment the following methods and override them if needed
