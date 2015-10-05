@@ -62,6 +62,15 @@ class Notice extends CActiveRecord
         '1'=>'день',
     ];
 
+    public static $abuse_items = array(
+        'tovar_prodan'=>array('class'=>'abuse_quick', 'name'=>'Товар продан'),
+        'nevernaya_cena'=>array('class'=>'abuse_quick', 'name'=>'Неверная цена'),
+        'ne_dozvonitsya'=>array('class'=>'abuse_quick', 'name'=>'Не дозвониться'),
+        'contacts_and_links'=>array('class'=>'abuse_quick', 'name'=>'Контакты и ссылки в описании'),
+        'money_moshennik'=>array('class'=>'abuse_quick', 'name'=>'Мошенничество с деньгами'),
+        'other_abuse'=>array('class'=>'abuse_other', 'name'=>'Другая причина'),
+    );
+
 
 
     /**

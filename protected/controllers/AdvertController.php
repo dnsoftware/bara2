@@ -2454,6 +2454,81 @@ class AdvertController extends Controller
 
     }
 
+    public function actionGetabuseform()
+    {
+        $formabuse = new FormAbuseCaptcha();
+
+        $formabuse->n_id = $_POST['n_id'];
+        $formabuse->class = $_POST['class'];
+        $formabuse->type = $_POST['type'];
+
+        $this->renderPartial('_abuseform', array('formabuse'=>$formabuse));
+    }
+
+    // Отправка жалобы на объявление
+    public function actionSendabuse()
+    {
+        $abusecaptcha = new FormAbuseCaptcha();
+
+        $abusecaptcha->attributes = $_POST['FormAbuseCaptcha'];
+        if(!$abusecaptcha->validate(array('class', 'type', 'message')))
+        {
+            echo CActiveForm::validate(array($abusecaptcha), array('class', 'type', 'message'));
+        }
+        else
+        {
+            $retvalidate = CActiveForm::validate(array($abusecaptcha), array('verifyCode'));
+
+            if($retvalidate != '[]')
+            {
+                echo $retvalidate;
+            }
+            else
+            {
+                $advert = Notice::model()->findByPk($abusecaptcha->n_id);
+                $town = Towns::model()->findByPk($advert->t_id);
+                $rubrik = Rubriks::model()->findByPk($advert->r_id);
+
+                // Генерация ссылки на объяву
+                $transliter = new Supporter();
+                $trans_title = $transliter->TranslitForUrl($advert->title);
+                $advert_page_url = $town->transname."/".$rubrik->transname."/".$trans_title."_".$advert->daynumber_id;
+
+                ob_start();
+                ?>
+                <p>Здравствуйте, <?= $advert->client_name;?>!</p>
+
+                <p>
+                    Появился новый вопрос по вашему объявлению <a href="http://<?= $_SERVER['HTTP_HOST'];?>/<?= $advert_page_url;?>"><?= $advert->title;?></a>
+                </p>
+
+                <p>
+                    От <?= $abusecaptcha->name;?> <a href="mailto: <?= $writeauthor->email;?>"><?= $writeauthor->email;?></a>
+                </p>
+
+                <p>
+                    <?= $abusecaptcha->message;?>
+                </p>
+                <?
+                $emessage = ob_get_contents();
+                ob_end_clean();
+
+                if(UserModule::sendMail($advert->client_email, 'Вопрос по вашему объявлению "'.addslashes($advert->title).'"', $emessage))
+                {
+                    $result = array('status'=>'ok');
+                    echo function_exists('json_encode') ? json_encode($result) : CJSON::encode($result);
+                }
+
+            }
+
+
+        }
+
+        Yii::app()->end();
+
+
+    }
+
 
     public function actions()
     {
@@ -2462,6 +2537,11 @@ class AdvertController extends Controller
                 'class'=>'RegCCaptchaAction',
                 'testLimit'=>2
             ),
+            'abuse_captcha'=>array(
+                'class'=>'RegCCaptchaAction',
+                'testLimit'=>2
+            ),
+
         );
     }
 

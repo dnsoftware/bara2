@@ -75,7 +75,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
 
             <div style="margin-top: 10px; font-weight: normal; width: 682px; border: #000000 solid 0px;">
 
-                <span style="padding-left: 20px; background-image: url('/images/client.png'); background-position: left center; background-repeat: no-repeat; font-weight: bold;" title="Имя"><?= $mainblock['client_name'];?></span>
+                <span style="padding-left: 20px; background-image: url('/images/client.png'); background-position: left center; background-repeat: no-repeat; font-weight: bold;" title="Имя"><a style="color: inherit; text-decoration: none;" href="/user/uadverts/<?= $mainblock['u_id'];?>"><?= $mainblock['client_name'];?></a></span>
                 <span style="font-weight: normal;">на baraholka.ru с <?= Yii::app()->params['month_padezh'][intval(date("m", strtotime($mainblock['user_date_reg'])))];?> <?= date("Y", strtotime($mainblock['user_date_reg']));?> года
                 </span>
 
@@ -103,7 +103,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                 </span>
 
                 <div style="float: right;">
-                <a class="span_lnk" style="background: url('/images/alladvert-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;">
+                <a href="/user/uadverts/<?= $mainblock['u_id'];?>" class="span_lnk" style="background: url('/images/alladvert-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;">
                     <span style="border-bottom: #008CC3 dotted; border-width: 1px;">Все объявления автора</span>
                 </a>
                 </div>
@@ -165,7 +165,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                     </a>
 
                     <a class="span_btn" style="margin-left: 5px; text-decoration: none;">
-                        <span style="border-bottom: #008CC3 dotted; border-width: 1px;">Пожаловаться</span>
+                        <span id="abuse_button" style="border-bottom: #008CC3 dotted; border-width: 1px;">Пожаловаться</span>
                     </a>
 
                     <a class="span_btn" style="margin-left: 5px; text-decoration: none;">
@@ -183,35 +183,9 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
         </td>
         <td style="vertical-align: top;">
 
-            <!-- Яндекс.Директ -->
-            <div id="yandex_ad2" style="float: right;"></div>
-            <script type="text/javascript">
-                (function(w, d, n, s, t) {
-                    w[n] = w[n] || [];
-                    w[n].push(function() {
-                        Ya.Direct.insertInto(150187, "yandex_ad2", {
-                            ad_format: "direct",
-                            type: "posterVertical",
-                            limit: 3,
-                            title_font_size: 3,
-                            links_underline: false,
-                            site_bg_color: "FFFFFF",
-                            title_color: "008CC3",
-                            url_color: "777777",
-                            text_color: "000000",
-                            hover_color: "008CC3",
-                            favicon: true,
-                            no_sitelinks: true
-                        });
-                    });
-                    t = d.getElementsByTagName("script")[0];
-                    s = d.createElement("script");
-                    s.src = "//an.yandex.ru/system/context.js";
-                    s.type = "text/javascript";
-                    s.async = true;
-                    t.parentNode.insertBefore(s, t);
-                })(window, document, "yandex_context_callbacks");
-            </script>
+        <?
+        include(Yii::getPathOfAlias('webroot')."/banners/yandex/right_300.php");
+        ?>
 
 
         </td>
@@ -228,3 +202,161 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
 
 ?>
 </div>
+
+<div id="abuse_window" style="border: #ddd solid 2px; padding: 5px; width: 200px; background-color: #fff;">
+
+    <?
+    foreach(Notice::$abuse_items as $akey=>$aval)
+    {
+    ?>
+        <div><a class="<?= $aval['class'];?> span_lnk" abuseclass="<?= $aval['class'];?>" abusetype="<?= $akey;?>" abuse_n_id="<?= $mainblock['n_id'];?>"><?= $aval['name'];?></a></div>
+    <?
+    }
+    ?>
+
+</div>
+
+<div class="form" id="modal_abusecaptcha" style="border: #999 solid 1px; width: 360px; padding: 20px; z-index: 12;">
+    <span id="modal_abusecaptcha_close">X</span>
+
+    <div id="modal_abusecaptcha_content">
+
+    </div>
+
+</div>
+
+
+<div id="modal_abusecaptcha_overlay"></div>
+
+<style>
+    #modal_abusecaptcha {
+        width: 300px;
+        height: 400px; /* Рaзмеры дoлжны быть фиксирoвaны */
+        border-radius: 5px;
+        border: 3px #000 solid;
+        background: #fff;
+        position: fixed; /* чтoбы oкнo былo в видимoй зoне в любoм месте */
+        top: 45%; /* oтступaем сверху 45%, oстaльные 5% пoдвинет скрипт */
+        left: 50%; /* пoлoвинa экрaнa слевa */
+        margin-top: -150px;
+        margin-left: -150px; /* тут вся мaгия центрoвки css, oтступaем влевo и вверх минус пoлoвину ширины и высoты сooтветственнo =) */
+        display: none; /* в oбычнoм сoстoянии oкнa не дoлжнo быть */
+        opacity: 0; /* пoлнoстью прoзрaчнo для aнимирoвaния */
+        z-index: 5; /* oкнo дoлжнo быть нaибoлее бoльшем слoе */
+        padding: 20px 10px;
+    }
+
+    #modal_abusecaptcha_close {
+        width: 21px;
+        height: 21px;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        display: block;
+    }
+
+    /* Пoдлoжкa */
+    #modal_abusecaptcha_overlay {
+        z-index: 11; /* пoдлoжкa дoлжнa быть выше слoев элементoв сaйтa, нo ниже слoя мoдaльнoгo oкнa */
+        position: fixed; /* всегдa перекрывaет весь сaйт */
+        background-color: #000; /* чернaя */
+        opacity: 0.8; /* нo немнoгo прoзрaчнa */
+        width: 100%;
+        height: 100%; /* рaзмерoм вo весь экрaн */
+        top: 0;
+        left: 0; /* сверху и слевa 0, oбязaтельные свoйствa! */
+        cursor: pointer;
+        display: none; /* в oбычнoм сoстoянии её нет) */
+    }
+</style>
+
+<script>
+
+    $('#abuse_button').click(function(){
+        $('#abuse_window').offset({
+            left: $('#abuse_button').offset().left-10,
+            top: $('#abuse_button').offset().top-123
+        });
+
+    });
+
+
+    function afterValidateAbuse(form, data, hasError)
+    {
+        if(!hasError)
+        {
+            //$('#modal_writeauthor_close').click();
+            $('#modal_abusecaptcha').css('display', 'none');
+            $('#modal_abusecaptcha_overlay').css('display', 'none');
+            alert('Сообщение успешно отправлено!');
+        }
+        else
+        {
+            if(data['FormAbuseCaptcha_verifyCode'])
+            {
+                $('#reg_captcha_button').click();
+            }
+
+        }
+
+    }
+
+    $(document).ready(function()
+    {
+        $('.abuse_quick').click( function(event){
+            item = $(this);
+            event.preventDefault(); // выключaем стaндaртную рoль элементa
+            $('#modal_abusecaptcha_overlay').fadeIn(400, // снaчaлa плaвнo пoкaзывaем темную пoдлoжку
+                function(){
+
+                    $.ajax({
+                        url: "<?= Yii::app()->createUrl('/advert/getabuseform');?>",
+                        method: "post",
+                        data:{
+                            n_id: item.attr('abuse_n_id'),
+                            class: item.attr('abuseclass'),
+                            type: item.attr('abusetype')
+                        },
+                        // обработка успешного выполнения запроса
+                        success: function(data){
+                            $('#modal_abusecaptcha').html(data);
+
+                        }
+                    });
+
+                    //******** Обнуление формы
+                    // Сокрытие сообщений об ошибках
+                    $('.row.error label').css('color', '#000');
+                    $('.errorMessage').css('display', 'none');
+
+                    $('#FormAbuseCaptcha_message').css('background-color', '#fff');
+                    $('#FormAbuseCaptcha_message').css('border-color', '#ddd');
+                    $('#FormAbuseCaptcha_message').val('');
+
+                    $('#FormAbuseCaptcha_verifyCode').css('background-color', '#fff');
+                    $('#FormAbuseCaptcha_verifyCode').css('border-color', '#ddd');
+                    $('#FormAbuseCaptcha_verifyCode').val('');
+
+                    $('#reg_captcha_button').click();
+
+                    $('#modal_abusecaptcha')
+                        .css('display', 'block') // убирaем у мoдaльнoгo oкнa display: none;
+                        .animate({opacity: 1, top: '50%'}, 200); // плaвнo прибaвляем прoзрaчнoсть oднoвременнo сo съезжaнием вниз
+
+                });
+        });
+
+        /* Зaкрытие мoдaльнoгo oкнa, тут делaем тo же сaмoе нo в oбрaтнoм пoрядке */
+        $('#modal_abusecaptcha_close, #modal_abusecaptcha_overlay').click( function(){ // лoвим клик пo крестику или пoдлoжке
+            $('#modal_abusecaptcha')
+                .animate({opacity: 0, top: '45%'}, 200,  // плaвнo меняем прoзрaчнoсть нa 0 и oднoвременнo двигaем oкнo вверх
+                function(){ // пoсле aнимaции
+                    $(this).css('display', 'none'); // делaем ему display: none;
+                    $('#modal_abusecaptcha_overlay').fadeOut(400); // скрывaем пoдлoжку
+                }
+            );
+        });
+    });
+
+</script>
