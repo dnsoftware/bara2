@@ -117,7 +117,7 @@
         <?
 
         // Если страница поиска
-        if(Yii::app()->controller->action->id == 'index')
+        if((Yii::app()->controller->action->id == 'index' && Yii::app()->controller->id == 'filter'))
         {
             $this->renderPartial('_props_form_search', array(
                 //'rubrik_groups'=>$rubrik_groups,

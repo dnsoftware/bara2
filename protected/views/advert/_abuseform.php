@@ -1,69 +1,101 @@
+<?
 
-    <?php
-    $form=$this->beginWidget('CActiveForm', array(
-        'id'=>'abusecaptcha-form',
-        'enableAjaxValidation'=>true,
-        'clientOptions'=>array(
-            'validateOnSubmit'=>true,
-            'afterValidate'=>'js: afterValidateAbuse'
-        ),
-        'htmlOptions' => array('enctype'=>'multipart/form-data'),
-        'action'=>Yii::app()->createUrl('/advert/sendabuse'),
-    ));
+/*
+public $n_id;
+public $class;
+public $type;
+public $message;
+public $verifyCode;
+*/
+
+
+?>
+
+<div id="div_abuse_form">
+<div style="">
+<form id="abuse_form" onsubmit="return false;">
+    <input type="hidden" name="n_id" value="<?= $formabuse['n_id'];?>">
+    <input type="hidden" name="class" value="<?= $formabuse['class'];?>">
+    <input type="hidden" name="type" value="<?= $formabuse['type'];?>">
+
+    <?
+    if($formabuse['class'] == 'abuse_other')
+    {
+    ?>
+        <div>Текст жалобы:</div>
+        <textarea name="message" style="width: 350px; height: 100px;"></textarea>
+    <?
+    }
+    else
+    {
+    ?>
+        <div style="font-size: 16px;">Причина жалобы: <?= Notice::$abuse_items[$formabuse['type']]['name'];?></div>
+    <?
+    }
     ?>
 
+    <table style="margin: 0;">
+    <tr>
+        <td>
+        <nobr>Код: <input type="text" name="verifycode" value="" style="width: 120px;"></nobr>
+        </td>
+        <td>
+        <img id="abuse_captcha_image" src="<?= Yii::app()->createUrl('/advert/showabusecaptcha', array('rnd'=>rand(11111, 99999)));?>" style="height: 50px; width: 150px;">
+        </td>
+        <td>
+            <img id="reload_abuse_captcha" src="/images/icons/reload.gif" style="cursor: pointer;">
+        </td>
+    </tr>
+    </table>
 
-    <?php echo $form->hiddenField($formabuse,'n_id'); ?>
-    <?php echo $form->hiddenField($formabuse,'class'); ?>
-    <?php echo $form->hiddenField($formabuse,'type'); ?>
+</form>
+</div>
+</div>
 
-    <div class="row">
-        <?php echo $form->labelEx($formabuse,'message'); ?>
-        <?php echo $form->textArea($formabuse,'message', array(
-            'style'=>'width: 350px; height: 100px;'
-        )); ?>
-        <?php echo $form->error($formabuse,'message'); ?>
-    </div>
+<div id="abuse_error" style="color: #f00;">
 
-    <div class="row" style=" border: #000020 solid 0px; text-align: left; margin-left: 0px;">
-        <table style="width: 350px; margin: 0; display: inline-block; padding: 0px;">
-            <tr>
-                <td style="padding-top: 0px; border: #000020 solid 0px; padding: 0px;">
-                    <?php echo $form->labelEx($formabuse,'verifyCode'); ?>
-                    <?php echo $form->textField($formabuse,'verifyCode', array(
-                        'placeholder'=>'Текст с картинки',
-                        'style'=>'width: 150px; margin:0; margin-top: 6px;'
-                    )); ?>
-                </td>
-                <td style="border: #000020 solid 0px;">
-                    <?php $this->widget('CCaptcha', array(
-                        'captchaAction'=>'abuse_captcha',
-                        'id'=>'reg_captcha',
-                        'clickableImage'=>true,
-                        'showRefreshButton'=>true,
-                        'buttonLabel' => CHtml::image(Yii::app()->baseUrl.'/images/icons/reload.gif'),
-                    ));
-                    ?>
-                </td>
-            </tr>
-        </table>
+</div>
 
-        <?php echo $form->error($formabuse,'verifyCode'); ?>
+    <input id="send_abuse_button" type="button" value="Отправить">
 
-    </div>
 
-    <div class="row submit">
-        <?php echo CHtml::submitButton('Отправить', array('style'=>'font-size:14px;')); ?>
-    </div>
+<script>
+    $('#reload_abuse_captcha').click(function(){
+        rnd = Math.random() * (999999 - 11111) + 11111;
+        $('#abuse_captcha_image').attr('src', '/advert/showabusecaptcha/rnd/'+rnd);
+    });
 
-    <?php $this->endWidget(); ?>
+    $('#send_abuse_button').click(function(){
 
-    <script>
-        /*
-        $('#abusecaptcha-form').submit(function(){
-            return false;
+        $.ajax({
+            type: 'POST',
+            url: '/advert/sendabuse',
+            dataType: 'json',
+            data: $('#abuse_form').serialize(),
+            success: function(msg){
+
+                if(msg['status'] == 'error')
+                {
+                    //$('#reload_abuse_captcha').click();
+                    $('#abuse_error').html(msg['message']);
+                }
+
+                if(msg['status'] == 'ok')
+                {
+                    $('#abuse_error').html('');
+                    $('#send_abuse_button').css('display', 'none');
+                    $('#div_abuse_form').html(msg['message']);
+                }
+                //console.log(msg);
+                //$('#search_data').html(msg);
+
+            }
         });
-        */
-    </script>
 
+    });
 
+</script>
+
+<?
+//deb::dump(Yii::app()->session['abusecaptcha']);
+?>

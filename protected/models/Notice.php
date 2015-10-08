@@ -218,16 +218,161 @@ class Notice extends CActiveRecord
     }
 
 
+    // Получение количества объяв в избранном
+    public static function GetFavoritCount()
+    {
+        $count = 0;
+        if(isset(Yii::app()->request->cookies['favorit']))
+        {
+            $cookie = Yii::app()->request->cookies['favorit'];
+            $temp = explode(";", $cookie->value);
+            if($temp[0] != '')
+            {
+                $count = count($temp);
+            }
+        }
+
+        return $count;
+    }
+
+    // Проверка наличия объявы в избранном
+    public static function CheckAdvertInFavorit($n_id)
+    {
+        $tag = 0;
+        if(isset(Yii::app()->request->cookies['favorit']))
+        {
+            $cookie = Yii::app()->request->cookies['favorit'];
+            $temp = explode(";", $cookie->value);
+            if(in_array($n_id, $temp))
+            {
+                $tag = 1;
+            }
+        }
+
+        return $tag;
+    }
 
 
+    // Добавление объявы в избранное
+    public static function AddToFavorit($n_id)
+    {
+        if(isset(Yii::app()->request->cookies['favorit']))
+        {
+            $cookie = Yii::app()->request->cookies['favorit'];
+            $cookie->expire = time() + 86400*365;
+
+            $temp = $cookie->value.";".$n_id;
+            $favorit_array = explode(";", $temp);
+            $favorit_array = array_flip(array_flip($favorit_array));
+            $cookie->value = implode(";", $favorit_array);
+            Yii::app()->request->cookies['favorit'] = $cookie;
+            //echo Yii::app()->request->cookies['favorit'];
+        }
+        else
+        {
+            $cookie = new CHttpCookie('favorit', $n_id);
+            $cookie->expire = time() + 86400*365;
+            Yii::app()->request->cookies['favorit'] = $cookie;
+            $favorit_array[] = $n_id;
+        }
+
+        return count($favorit_array);
+
+    }
+
+    // Удаление из избранного
+    public static function DeleteFromFavorit($n_id)
+    {
+        $count = 0;
+        if(isset(Yii::app()->request->cookies['favorit']))
+        {
+            $cookie = Yii::app()->request->cookies['favorit'];
+            $temp = explode(";", $cookie->value);
+            if($temp[0] != '')
+            {
+                foreach($temp as $tkey=>$tval)
+                {
+                    if($tval == $n_id)
+                    {
+                        unset($temp[$tkey]);
+                    }
+                }
+                $cookie->value = implode(";", $temp);
+                Yii::app()->request->cookies['favorit'] = $cookie;
+            }
+        }
+
+        return count($temp);
+    }
 
 
+    // Добавление объявы в последние просмотренные
+    public static function AddToLastVisit($n_id)
+    {
+        $temp = array();
+        if(isset(Yii::app()->request->cookies['last_visit_adverts']))
+        {
+            $cookie = Yii::app()->request->cookies['last_visit_adverts'];
+        }
+        else
+        {
+            $cookie = new CHttpCookie('last_visit_adverts', $n_id);
+        }
+        $cookie->expire = time() + 86400*365;
+
+        $temp = unserialize($cookie->value);
+        $temp[$n_id]['date_view'] = time();
+        $cookie->value = serialize($temp);
+
+        Yii::app()->request->cookies['last_visit_adverts'] = $cookie;
+
+        return count($temp);
+
+    }
 
 
+    // Количество последних просмотренных
+    public static function GetLastvisitCount()
+    {
+        self::DeleteOldLastvisit();
+
+        $count = 0;
+        $temp = array();
+        if(isset(Yii::app()->request->cookies['last_visit_adverts']))
+        {
+            $cookie = Yii::app()->request->cookies['last_visit_adverts'];
+            $temp = unserialize($cookie->value);
+        }
 
 
+        return count($temp);
 
+    }
 
+    // Удаление старых просмотренных
+    public static function DeleteOldLastvisit()
+    {
+        $temp = array();
+        if(isset(Yii::app()->request->cookies['last_visit_adverts']))
+        {
+            $cookie = Yii::app()->request->cookies['last_visit_adverts'];
+            $temp = unserialize($cookie->value);
+
+            $start_date = time() - 86400;
+            foreach ($temp as $tkey=>$tval)
+            {
+                if($tval < $start_date)
+                {
+                    unset($temp[$tkey]);
+                }
+            }
+
+            $cookie->value = serialize($temp);
+            Yii::app()->request->cookies['last_visit_adverts'] = $cookie;
+
+        }
+
+    }
 
 
 

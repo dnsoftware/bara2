@@ -1,9 +1,12 @@
 <?php
-/* @var $this UadvertsController */
+$this->renderPartial('application.views.filter._search_form', array(
+    'rub_array'=>$rub_array,
+    'mselector'=>$mselector,
+    'm_id'=>$m_id,
+    'props_sprav_sorted_array'=>$props_sprav_sorted_array,
+    'rubriks_props_array'=>$rubriks_props_array,
 
-$this->breadcrumbs=array(
-	'Uadverts',
-);
+));
 ?>
 
 <div style="text-align: left; padding-left: 14px; margin-top: 10px; height: 120px;">

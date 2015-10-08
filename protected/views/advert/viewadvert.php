@@ -18,6 +18,8 @@ $this->renderPartial('/filter/_search_form', array(
 <div style="text-align: left; padding-left: 14px; margin-top: 10px; height: 120px;">
 <?
 include(Yii::getPathOfAlias('webroot')."/banners/yandex/top_horizont.php");
+
+
 ?>
 </div>
 
@@ -191,9 +193,23 @@ $this->renderPartial('_advertpage', array(
             }
 
             if ($(event.target).closest("#div_valute_change").length)
+            {
                 return;
+            }
 
             $("#div_valute_change").css('display', 'none');
+
+            if ($(event.target).closest("#abuse_button").length)
+            {
+                return;
+            }
+            if ($(event.target).closest("#abuse_window").length)
+            {
+                return;
+            }
+
+            $("#abuse_window").css('display', 'none');
+
 
             event.stopPropagation();
         });

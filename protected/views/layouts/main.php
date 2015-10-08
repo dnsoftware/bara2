@@ -55,7 +55,13 @@ header("Content-type: text/html; charset=utf-8");
             </td>
             <td style="border: #111 solid 0px; text-align: right; vertical-align: top;">
 
-            <div style="margin-bottom: 5px; margin-top: 2px;">
+            <div style="margin-bottom: 5px; margin-top: 2px; ">
+                <span style="background: url('/images/lastvisit.png'); background-position: left center; background-repeat: no-repeat; padding-left: 23px;">
+                <a href="<?= Yii::app()->createUrl('/user/lastvisit');?>" class="baralink" style="margin-right: 20px;">Недавнее: <span id="lastvisit_count"><?= Notice::GetLastvisitCount();?></span></a></span>
+
+                <span style="background: url('/images/favorit.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px;">
+                <a href="<?= Yii::app()->createUrl('/user/favorit');?>" class="baralink" style="margin-right: 20px;">Избранное: <span id="favorit_count"><?= Notice::GetFavoritCount();?></span></a></span>
+
             <?
             if(Yii::app()->user->isGuest)
             {

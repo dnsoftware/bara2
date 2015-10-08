@@ -2094,6 +2094,10 @@ class AdvertController extends Controller
             $m_id = $advert->t_id;
             $_GET['mainblock']['r_id'] = $advert->r_id;
             /***********************/
+
+            // Выставление кук последних просмотренных
+            Notice::AddToLastVisit($advert->n_id);
+
         }
 
         $town = Towns::model()->findByPk($advert->t_id);
@@ -2456,38 +2460,47 @@ class AdvertController extends Controller
 
     public function actionGetabuseform()
     {
-        $formabuse = new FormAbuseCaptcha();
+        $formabuse['n_id'] = $_POST['n_id'];
+        $formabuse['class'] = $_POST['class'];
+        $formabuse['type'] = $_POST['type'];
 
-        $formabuse->n_id = $_POST['n_id'];
-        $formabuse->class = $_POST['class'];
-        $formabuse->type = $_POST['type'];
 
         $this->renderPartial('_abuseform', array('formabuse'=>$formabuse));
+    }
+
+    public function actionShowAbuseCaptcha()
+    {
+        $captcha = new BaraholkaCaptcha();
+        $captcha->renderImage();
+        Yii::app()->session['abusecaptcha'] = $captcha->code;
     }
 
     // Отправка жалобы на объявление
     public function actionSendabuse()
     {
-        $abusecaptcha = new FormAbuseCaptcha();
 
-        $abusecaptcha->attributes = $_POST['FormAbuseCaptcha'];
-        if(!$abusecaptcha->validate(array('class', 'type', 'message')))
-        {
-            echo CActiveForm::validate(array($abusecaptcha), array('class', 'type', 'message'));
-        }
-        else
-        {
-            $retvalidate = CActiveForm::validate(array($abusecaptcha), array('verifyCode'));
+        //deb::dump(Yii::app()->session['abusecaptcha']);
 
-            if($retvalidate != '[]')
+        $ret = array();
+        if(strtolower(Yii::app()->session['abusecaptcha']) == strtolower($_POST['verifycode']) )
+        {
+            if($_POST['type'] == 'other_abuse' && strlen($_POST['message']) < 10)
             {
-                echo $retvalidate;
+                $ret['status'] = 'error';
+                $ret['message'] = 'Текст жалобы слишком короткий!';
             }
             else
             {
-                $advert = Notice::model()->findByPk($abusecaptcha->n_id);
+                $advert = Notice::model()->findByPk(intval($_POST['n_id']));
                 $town = Towns::model()->findByPk($advert->t_id);
                 $rubrik = Rubriks::model()->findByPk($advert->r_id);
+
+
+                $abusemessage = Notice::$abuse_items[$_POST['type']]['name'];
+                if($_POST['type'] == 'other_abuse')
+                {
+                    $abusemessage = $_POST['message'];
+                }
 
                 // Генерация ссылки на объяву
                 $transliter = new Supporter();
@@ -2496,39 +2509,69 @@ class AdvertController extends Controller
 
                 ob_start();
                 ?>
-                <p>Здравствуйте, <?= $advert->client_name;?>!</p>
-
                 <p>
-                    Появился новый вопрос по вашему объявлению <a href="http://<?= $_SERVER['HTTP_HOST'];?>/<?= $advert_page_url;?>"><?= $advert->title;?></a>
+                    Поступила жалоба на объявление <a href="http://<?= $_SERVER['HTTP_HOST'];?>/<?= $advert_page_url;?>"><?= $advert->title;?></a>
                 </p>
 
                 <p>
-                    От <?= $abusecaptcha->name;?> <a href="mailto: <?= $writeauthor->email;?>"><?= $writeauthor->email;?></a>
+                    Причина жалобы: <?= $abusemessage;?>
                 </p>
 
                 <p>
-                    <?= $abusecaptcha->message;?>
+                    IP отправителя: <?= $_SERVER['REMOTE_ADDR'];?>
                 </p>
+
                 <?
                 $emessage = ob_get_contents();
                 ob_end_clean();
 
-                if(UserModule::sendMail($advert->client_email, 'Вопрос по вашему объявлению "'.addslashes($advert->title).'"', $emessage))
+                if(UserModule::sendMail(Yii::app()->params['adminEmail'], 'Поступила жалоба на объявление', $emessage))
                 {
-                    $result = array('status'=>'ok');
-                    echo function_exists('json_encode') ? json_encode($result) : CJSON::encode($result);
+                    $ret['status'] = 'ok';
+                    $ret['message'] = 'Ваша жалоба успешно отправлена!';
+                }
+                else
+                {
+                    $ret['status'] = 'error';
+                    $ret['message'] = 'При отправке возник сбой!';
                 }
 
+
             }
-
-
         }
+        else
+        {
+            $ret['status'] = 'error';
+            $ret['message'] = 'Неверный код проверки!';
+        }
+
+        echo json_encode($ret);
 
         Yii::app()->end();
 
 
     }
 
+
+    // Добавление в избранное
+    public function actionAddToFavorit()
+    {
+        $n_id = intval($_POST['n_id']);
+
+        if(Notice::CheckAdvertInFavorit($n_id))
+        {
+            $ret['status'] = 'del';
+            $count = Notice::DeleteFromFavorit($n_id);
+        }
+        else
+        {
+            $ret['status'] = 'add';
+            $count = Notice::AddToFavorit($n_id);
+        }
+
+        $ret['count'] = $count;
+        echo json_encode($ret);
+    }
 
     public function actions()
     {

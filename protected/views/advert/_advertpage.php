@@ -161,11 +161,18 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
 
                 <div style="margin-top: 10px;">
                     <a class="span_btn" style="margin-left: 0px; text-decoration: none;">
-                        <span style="border-bottom: #008CC3 dotted; border-width: 1px;">В избранное</span>
+                        <?
+                        $favorit_title = 'В избранное';
+                        if(Notice::CheckAdvertInFavorit($mainblock['n_id']))
+                        {
+                            $favorit_title = 'В избранном';
+                        }
+                        ?>
+                        <span id="favorit_button" advert_id="<?= $mainblock['n_id'];?>" style="border-bottom: #008CC3 dotted; border-width: 1px;"><?= $favorit_title;?></span>
                     </a>
 
                     <a class="span_btn" style="margin-left: 5px; text-decoration: none;">
-                        <span id="abuse_button" style="border-bottom: #008CC3 dotted; border-width: 1px;">Пожаловаться</span>
+                        <span id="abuse_button" style="border-bottom: #008CC3 dotted; border-width: 1px;" >Пожаловаться</span>
                     </a>
 
                     <a class="span_btn" style="margin-left: 5px; text-decoration: none;">
@@ -203,7 +210,9 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
 ?>
 </div>
 
-<div id="abuse_window" style="border: #ddd solid 2px; padding: 5px; width: 200px; background-color: #fff;">
+<div id="abuse_window" style="border: #ddd solid 2px; display: none; padding: 5px; width: 200px; background-color: #fff; z-index: 90; position: absolute;">
+
+    <div id="" style="float: right; margin-top: -5px; cursor: pointer;" onclick="$('#abuse_window').css('display', 'none');">x</div>
 
     <?
     foreach(Notice::$abuse_items as $akey=>$aval)
@@ -217,7 +226,7 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
 </div>
 
 <div class="form" id="modal_abusecaptcha" style="border: #999 solid 1px; width: 360px; padding: 20px; z-index: 12;">
-    <span id="modal_abusecaptcha_close">X</span>
+    <div id="modal_abusecaptcha_close" style="z-index: 13;">X</div>
 
     <div id="modal_abusecaptcha_content">
 
@@ -228,10 +237,108 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
 
 <div id="modal_abusecaptcha_overlay"></div>
 
+
+<script>
+
+    $('#abuse_button').click(function(){
+
+        $('#abuse_window').css('display', 'block');
+        $('#abuse_window').offset({
+            left: $('#abuse_button').offset().left - 10,
+            top: $('#abuse_button').offset().top - 123
+        });
+
+    });
+
+    $(document).ready(function()
+    {
+        $('.abuse_quick, .abuse_other').click( function(event){
+            item = $(this);
+            event.preventDefault(); // выключaем стaндaртную рoль элементa
+            $('#modal_abusecaptcha_overlay').fadeIn(400, // снaчaлa плaвнo пoкaзывaем темную пoдлoжку
+                function(){
+
+                    if(item.attr('abusetype') != 'other_abuse')
+                    {
+                        $('#modal_abusecaptcha').css('height', '140px');
+                    }
+                    else
+                    {
+                        $('#modal_abusecaptcha').css('height', '230px');
+                    }
+
+                    $.ajax({
+                        url: "<?= Yii::app()->createUrl('/advert/getabuseform');?>",
+                        method: "post",
+                        data:{
+                            n_id: item.attr('abuse_n_id'),
+                            class: item.attr('abuseclass'),
+                            type: item.attr('abusetype')
+                        },
+                        // обработка успешного выполнения запроса
+                        success: function(data){
+                            $('#modal_abusecaptcha_content').html(data);
+
+                        }
+                    });
+
+                    $('#abuse_window').css('display', 'none');
+
+                    $('#modal_abusecaptcha')
+                        .css('display', 'block') // убирaем у мoдaльнoгo oкнa display: none;
+                        .animate({opacity: 1, top: '50%'}, 200); // плaвнo прибaвляем прoзрaчнoсть oднoвременнo сo съезжaнием вниз
+
+                });
+        });
+
+        /* Зaкрытие мoдaльнoгo oкнa, тут делaем тo же сaмoе нo в oбрaтнoм пoрядке */
+        $('#modal_abusecaptcha_close, #modal_abusecaptcha_overlay').click( function(){ // лoвим клик пo крестику или пoдлoжке
+            $('#modal_abusecaptcha')
+                .animate({opacity: 0, top: '45%'}, 200,  // плaвнo меняем прoзрaчнoсть нa 0 и oднoвременнo двигaем oкнo вверх
+                function(){ // пoсле aнимaции
+                    $(this).css('display', 'none'); // делaем ему display: none;
+                    $('#modal_abusecaptcha_overlay').fadeOut(400); // скрывaем пoдлoжку
+                }
+            );
+        });
+
+
+    });
+
+    $('#favorit_button').click(function(){
+        fbut = $(this);
+
+        $.ajax({
+            url: "<?= Yii::app()->createUrl('/advert/addtofavorit');?>",
+            method: "post",
+            dataType: 'json',
+            data:{
+                n_id: fbut.attr('advert_id')
+            },
+            // обработка успешного выполнения запроса
+            success: function(data){
+                $('#favorit_count').html(data['count']);
+                if(data['status'] == 'add')
+                {
+                    $('#favorit_button').html('В избранном');
+                }
+                else
+                {
+                    $('#favorit_button').html('В избранное');
+                }
+
+            }
+        });
+
+    });
+
+</script>
+
+
 <style>
     #modal_abusecaptcha {
         width: 300px;
-        height: 400px; /* Рaзмеры дoлжны быть фиксирoвaны */
+        height: 230px; /* Рaзмеры дoлжны быть фиксирoвaны */
         border-radius: 5px;
         border: 3px #000 solid;
         background: #fff;
@@ -270,93 +377,3 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
         display: none; /* в oбычнoм сoстoянии её нет) */
     }
 </style>
-
-<script>
-
-    $('#abuse_button').click(function(){
-        $('#abuse_window').offset({
-            left: $('#abuse_button').offset().left-10,
-            top: $('#abuse_button').offset().top-123
-        });
-
-    });
-
-
-    function afterValidateAbuse(form, data, hasError)
-    {
-        if(!hasError)
-        {
-            //$('#modal_writeauthor_close').click();
-            $('#modal_abusecaptcha').css('display', 'none');
-            $('#modal_abusecaptcha_overlay').css('display', 'none');
-            alert('Сообщение успешно отправлено!');
-        }
-        else
-        {
-            if(data['FormAbuseCaptcha_verifyCode'])
-            {
-                $('#reg_captcha_button').click();
-            }
-
-        }
-
-    }
-
-    $(document).ready(function()
-    {
-        $('.abuse_quick').click( function(event){
-            item = $(this);
-            event.preventDefault(); // выключaем стaндaртную рoль элементa
-            $('#modal_abusecaptcha_overlay').fadeIn(400, // снaчaлa плaвнo пoкaзывaем темную пoдлoжку
-                function(){
-
-                    $.ajax({
-                        url: "<?= Yii::app()->createUrl('/advert/getabuseform');?>",
-                        method: "post",
-                        data:{
-                            n_id: item.attr('abuse_n_id'),
-                            class: item.attr('abuseclass'),
-                            type: item.attr('abusetype')
-                        },
-                        // обработка успешного выполнения запроса
-                        success: function(data){
-                            $('#modal_abusecaptcha').html(data);
-
-                        }
-                    });
-
-                    //******** Обнуление формы
-                    // Сокрытие сообщений об ошибках
-                    $('.row.error label').css('color', '#000');
-                    $('.errorMessage').css('display', 'none');
-
-                    $('#FormAbuseCaptcha_message').css('background-color', '#fff');
-                    $('#FormAbuseCaptcha_message').css('border-color', '#ddd');
-                    $('#FormAbuseCaptcha_message').val('');
-
-                    $('#FormAbuseCaptcha_verifyCode').css('background-color', '#fff');
-                    $('#FormAbuseCaptcha_verifyCode').css('border-color', '#ddd');
-                    $('#FormAbuseCaptcha_verifyCode').val('');
-
-                    $('#reg_captcha_button').click();
-
-                    $('#modal_abusecaptcha')
-                        .css('display', 'block') // убирaем у мoдaльнoгo oкнa display: none;
-                        .animate({opacity: 1, top: '50%'}, 200); // плaвнo прибaвляем прoзрaчнoсть oднoвременнo сo съезжaнием вниз
-
-                });
-        });
-
-        /* Зaкрытие мoдaльнoгo oкнa, тут делaем тo же сaмoе нo в oбрaтнoм пoрядке */
-        $('#modal_abusecaptcha_close, #modal_abusecaptcha_overlay').click( function(){ // лoвим клик пo крестику или пoдлoжке
-            $('#modal_abusecaptcha')
-                .animate({opacity: 0, top: '45%'}, 200,  // плaвнo меняем прoзрaчнoсть нa 0 и oднoвременнo двигaем oкнo вверх
-                function(){ // пoсле aнимaции
-                    $(this).css('display', 'none'); // делaем ему display: none;
-                    $('#modal_abusecaptcha_overlay').fadeOut(400); // скрывaем пoдлoжку
-                }
-            );
-        });
-    });
-
-</script>
