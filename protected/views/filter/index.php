@@ -60,9 +60,10 @@ $this->renderPartial('/filter/_search_form', array(
 </div>
 
 
-<div style="text-align: left; padding-left: 14px;">
+<div style="text-align: center; padding-left: 0px;">
     <?
-    include(Yii::getPathOfAlias('webroot')."/banners/yandex/top_horizont.php");
+    $banner_operator = Yii::app()->params['banners_raspred'][0];
+    include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizont.php");
     ?>
 </div>
 
@@ -148,7 +149,7 @@ foreach ($rubrik_groups as $rkey=>$rval)
         {
         ?>
         <tr style="">
-            <td style="width: 125px;">
+            <td style="width: 125px; ">
             <?
             if(count($props_array[$key]['photos']) > 0)
             {
@@ -171,7 +172,8 @@ foreach ($rubrik_groups as $rkey=>$rval)
         <aside>
             <div style="width: 300px; height: 600px; border: #000020 solid 0px;">
             <?
-            include(Yii::getPathOfAlias('webroot')."/banners/yandex/right_300.php");
+            $banner_operator = Yii::app()->params['banners_raspred'][1];
+            include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/right_300.php");
             ?>
             </div>
         </aside>
@@ -214,4 +216,35 @@ foreach ($rubrik_groups as $rkey=>$rval)
         }
     }
     window.addEventListener('scroll', asideScroll, false);
+</script>
+
+<script>
+    $('.favorit_button, .favoritstar').click(function(){
+        fbut = $(this);
+
+        $.ajax({
+            url: "<?= Yii::app()->createUrl('/advert/addtofavorit');?>",
+            method: "post",
+            dataType: 'json',
+            data:{
+                n_id: fbut.attr('advert_id')
+            },
+            // обработка успешного выполнения запроса
+            success: function(data){
+                $('#favorit_count').html(data['count']);
+                if(data['status'] == 'add')
+                {
+                    //fbut.html('В избранном');
+                    fbut.css('background-image', 'url("/images/favorit_yellow.png")');
+                }
+                else
+                {
+                    //fbut.html('В избранное');
+                    fbut.css('background-image', 'url("/images/favorit.png")');
+                }
+
+            }
+        });
+
+    });
 </script>

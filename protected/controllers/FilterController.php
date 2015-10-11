@@ -776,6 +776,25 @@ class FilterController extends Controller
                 $short_advert_display = str_replace('{'.$match.'}', $val[$match], $short_advert_display);
             }
 
+            // Титул
+            ob_start();
+            $favprefix = "";
+            $favorit_title = '';
+            if(Notice::CheckAdvertInFavorit($val['n_id']))
+            {
+                //$favorit_title = 'В избранном';
+                $favorit_title = '';
+                $favprefix = "_yellow";
+            }
+            ?>
+            <a class="span_lnk favoritstar" advert_id="<?= $val['n_id'];?>" style="background-image: url('/images/favorit<?= $favprefix;?>.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px; margin-left: 0px; text-decoration: none;">
+                <span class="favorit_button" advert_id="<?= $val['n_id'];?>" style="border-bottom: #008CC3 dotted; border-width: 1px;"></span>
+            </a>
+            <?
+            $favoritstar_block = ob_get_contents();
+            ob_end_clean();
+            $short_advert_display = str_replace('[[favoritstar_block]]', $favoritstar_block, $short_advert_display);
+
             //deb::dump($val);
             //$short_advert_display = str_replace('[[advert_page_url]]');
             $short_advert_display = str_replace('[[mestopolozhenie]]', $val['town_name'], $short_advert_display);

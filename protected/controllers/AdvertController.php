@@ -2098,6 +2098,90 @@ class AdvertController extends Controller
             // Выставление кук последних просмотренных
             Notice::AddToLastVisit($advert->n_id);
 
+            // Подготовка данных для похожих объяв
+            $connection=Yii::app()->db;
+            $i=0;
+            $tables_array = array();
+            $where_array = array();
+            foreach($props_relate as $pkey=>$pval)
+            {
+                if($pval['hierarhy_tag'] == 1)
+                {
+                    $i++;
+                //deb::dump($pval);
+                    $tables_array[] = $connection->tablePrefix . "notice_props n".$i;
+                    $where_array[] = " AND n".$i.".rp_id = ".$pval['rp_id'];
+                    $where_array[] = " AND n".$i.".ps_id = ".$pval['notice_props'][0]->ps_id;
+                    $where_array[] = " AND n".$i.".n_id = n".($i+1).".n_id ";
+
+                }
+            }
+            unset($where_array[count($where_array)-1]);
+            $tables_sql = implode(", ", $tables_array);
+            $where_sql = implode(" ", $where_array);
+
+            $sql = "SELECT DISTINCT n.*
+                        FROM ". $connection->tablePrefix . "notice n,
+                        ".$tables_sql."
+                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0
+                        AND n.n_id <> ".$advert->n_id."
+                        AND n.r_id = ".$advert->r_id . " AND n.t_id = ".$advert->t_id.
+                        $where_sql . " AND n1.n_id = n.n_id
+                        ORDER BY date_add DESC
+                        LIMIT 0, 5";
+            //deb::dump($sql);
+            $command = $connection->createCommand($sql);
+            $dataReader=$command->query();
+            $similar_adverts = array();
+            while(($row = $dataReader->read())!==false)
+            {
+                $similar_adverts[$row['n_id']] = $row;
+            }
+//deb::dump($similar_adverts);
+
+            if(count($similar_adverts) > 0)
+            {
+                $similar_photos = array();
+                $rub_ids = array();
+                $towns_ids = array();
+                foreach($similar_adverts as $ukey=>$uval)
+                {
+                    // Фотографии
+                    preg_match('|<vibor_type>photoblock</vibor_type>.+<hand_input_value>([^<]+)</hand_input_value>.+</item>|siU', $uval['props_xml'], $match);
+                    $photos = explode(";", $match[1]);
+                    unset($photos[count($photos)-1]);
+
+                    $rub_ids[$uval['r_id']] = $uval['r_id'];
+                    $towns_ids[$uval['t_id']] = $uval['t_id'];
+
+                    $similar_photos[$uval['n_id']] = $photos;
+
+                }
+//deb::dump($similar_photos);
+                // Рубрики для ссылок на похожие
+                $subrub_array = array();
+                if($rubriks = Rubriks::model()->findAll(array(
+                    'select'=>'*',
+                    'condition'=>'r_id IN ('.implode(", ", $rub_ids).')'
+                )))
+                {
+                    foreach($rubriks as $rkey=>$rval)
+                    {
+                        $subrub_array[$rval->r_id] = $rval;
+                    }
+                }
+
+                // Города для ссылок на похожие
+                $towns = Towns::model()->findAll(array(
+                    'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
+                ));
+                $towns_array = array();
+                foreach($towns as $tkey=>$tval)
+                {
+                    $towns_array[$tval->t_id] = $tval;
+                }
+            }
+
         }
 
         $town = Towns::model()->findByPk($advert->t_id);
@@ -2149,6 +2233,8 @@ class AdvertController extends Controller
 
         $rub_array = Rubriks::get_rublist();
 
+
+
         $this->render('viewadvert', array(
             'mainblock'=>$mainblock,
             'addfield'=>$addfield,
@@ -2159,7 +2245,13 @@ class AdvertController extends Controller
             'rub_array'=>$rub_array,
             'mselector'=>$mselector,
             'm_id'=>$m_id,
-            'breadcrumbs'=>$breadcrumbs
+            'breadcrumbs'=>$breadcrumbs,
+            'user'=>$user,
+
+            'similar_adverts'=>$similar_adverts,
+            'similar_photos'=>$similar_photos,
+            'subrub_array'=>$subrub_array,
+            'towns_array'=>$towns_array
         ));
 
 
@@ -2573,6 +2665,23 @@ class AdvertController extends Controller
         echo json_encode($ret);
     }
 
+    // Удаление всего из избранного
+    public function actionDeleteAllFromFavorit()
+    {
+        Notice::DeleteAllFromFavorit();
+
+        header('Location: '.$_SERVER['HTTP_REFERER']);
+    }
+
+    // Удаление всего из недавнего
+    public function actionDeleteAllLastVisit()
+    {
+        Notice::DeleteAllLastVisit();
+
+        header('Location: '.$_SERVER['HTTP_REFERER']);
+    }
+
+
     public function actions()
     {
         return array(
@@ -2588,8 +2697,113 @@ class AdvertController extends Controller
         );
     }
 
+    // Отображение формы Поделиться
+    public function actionGetshareform()
+    {
+        $n_id = $_POST['n_id'];
 
-	// Uncomment the following methods and override them if needed
+        $this->renderPartial('_shareform', array('n_id'=>$n_id));
+    }
+
+    public function actionShowShareCaptcha()
+    {
+        $captcha = new BaraholkaCaptcha();
+        $captcha->renderImage();
+        Yii::app()->session['sharecaptcha'] = $captcha->code;
+    }
+
+    // Поделиться ссылкой
+    public function actionSendshare()
+    {
+
+        $n_id = intval($_POST['n_id']);
+        $your_name = $_POST['your_name'];
+        $your_email = $_POST['your_email'];
+        $friend_name = $_POST['friend_name'];
+        $friend_email = $_POST['friend_email'];
+
+        $errors = array();
+        $emailvalidate = new CEmailValidator();
+
+        if(strlen($your_name) < 3)
+        {
+            $errors[] = 'Ваше имя слишком короткое';
+        }
+        if(!$emailvalidate->validateValue($your_email) || strlen(trim($your_email)) == 0)
+        {
+            $errors[] = 'Ваша почта указана неправильно';
+        }
+        if(!$emailvalidate->validateValue($friend_email) || strlen(trim($friend_email)) == 0)
+        {
+            $errors[] = 'Почта друга указана неправильно';
+        }
+        if(strlen($friend_name) < 3)
+        {
+            $errors[] = 'Имя друга слишком короткое';
+        }
+        if(strtolower(Yii::app()->session['sharecaptcha']) != strtolower($_POST['verifycode']))
+        {
+            $errors[] = 'Код проверки указан неверно';
+        }
+
+        $ret = array();
+        if(count($errors) == 0)
+        {
+            $advert = Notice::model()->findByPk(intval($_POST['n_id']));
+            $town = Towns::model()->findByPk($advert->t_id);
+            $rubrik = Rubriks::model()->findByPk($advert->r_id);
+
+
+            // Генерация ссылки на объяву
+            $transliter = new Supporter();
+            $trans_title = $transliter->TranslitForUrl($advert->title);
+            $advert_page_url = $town->transname."/".$rubrik->transname."/".$trans_title."_".$advert->daynumber_id;
+
+            ob_start();
+            ?>
+            <p>
+                Здравствуйте, <?= $friend_name;?>!
+            </p>
+            <p>
+                Ваш знакомый <?= $your_name;?> (<a href="mailto:<?= $your_email;?>"><?= $your_email;?></a>) советует вам посмотреть объявление <a href="http://<?= $_SERVER['HTTP_HOST'];?>/<?= $advert_page_url;?>"><?= $advert->title;?></a>.
+            </p>
+
+            <p>
+                __________________________<br>
+                С наилучшими пожеланиями,<br>
+                коллектив сайта baraholka.ru
+            </p>
+
+            <?
+            $emessage = ob_get_contents();
+            ob_end_clean();
+
+            if(UserModule::sendMailFrom($friend_email, 'Вам порекомендовали объявление', $emessage, Yii::app()->params['noreplyEmail']))
+            {
+                $ret['status'] = 'ok';
+                $ret['message'] = 'Ссылка вашему другу успешно отправлена!';
+            }
+            else
+            {
+                $ret['status'] = 'error';
+                $ret['message'] = 'При отправке возник сбой!';
+            }
+
+        }
+        else
+        {
+            $ret['status'] = 'error';
+            $ret['message'] = implode("<br>", $errors);
+        }
+
+        echo json_encode($ret);
+
+        Yii::app()->end();
+
+
+    }
+
+    // Uncomment the following methods and override them if needed
 	/*
 	public function filters()
 	{

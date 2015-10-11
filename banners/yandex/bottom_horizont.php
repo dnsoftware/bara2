@@ -1,10 +1,10 @@
 <!-- Яндекс.Директ -->
-<div id="yandex_ad" style="padding-left: 14px;"></div>
+<div id="yandex_ad3"></div>
 <script type="text/javascript">
     (function(w, d, n, s, t) {
         w[n] = w[n] || [];
         w[n].push(function() {
-            Ya.Direct.insertInto(150187, "yandex_ad", {
+            Ya.Direct.insertInto(150187, "yandex_ad3", {
                 ad_format: "direct",
                 type: "1000x120",
                 border_type: "block",

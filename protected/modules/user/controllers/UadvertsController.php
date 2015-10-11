@@ -142,6 +142,7 @@ class UadvertsController extends Controller
             $m_id = Yii::app()->params['russia_id'];
         }
 
+        $user = Users::model()->findByPk($u_id);
 
 
 		$this->render('index', array(
@@ -150,6 +151,7 @@ class UadvertsController extends Controller
             'parent_ids_count'=>$parent_ids_count, 'rub_counter'=>$rub_counter,
             'useradverts_photos'=>$useradverts_photos, 'towns_array'=>$towns_array,
             'transliter'=>$transliter,
+            'user'=>$user,
 
             /********для формы поиска*********/
             'rub_array'=>$rub_array,
@@ -246,35 +248,37 @@ class UadvertsController extends Controller
                     $useradverts_photos[$uval->n_id] = $photos;
 
                 }
-            }
 
-            if($rubriks = Rubriks::model()->findAll(array(
-                'select'=>'*',
-                'condition'=>'r_id IN ('.implode(", ", $rub_ids).')'
-            )))
-            {
-                foreach($rubriks as $rkey=>$rval)
+                if($rubriks = Rubriks::model()->findAll(array(
+                    'select'=>'*',
+                    'condition'=>'r_id IN ('.implode(", ", $rub_ids).')'
+                )))
                 {
-                    $subrub_array[$rval->r_id] = $rval;
-                    $parent_ids[$rval->parent_id] = $rval->parent_id;
-                    $parent_ids_count[$rval->parent_id] += $rub_counter[$rval->r_id];
+                    foreach($rubriks as $rkey=>$rval)
+                    {
+                        $subrub_array[$rval->r_id] = $rval;
+                        $parent_ids[$rval->parent_id] = $rval->parent_id;
+                        $parent_ids_count[$rval->parent_id] += $rub_counter[$rval->r_id];
+                    }
                 }
+
+                // Города
+                $towns = Towns::model()->findAll(array(
+                    'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
+                ));
+                $towns_array = array();
+                foreach($towns as $tkey=>$tval)
+                {
+                    $towns_array[$tval->t_id] = $tval;
+                }
+
+                $parent_rubriks = Rubriks::model()->findAll(array(
+                    'select'=>'*',
+                    'condition'=>'r_id IN ('.implode(", ", $parent_ids).')'
+                ));
+
             }
 
-            // Города
-            $towns = Towns::model()->findAll(array(
-                'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
-            ));
-            $towns_array = array();
-            foreach($towns as $tkey=>$tval)
-            {
-                $towns_array[$tval->t_id] = $tval;
-            }
-
-            $parent_rubriks = Rubriks::model()->findAll(array(
-                'select'=>'*',
-                'condition'=>'r_id IN ('.implode(", ", $parent_ids).')'
-            ));
 
 
         }

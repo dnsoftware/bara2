@@ -15,11 +15,10 @@ $this->renderPartial('/filter/_search_form', array(
 ?>
 
 
-<div style="text-align: left; padding-left: 14px; margin-top: 10px; height: 120px;">
+<div style="text-align: center; padding-left: 0px; margin-top: 10px; height: 120px; width: 1050px;">
 <?
-include(Yii::getPathOfAlias('webroot')."/banners/yandex/top_horizont.php");
-
-
+$banner_operator = Yii::app()->params['banners_raspred'][0];
+include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizont.php");
 ?>
 </div>
 
@@ -134,6 +133,12 @@ $this->renderPartial('_advertpage', array(
     'mainblock_data'=>$this->mainblock_data,
     'addfield_data'=>$this->addfield_data,
     'options'=>$this->options,
+    'similar_adverts'=>$similar_adverts,
+    'similar_photos'=>$similar_photos,
+    'subrub_array'=>$subrub_array,
+    'towns_array'=>$towns_array,
+    'user'=>$user
+
 ));
 
 

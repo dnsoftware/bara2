@@ -64,7 +64,8 @@ foreach ($rub_array as $rkey=>$rval)
         <td style="vertical-align: top;">
             [[advert_page_url]] - url объявления<br>
             [[mestopolozhenie]] - местоположение (город)<br>
-            [[date_add]] - дата добавления
+            [[date_add]] - дата добавления<br>
+            [[favoritstar_block]] - Звезда "Избранное"
         </td>
     </tr>
     </table>

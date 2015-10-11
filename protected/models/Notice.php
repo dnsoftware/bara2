@@ -305,6 +305,29 @@ class Notice extends CActiveRecord
         return count($temp);
     }
 
+    // Удаление всех из избранного
+    public static function DeleteAllFromFavorit()
+    {
+        $count = 0;
+        if(isset(Yii::app()->request->cookies['favorit']))
+        {
+            unset(Yii::app()->request->cookies['favorit']);
+        }
+
+        return 0;
+    }
+
+    // Удаление всех из недавнего
+    public static function DeleteAllLastVisit()
+    {
+        $count = 0;
+        if(isset(Yii::app()->request->cookies['last_visit_adverts']))
+        {
+            unset(Yii::app()->request->cookies['last_visit_adverts']);
+        }
+
+        return 0;
+    }
 
     // Добавление объявы в последние просмотренные
     public static function AddToLastVisit($n_id)

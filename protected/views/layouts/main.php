@@ -116,7 +116,15 @@ border-radius: 3px;">
 
 	<div class="clear"></div>
 
-	<div id="footer">
+    <div style="text-align: center; padding-left: 0; margin-top: 10px; height: 120px; width: 1050px; border: #000099 solid 0px;">
+        <?
+        $banner_operator = Yii::app()->params['banners_raspred'][2];
+        include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/bottom_horizont.php");
+        ?>
+    </div>
+
+
+    <div id="footer" style="">
         baraholka.ru
 
         <div style="float: right;">

@@ -96,7 +96,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                 $region_str = $mainblock_data['region']->name;
                 if($mainblock_data['region']->name != $mainblock_data['town']->name)
                 {
-                    $mainblock_data['town']->name .= ", ".$region_str;
+                    $region_str = $mainblock_data['town']->name;
                 }
                 ?>
                 <?= $region_str.", ".$mainblock_data['country']->name;?>
@@ -153,51 +153,112 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
             </div>
 
             <div style="margin-top: 20px;">
-                <div style="font-weight: bold;">Комментарий продавца</div>
+
                 <?= $mainblock['notice_text'];?>
             </div>
 
             <div style="margin-top: 20px;">
 
                 <div style="margin-top: 10px;">
-                    <a class="span_btn" style="margin-left: 0px; text-decoration: none;">
-                        <?
-                        $favorit_title = 'В избранное';
-                        if(Notice::CheckAdvertInFavorit($mainblock['n_id']))
-                        {
-                            $favorit_title = 'В избранном';
-                        }
-                        ?>
-                        <span id="favorit_button" advert_id="<?= $mainblock['n_id'];?>" style="border-bottom: #008CC3 dotted; border-width: 1px;"><?= $favorit_title;?></span>
-                    </a>
-
-                    <a class="span_btn" style="margin-left: 5px; text-decoration: none;">
-                        <span id="abuse_button" style="border-bottom: #008CC3 dotted; border-width: 1px;" >Пожаловаться</span>
-                    </a>
-
-                    <a class="span_btn" style="margin-left: 5px; text-decoration: none;">
-                        <span style="border-bottom: #008CC3 dotted; border-width: 1px;">Поделиться</span>
-                    </a>
-
-                    <script type="text/javascript" src="//yastatic.net/share/share.js" charset="utf-8"></script>
-                    <div style="display: inline;" class="yashare-auto-init" data-yashareL10n="ru" data-yashareType="small" data-yashareQuickServices="vkontakte,facebook,twitter,odnoklassniki,moimir,lj,gplus" data-yashareTheme="counter"></div>
+                    <table style="width: 682px; border: #000099 solid 0px;">
+                    <tr>
+                        <td style="text-align: center;">
+                        <a class="span_lnk" style="background: url('/images/favorit.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px; margin-left: 0px; text-decoration: none;">
+                            <?
+                            $favorit_title = 'В избранное';
+                            if(Notice::CheckAdvertInFavorit($mainblock['n_id']))
+                            {
+                                $favorit_title = 'В избранном';
+                            }
+                            ?>
+                            <span id="favorit_button" advert_id="<?= $mainblock['n_id'];?>" style="border-bottom: #008CC3 dotted; border-width: 1px;"><?= $favorit_title;?></span>
+                        </a>
+                        </td>
+                        <td style="text-align: center;">
+                        <a class="span_lnk" style="background: url('/images/abuse.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px; margin-left: 5px; text-decoration: none;">
+                            <span id="abuse_button" style="border-bottom: #008CC3 dotted; border-width: 1px;" >Пожаловаться</span>
+                        </a>
+                        </td>
+                        <td style="text-align: center;">
+                        <a class="span_lnk" style="background: url('/images/podelit.png'); background-position: left center; background-repeat: no-repeat; padding-left: 15px; margin-left: 5px; text-decoration: none;">
+                            <span id="share_button" share_n_id="<?= $mainblock['n_id'];?>" style="border-bottom: #008CC3 dotted; border-width: 1px;">Поделиться</span>
+                        </a>
+                        </td>
+                        <td style="text-align: center;">
+                        <script type="text/javascript" src="//yastatic.net/share/share.js" charset="utf-8"></script>
+                        <div style="display: inline;" class="yashare-auto-init" data-yashareL10n="ru" data-yashareType="small" data-yashareQuickServices="vkontakte,facebook,twitter,odnoklassniki,moimir,lj,gplus" data-yashareTheme="counter"></div>
+                        </td>
+                    </tr>
+                    </table>
                 </div>
 
             </div>
 
+            <div style="width: 682px; margin-top: 10px;">
+                <div style="font-weight: bold;">Похожие объявления:</div>
+
+                <table>
+                    <tr>
+                        <?
+                        if(count($similar_adverts) > 0)
+                        {
+                            foreach($similar_adverts as $skey=>$sval)
+                            {
+                                ?>
+                                <td style="vertical-align: top; text-align: center;">
+                                    <?
+                                    if(isset($similar_photos[$sval['n_id']][0]))
+                                    {
+                                        $photoname = str_replace(".", "_thumb.", $similar_photos[$sval['n_id']][0]);
+                                        ?>
+                                        <img style="height: 80px;" src="/photos/<?= $photoname;?>">
+                                    <?
+                                    }
+
+                                    $transliter = new Supporter();
+                                    $advert_page_url = "/".$towns_array[$sval['t_id']]->transname."/".$subrub_array[$sval['r_id']]->transname."/".$transliter->TranslitForUrl($sval['title'])."_".$sval['daynumber_id'];
+
+                                    ?>
+                                    <div style="margin-top: 5px;"><a class="baralink" href="<?= $advert_page_url;?>"><?= $sval['title'];?></a></div>
+
+                                    <div  style="color: #777;">
+                                    <?= Notice::costCalcAndView(
+                                        $sval['cost_valuta'],
+                                        $sval['cost'],
+                                        Yii::app()->request->cookies['user_valuta_view']->value
+                                    );?>
+
+                                    <span><?= Options::$valutes[Yii::app()->request->cookies['user_valuta_view']->value]['symbol2'];?></span>
+                                    </div>
+
+                                </td>
+                            <?
+                            }
+                        }
+                        ?>
+                    </tr>
+                </table>
+            </div>
 
 
         </td>
         <td style="vertical-align: top;">
 
         <?
-        include(Yii::getPathOfAlias('webroot')."/banners/yandex/right_300.php");
+        $banner_operator = Yii::app()->params['banners_raspred'][1];
+        include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/right_300.php");
         ?>
 
 
         </td>
     </tr>
 </table>
+
+
+
+
+
+
 
 
 <div>
@@ -236,6 +297,22 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
 
 
 <div id="modal_abusecaptcha_overlay"></div>
+
+
+<!---------------------------- Поделиться ------------------------------>
+
+<div class="form" id="modal_share" style="border: #999 solid 1px; width: 360px; padding: 20px; z-index: 12;">
+    <div id="modal_share_close" style="z-index: 13;">X</div>
+
+    <div id="modal_share_content" style="display: table-cell; vertical-align: middle; border: #000000 solid 0px; height: 310px; padding-left: 20px;">
+
+    </div>
+
+</div>
+
+
+<div id="modal_share_overlay"></div>
+
 
 
 <script>
@@ -303,8 +380,48 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
         });
 
 
+        /****************************** Поделиться*********************************/
+
+        $('#share_button').click( function(event){
+            item = $(this);
+            event.preventDefault(); // выключaем стaндaртную рoль элементa
+            $('#modal_share_overlay').fadeIn(400, // снaчaлa плaвнo пoкaзывaем темную пoдлoжку
+                function(){
+
+                    $.ajax({
+                        url: "<?= Yii::app()->createUrl('/advert/getshareform');?>",
+                        method: "post",
+                        data:{
+                            n_id: item.attr('share_n_id')
+                        },
+                        // обработка успешного выполнения запроса
+                        success: function(data){
+                            $('#modal_share_content').html(data);
+
+                        }
+                    });
+
+                    $('#modal_share')
+                        .css('display', 'block') // убирaем у мoдaльнoгo oкнa display: none;
+                        .animate({opacity: 1, top: '50%'}, 200); // плaвнo прибaвляем прoзрaчнoсть oднoвременнo сo съезжaнием вниз
+
+                });
+        });
+
+        /* Зaкрытие мoдaльнoгo oкнa, тут делaем тo же сaмoе нo в oбрaтнoм пoрядке */
+        $('#modal_share_close, #modal_share_overlay').click( function(){ // лoвим клик пo крестику или пoдлoжке
+            $('#modal_share')
+                .animate({opacity: 0, top: '45%'}, 200,  // плaвнo меняем прoзрaчнoсть нa 0 и oднoвременнo двигaем oкнo вверх
+                function(){ // пoсле aнимaции
+                    $(this).css('display', 'none'); // делaем ему display: none;
+                    $('#modal_share_overlay').fadeOut(400); // скрывaем пoдлoжку
+                }
+            );
+        });
+
     });
 
+    /******************************************************************/
     $('#favorit_button').click(function(){
         fbut = $(this);
 
@@ -336,9 +453,9 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
 
 
 <style>
-    #modal_abusecaptcha {
+    #modal_abusecaptcha, #modal_share {
         width: 300px;
-        height: 230px; /* Рaзмеры дoлжны быть фиксирoвaны */
+        height: 310px; /* Рaзмеры дoлжны быть фиксирoвaны */
         border-radius: 5px;
         border: 3px #000 solid;
         background: #fff;
@@ -353,7 +470,7 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
         padding: 20px 10px;
     }
 
-    #modal_abusecaptcha_close {
+    #modal_abusecaptcha_close, #modal_share_close {
         width: 21px;
         height: 21px;
         position: absolute;
@@ -364,7 +481,7 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
     }
 
     /* Пoдлoжкa */
-    #modal_abusecaptcha_overlay {
+    #modal_abusecaptcha_overlay, #modal_share_overlay {
         z-index: 11; /* пoдлoжкa дoлжнa быть выше слoев элементoв сaйтa, нo ниже слoя мoдaльнoгo oкнa */
         position: fixed; /* всегдa перекрывaет весь сaйт */
         background-color: #000; /* чернaя */

@@ -225,7 +225,16 @@ class UserModule extends CWebModule
 	    $message = str_replace("\n.", "\n..", $message);
 	    return mail($email,'=?UTF-8?B?'.base64_encode($subject).'?=',$message,$headers);
 	}
-	
+
+
+    // Отправка мыла с указанием мыла отправителя
+    public static function sendMailFrom($email,$subject,$message, $from_email) {
+        $headers = "MIME-Version: 1.0\r\nFrom: $from_email\r\nReply-To: $from_email\r\nContent-Type: text/html; charset=utf-8";
+        $message = wordwrap($message, 70);
+        $message = str_replace("\n.", "\n..", $message);
+        return mail($email,'=?UTF-8?B?'.base64_encode($subject).'?=',$message,$headers);
+    }
+
 	/**
 	 * Return safe user data.
 	 * @param user id not required
