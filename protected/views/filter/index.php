@@ -149,17 +149,17 @@ foreach ($rubrik_groups as $rkey=>$rval)
         {
         ?>
         <tr style="">
-            <td style="width: 125px; ">
+            <td style="width: 140px; height: 105px; vertical-align: top; text-align: center;">
             <?
             if(count($props_array[$key]['photos']) > 0)
             {
             ?>
-                <img src="/photos/<?= Notice::getPhotoName($props_array[$key]['photos'][0], "_thumb");?>">
+                <img src="/photos/<?= Notice::getPhotoName($props_array[$key]['photos'][0], "_medium");?>">
             <?
             }
             ?>
             </td>
-            <td>
+            <td style="vertical-align: top; padding: 0; margin: 0; padding-left: 10px;">
             <?= $props_array[$key]['props_display'];?>
             </td>
         </tr>

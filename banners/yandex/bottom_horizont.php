@@ -1,5 +1,5 @@
 <!-- Яндекс.Директ -->
-<div id="yandex_ad3"></div>
+<div id="yandex_ad3" style="margin-left: 25px;"></div>
 <script type="text/javascript">
     (function(w, d, n, s, t) {
         w[n] = w[n] || [];

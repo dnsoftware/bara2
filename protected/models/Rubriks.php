@@ -129,6 +129,19 @@ class Rubriks extends CActiveRecord
         return $parent_list;
     }
 
+    // Получение массива шаблонов отображения из рубрик
+    public static function GetShablonsDisplay()
+    {
+        $shablons = Rubriks::model()->findAll(array('select'=>'r_id, advert_list_item_shablon'));
+        $shablons_display = array();
+        foreach($shablons as $skey=>$sval)
+        {
+            $shablons_display[$sval->r_id] = $sval->advert_list_item_shablon;
+        }
+
+        return $shablons_display;
+    }
+
 	/**
 	 * @return array relational rules.
 	 */

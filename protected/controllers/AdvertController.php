@@ -1735,6 +1735,19 @@ class AdvertController extends Controller
                                     $img->watermark($_SERVER['DOCUMENT_ROOT']."/images/waterbig.png", 10, 10, CImageHandler::CORNER_RIGHT_BOTTOM, $scale_koeff*$smaller_koeff);
                                     $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root."_big.".$filename_ext);
 
+                                    // Средняя превьюшка
+                                    $img->reload();
+                                    if($orient == 'h')
+                                    {
+                                        $img->resize(Notice::MEDIUM_PREVIEW_WIDTH, false);
+                                    }
+                                    else
+                                    {
+                                        $img->resize(false, Notice::MEDIUM_PREVIEW_HEIGHT);
+                                    }
+
+                                    $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root."_medium.".$filename_ext);
+
                                     // Маленькая превьюшка
                                     $img->reload();
                                     if($orient == 'h')

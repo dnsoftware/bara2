@@ -89,11 +89,11 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
             $advert_page_url = "/".$towns_array[$uval->t_id]->transname."/".$subrub_array[$uval->r_id]->transname."/".$transliter->TranslitForUrl($uval->title)."_".$uval->daynumber_id;
         ?>
         <tr id="row_favorit_<?= $uval->n_id;?>">
-            <td style="border-left: #ddd solid 0px; width: 170px;  border-top: #ddd solid 0px;  text-align: center; vertical-align: top;">
+            <td style="border-left: #ddd solid 0px; width: 140px; height: 105px; border-top: #ddd solid 0px;  text-align: center; vertical-align: top; ">
                 <?
                 if(isset($useradverts_photos[$uval->n_id][0]))
                 {
-                    $photoname = str_replace(".", "_thumb.", $useradverts_photos[$uval->n_id][0]);
+                    $photoname = str_replace(".", "_medium.", $useradverts_photos[$uval->n_id][0]);
                     ?>
                     <a style="font-size: 16px;" href="<?= $advert_page_url;?>"><img src="/photos/<?= $photoname;?>"></a>
                 <?
@@ -137,8 +137,8 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
                         <span><?= Options::$valutes[Yii::app()->request->cookies['user_valuta_view']->value]['symbol2'];?></span>
                     </div>
 
-                    <?= date("d.m.Y", $uval->date_add);?>
-                    <?= date("H:i", $uval->date_add);?>
+                    <span style="color: #777;"><?= date("d.m.Y", $uval->date_add);?>
+                    <?= date("H:i", $uval->date_add);?></span>
 
                 </div>
             </td>

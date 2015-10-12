@@ -706,12 +706,8 @@ class FilterController extends Controller
 
         //deb::dump($search_adverts);
         // Шаблоны отображения из рубрик
-        $shablons = Rubriks::model()->findAll(array('select'=>'r_id, advert_list_item_shablon'));
-        $shablons_display = array();
-        foreach($shablons as $skey=>$sval)
-        {
-            $shablons_display[$sval->r_id] = $sval->advert_list_item_shablon;
-        }
+        $shablons_display = Rubriks::GetShablonsDisplay();
+
 //deb::dump($search_adverts);
         // Подготовка данных для отображения
         $props_array = array();
@@ -798,7 +794,7 @@ class FilterController extends Controller
             //deb::dump($val);
             //$short_advert_display = str_replace('[[advert_page_url]]');
             $short_advert_display = str_replace('[[mestopolozhenie]]', $val['town_name'], $short_advert_display);
-            $date_add_str = date('d-m-Y H:i', $val['date_add']);
+            $date_add_str = date('d.m.Y H:i', $val['date_add']);
             $start_time = mktime(0,0,0,intval(date("m", $val['date_add'])), intval(date("d", $val['date_add'])), intval(date("Y", $val['date_add'])));
             if((time() - $start_time) < 86400)
             {
