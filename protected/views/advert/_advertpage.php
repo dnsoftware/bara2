@@ -56,7 +56,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                                 $valuta_symbol = 'Р';
                             }
                         ?>
-                            <a href="<?= Notice::getPhotoName($part_path.$uval, "_big");?>"><img data-big="<?= $part_path.$uval;?>" src="<?= Notice::getPhotoName($part_path.$uval, "_thumb");?>" data-title="<?= htmlspecialchars($mainblock['title']). " за ".Notice::costCalcAndView(
+                            <a href="<?= Notice::getPhotoName($part_path.$uval, "_big");?>"><img data-big="<?= Notice::getPhotoName($part_path.$uval, "_huge");?>" src="<?= Notice::getPhotoName($part_path.$uval, "_thumb");?>" data-title="<?= htmlspecialchars($mainblock['title']). " за ".Notice::costCalcAndView(
                                     $mainblock['cost_valuta'],
                                     $mainblock['cost'],
                                     Yii::app()->request->cookies['user_valuta_view']->value)." ".$valuta_symbol;?>" data-description="<?= htmlspecialchars($mainblock['title']);?>"></a>

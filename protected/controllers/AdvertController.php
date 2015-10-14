@@ -1656,7 +1656,7 @@ class AdvertController extends Controller
                                 if(@copy ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval, $output_dir.$fval ))
                                 {
                                     // дублируем в качестве исходника
-                                    $original_photo = 'o_'.$fval;
+                                    $original_photo = $fval;
                                     @copy ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval, $output_dir.$original_photo );
 
                                     /* Наложение водяного знака и генерация картинок разных размеров */
@@ -1701,9 +1701,11 @@ class AdvertController extends Controller
                                         */
                                         $scale_koeff = Notice::HUGE_HEIGHT / Notice::BIG_PREVIEW_HEIGHT * Notice::BASE_KOEFF_WATER_SCALE;
                                     }
+                                    // Сохраняем без водяного знака (для использования как исходник в будущем)
+                                    $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root.".".$filename_ext);
 
                                     $img->watermark($_SERVER['DOCUMENT_ROOT']."/images/waterbig.png", 10, 10, CImageHandler::CORNER_RIGHT_BOTTOM, $scale_koeff*$smaller_koeff);
-                                    $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root.".".$filename_ext);
+                                    $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root."_huge.".$filename_ext);
 
                                     // Резайз до средней картинки
                                     $img->reload();
@@ -1766,7 +1768,7 @@ class AdvertController extends Controller
 
 
                                     @unlink ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval);
-                                    @unlink($full_filename);
+                                    //@unlink($full_filename);
                                 }
 
                                 $files_assoc_array[$fval] = $fval;

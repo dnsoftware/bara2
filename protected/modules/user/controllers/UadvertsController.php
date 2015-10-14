@@ -50,15 +50,28 @@ class UadvertsController extends Controller
             'params'=>array(':u_id'=>$u_id),
         )))
         {
-            $useradverts_photos = array();
             foreach($useradverts as $ukey=>$uval)
             {
                 $rub_counter[$uval->r_id]++;
                 $rub_ids[$uval->r_id] = $uval->r_id;
                 $towns_ids[$uval->t_id] = $uval->t_id;
             }
+
+            // Города
+            $towns = Towns::model()->findAll(array(
+                'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
+            ));
+            $towns_array = array();
+            foreach($towns as $tkey=>$tval)
+            {
+                $towns_array[$tval->t_id] = $tval;
+            }
+
         }
 
+        //////////////////////////
+        $search_adverts = array();
+        $props_array = array();
         if($useradverts = Notice::model()->findAll(array(
             'select'=>'*',
             'condition'=>'u_id = :u_id AND verify_tag = 1 AND active_tag = 1 ' . $sql_rub,
@@ -66,6 +79,20 @@ class UadvertsController extends Controller
             'params'=>array(':u_id'=>$u_id),
         )))
         {
+            foreach($useradverts as $ukey=>$uval)
+            {
+                $search_adverts[$uval->n_id] = $uval->attributes;
+                $search_adverts[$uval->n_id]['town_name'] = $towns_array[$uval->t_id]->name;
+                $search_adverts[$uval->n_id]['town_transname'] = $towns_array[$uval->t_id]->transname;
+            }
+
+            // Подготовка данных для отображения
+            //// Шаблоны отображения из рубрик
+            $shablons_display = Rubriks::GetShablonsDisplay();
+            $rubriks_all_array = Rubriks::get_all_subrubs();
+            $props_array = Notice::DisplayAdvertsList($search_adverts, $shablons_display, $rubriks_all_array);
+
+            /*
             $useradverts_photos = array();
             foreach($useradverts as $ukey=>$uval)
             {
@@ -77,9 +104,11 @@ class UadvertsController extends Controller
                 $useradverts_photos[$uval->n_id] = $photos;
 
             }
+            */
+
         }
 
-        //deb::dump($useradverts_photos);
+        //deb::dump($search_adverts);
         //deb::dump($useradverts);
 
         $subrub_array = array();
@@ -96,16 +125,6 @@ class UadvertsController extends Controller
                 $parent_ids[$rval->parent_id] = $rval->parent_id;
                 $parent_ids_count[$rval->parent_id] += $rub_counter[$rval->r_id];
             }
-        }
-
-        // Города
-        $towns = Towns::model()->findAll(array(
-            'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
-        ));
-        $towns_array = array();
-        foreach($towns as $tkey=>$tval)
-        {
-            $towns_array[$tval->t_id] = $tval;
         }
 
         $parent_rubriks = Rubriks::model()->findAll(array(
@@ -146,12 +165,16 @@ class UadvertsController extends Controller
 
 
 		$this->render('index', array(
-            'u_id'=>$u_id, 'useradverts'=>$useradverts,
+            'u_id'=>$u_id,
+            //'useradverts'=>$useradverts,
             'parent_rubriks'=>$parent_rubriks, 'subrub_array'=>$subrub_array,
             'parent_ids_count'=>$parent_ids_count, 'rub_counter'=>$rub_counter,
-            'useradverts_photos'=>$useradverts_photos, 'towns_array'=>$towns_array,
+            //'useradverts_photos'=>$useradverts_photos, 'towns_array'=>$towns_array,
             'transliter'=>$transliter,
             'user'=>$user,
+            'search_adverts'=>$search_adverts,
+            'props_array'=>$props_array,
+
 
             /********для формы поиска*********/
             'rub_array'=>$rub_array,
@@ -159,6 +182,8 @@ class UadvertsController extends Controller
             'm_id'=>$m_id,
             'props_sprav_sorted_array'=>$props_sprav_sorted_array,
             'rubriks_props_array'=>$rubriks_props_array,
+            'rubriks_all_array'=>$rubriks_all_array,
+
 
         ));
 	}
@@ -229,14 +254,43 @@ class UadvertsController extends Controller
                     $rub_ids[$uval->r_id] = $uval->r_id;
                     $towns_ids[$uval->t_id] = $uval->t_id;
                 }
+
+                // Города
+                $towns = Towns::model()->findAll(array(
+                    'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
+                ));
+                $towns_array = array();
+                foreach($towns as $tkey=>$tval)
+                {
+                    $towns_array[$tval->t_id] = $tval;
+                }
+
             }
 
+            //////////////////////////
+            $search_adverts = array();
+            $props_array = array();
             if($useradverts = Notice::model()->findAll(array(
                 'select'=>'*',
                 'condition'=>'n_id IN ('.$n_ids.') AND verify_tag = 1 AND active_tag = 1 ' . $sql_rub,
                 'order'=>'date_add DESC',
             )))
             {
+
+                foreach($useradverts as $ukey=>$uval)
+                {
+                    $search_adverts[$uval->n_id] = $uval->attributes;
+                    $search_adverts[$uval->n_id]['town_name'] = $towns_array[$uval->t_id]->name;
+                    $search_adverts[$uval->n_id]['town_transname'] = $towns_array[$uval->t_id]->transname;
+                }
+
+                // Подготовка данных для отображения
+                //// Шаблоны отображения из рубрик
+                $shablons_display = Rubriks::GetShablonsDisplay();
+                $rubriks_all_array = Rubriks::get_all_subrubs();
+                $props_array = Notice::DisplayAdvertsList($search_adverts, $shablons_display, $rubriks_all_array);
+
+                /*
                 $useradverts_photos = array();
                 foreach($useradverts as $ukey=>$uval)
                 {
@@ -248,6 +302,8 @@ class UadvertsController extends Controller
                     $useradverts_photos[$uval->n_id] = $photos;
 
                 }
+                */
+
 
                 if($rubriks = Rubriks::model()->findAll(array(
                     'select'=>'*',
@@ -260,16 +316,6 @@ class UadvertsController extends Controller
                         $parent_ids[$rval->parent_id] = $rval->parent_id;
                         $parent_ids_count[$rval->parent_id] += $rub_counter[$rval->r_id];
                     }
-                }
-
-                // Города
-                $towns = Towns::model()->findAll(array(
-                    'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
-                ));
-                $towns_array = array();
-                foreach($towns as $tkey=>$tval)
-                {
-                    $towns_array[$tval->t_id] = $tval;
                 }
 
                 $parent_rubriks = Rubriks::model()->findAll(array(
@@ -314,11 +360,13 @@ class UadvertsController extends Controller
 
 
         $this->render('favorit', array(
-            'useradverts'=>$useradverts,
+            //'useradverts'=>$useradverts,
             'parent_rubriks'=>$parent_rubriks, 'subrub_array'=>$subrub_array,
             'parent_ids_count'=>$parent_ids_count, 'rub_counter'=>$rub_counter,
-            'useradverts_photos'=>$useradverts_photos, 'towns_array'=>$towns_array,
+            //'useradverts_photos'=>$useradverts_photos, 'towns_array'=>$towns_array,
             'transliter'=>$transliter,
+            'search_adverts'=>$search_adverts,
+            'props_array'=>$props_array,
 
             /********для формы поиска*********/
             'rub_array'=>$rub_array,
@@ -326,6 +374,8 @@ class UadvertsController extends Controller
             'm_id'=>$m_id,
             'props_sprav_sorted_array'=>$props_sprav_sorted_array,
             'rubriks_props_array'=>$rubriks_props_array,
+            'rubriks_all_array'=>$rubriks_all_array,
+
 
         ));
 
@@ -408,14 +458,42 @@ class UadvertsController extends Controller
                     $rub_ids[$uval->r_id] = $uval->r_id;
                     $towns_ids[$uval->t_id] = $uval->t_id;
                 }
+
+                // Города
+                $towns = Towns::model()->findAll(array(
+                    'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
+                ));
+                $towns_array = array();
+                foreach($towns as $tkey=>$tval)
+                {
+                    $towns_array[$tval->t_id] = $tval;
+                }
             }
 
+
+            //////////////////////////
+            $search_adverts = array();
+            $props_array = array();
             if($useradverts_temp = Notice::model()->findAll(array(
                 'select'=>'*',
                 'condition'=>'n_id IN ('.$n_ids.') AND verify_tag = 1 AND active_tag = 1 ' . $sql_rub,
                 'order'=>'date_add DESC',
             )))
             {
+                foreach($useradverts_temp as $ukey=>$uval)
+                {
+                    $search_adverts[$uval->n_id] = $uval->attributes;
+                    $search_adverts[$uval->n_id]['town_name'] = $towns_array[$uval->t_id]->name;
+                    $search_adverts[$uval->n_id]['town_transname'] = $towns_array[$uval->t_id]->transname;
+                }
+
+                // Подготовка данных для отображения
+                //// Шаблоны отображения из рубрик
+                $shablons_display = Rubriks::GetShablonsDisplay();
+                $rubriks_all_array = Rubriks::get_all_subrubs();
+                $props_array = Notice::DisplayAdvertsList($search_adverts, $shablons_display, $rubriks_all_array);
+
+                /*
                 $useradverts_photos = array();
                 foreach($useradverts_temp as $ukey=>$uval)
                 {
@@ -430,6 +508,8 @@ class UadvertsController extends Controller
                     $useradverts_photos[$uval->n_id] = $photos;
 
                 }
+                */
+
             }
 
             if($rubriks = Rubriks::model()->findAll(array(
@@ -443,16 +523,6 @@ class UadvertsController extends Controller
                     $parent_ids[$rval->parent_id] = $rval->parent_id;
                     $parent_ids_count[$rval->parent_id] += $rub_counter[$rval->r_id];
                 }
-            }
-
-            // Города
-            $towns = Towns::model()->findAll(array(
-                'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
-            ));
-            $towns_array = array();
-            foreach($towns as $tkey=>$tval)
-            {
-                $towns_array[$tval->t_id] = $tval;
             }
 
             $parent_rubriks = Rubriks::model()->findAll(array(
@@ -495,11 +565,13 @@ class UadvertsController extends Controller
 
 
         $this->render('lastvisit', array(
-            'useradverts'=>$useradverts,
+            //'useradverts'=>$useradverts,
             'parent_rubriks'=>$parent_rubriks, 'subrub_array'=>$subrub_array,
             'parent_ids_count'=>$parent_ids_count, 'rub_counter'=>$rub_counter,
-            'useradverts_photos'=>$useradverts_photos, 'towns_array'=>$towns_array,
+            //'useradverts_photos'=>$useradverts_photos, 'towns_array'=>$towns_array,
             'transliter'=>$transliter, 'lastvisitdate'=>$lastvisitdate,
+            'search_adverts'=>$search_adverts,
+            'props_array'=>$props_array,
 
             /********для формы поиска*********/
             'rub_array'=>$rub_array,
@@ -507,6 +579,8 @@ class UadvertsController extends Controller
             'm_id'=>$m_id,
             'props_sprav_sorted_array'=>$props_sprav_sorted_array,
             'rubriks_props_array'=>$rubriks_props_array,
+            'rubriks_all_array'=>$rubriks_all_array,
+
 
         ));
 

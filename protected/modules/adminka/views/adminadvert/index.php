@@ -4,6 +4,9 @@
 $this->breadcrumbs=array(
 	'Adminadvert',
 );
+
+$this->renderPartial('/default/_admin_menu');
+
 ?>
 
 <h1 style="margin: 5px; font-size: 16px;">Админка: Работа с объявлениями</h1>

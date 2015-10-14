@@ -83,7 +83,37 @@ class RegistrationController extends Controller
 
                         if (Yii::app()->controller->module->sendActivationMail) {
                             $activation_url = $this->createAbsoluteUrl('/user/activation/activation',array("activkey" => $model->activkey, "email" => $model->email));
-                            UserModule::sendMail($model->email,UserModule::t("You registered from {site_name}",array('{site_name}'=>Yii::app()->name)),UserModule::t("Please activate you account go to {activation_url}",array('{activation_url}'=>$activation_url)));
+
+                            ob_start();
+                            ?>
+                            <p>
+                                Здравствуйте!
+                            </p>
+                            <p>
+                                Вы получили это письмо, потому что Ваш e-mail (<?= $model->email;?>) был указан при регистрации аккаунта на сайте частных бесплатных объявлений <a href="http://baraholka.ru">baraholka.ru</a>.
+                            </p>
+                            <p>
+                                Чтобы подтвердить регистрацию, нажмите на эту ссылку до <?= date("d.m.Y", time()+86400*30);?>: <a href="<?= $activation_url;?>"><?= $activation_url;?></a>.
+                            </p>
+                            <p>
+                                Если ссылка не открывается, скопируйте ее в адресную строку своего браузера.
+                            </p>
+                            <p>
+                                Если Вы не регистрировались на сайте baraholka.ru, то просто оставьте это письмо без дополнительных действий. Аккаунт не будет верифицирован и никто не сможет подавать объявления, указывая Ваш e-mail.
+                            </p>
+                            <p>
+                                __________________________<br>
+                                С наилучшими пожеланиями,<br>
+                                коллектив сайта baraholka.ru
+                            </p>
+
+                            <?
+                            $emessage = ob_get_contents();
+                            ob_end_clean();
+
+                            UserModule::sendMailFrom($model->email, "Подтвердите свой e-mail для завершения регистрации", $emessage, "baraholka.ru <".Yii::app()->params['noreplyEmail'].">");
+
+
                         }
 
                         if ((Yii::app()->controller->module->loginNotActiv||(Yii::app()->controller->module->activeAfterRegister&&Yii::app()->controller->module->sendActivationMail==false))&&Yii::app()->controller->module->autoLogin) {

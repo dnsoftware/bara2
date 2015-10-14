@@ -136,3 +136,16 @@ tr.trbotline td
 {
 
 }
+
+.colphoto
+{
+    width: 20px; height: 16px;
+    background-color: #000;
+    /*background-image: url('/images/photoapp.png');*/
+    color: #fff; font-size: 12px; font-weight: bold; position: absolute; bottom: 2px; right: 2px;
+}
+
+.colphoto div
+{
+    padding: 1px 0px 0px 0px;
+}

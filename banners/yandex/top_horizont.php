@@ -1,31 +1,9 @@
-<!-- Яндекс.Директ -->
-<div id="yandex_ad" style="padding-left: 14px;"></div>
-<script type="text/javascript">
-    (function(w, d, n, s, t) {
-        w[n] = w[n] || [];
-        w[n].push(function() {
-            Ya.Direct.insertInto(150187, "yandex_ad", {
-                ad_format: "direct",
-                type: "1000x120",
-                border_type: "block",
-                links_underline: false,
-                site_bg_color: "FFFFFF",
-                header_bg_color: "FEEAC7",
-                border_color: "FBE5C0",
-                title_color: "008CC3",
-                url_color: "777777",
-                text_color: "000000",
-                hover_color: "008CC3",
-                sitelinks_color: "0066CC",
-                favicon: true,
-                no_sitelinks: false
-            });
-        });
-        t = d.getElementsByTagName("script")[0];
-        s = d.createElement("script");
-        s.src = "//an.yandex.ru/system/context.js";
-        s.type = "text/javascript";
-        s.async = true;
-        t.parentNode.insertBefore(s, t);
-    })(window, document, "yandex_context_callbacks");
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- baraholka horizontal -->
+<ins class="adsbygoogle"
+     style="display:inline-block;width:980px;height:120px"
+     data-ad-client="ca-pub-6645436498372145"
+     data-ad-slot="4022756412"></ins>
+<script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
 </script>

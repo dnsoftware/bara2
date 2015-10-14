@@ -149,12 +149,24 @@ foreach ($rubrik_groups as $rkey=>$rval)
         {
         ?>
         <tr style="">
-            <td style="width: 140px; height: 105px; vertical-align: top; text-align: center;">
+            <td style="padding: 0 10px 0 0; margin: 0; width: 140px; height: 105px; vertical-align: middle; text-align: center; border: #000 solid 0px;">
             <?
             if(count($props_array[$key]['photos']) > 0)
             {
+                $transliter = new Supporter();
+                $advert_page_url = "/".$val['town_transname']."/".$rubriks_all_array[$val['r_id']]->transname."/".$transliter->TranslitForUrl($val['title'])."_".$val['daynumber_id'];
             ?>
-                <img src="/photos/<?= Notice::getPhotoName($props_array[$key]['photos'][0], "_medium");?>">
+                <div style="position: relative;">
+                    <a href="<?= $advert_page_url;?>"><img src="/photos/<?= Notice::getPhotoName($props_array[$key]['photos'][0], "_medium");?>"></a>
+                    <?
+                    if(count($props_array[$key]['photos']) > 1)
+                    {
+                    ?>
+                    <div class="colphoto"><div><?= count($props_array[$key]['photos']);?></div></div>
+                    <?
+                    }
+                    ?>
+                </div>
             <?
             }
             ?>
@@ -162,6 +174,9 @@ foreach ($rubrik_groups as $rkey=>$rval)
             <td style="vertical-align: top; padding: 0; margin: 0; padding-left: 10px;">
             <?= $props_array[$key]['props_display'];?>
             </td>
+        </tr>
+        <tr>
+            <td style="height: 10px;"></td><td></td>
         </tr>
         <?
         }

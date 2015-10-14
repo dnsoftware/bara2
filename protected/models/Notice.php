@@ -387,7 +387,8 @@ class Notice extends CActiveRecord
             $start_date = time() - 86400;
             foreach ($temp as $tkey=>$tval)
             {
-                if($tval < $start_date)
+
+                if($tval['date_view'] < $start_date)
                 {
                     unset($temp[$tkey]);
                 }
@@ -401,7 +402,118 @@ class Notice extends CActiveRecord
     }
 
 
+    // Формирование отображения списка объявлений
+    // $search_adverts - массив объявлений
+    // $shablons_display - шаблоны  отображения объявы в списке в зависимости от рубрики
+    // $rubriks_all_array - массив всех рубрик
+    public static function DisplayAdvertsList($search_adverts, $shablons_display, $rubriks_all_array)
+    {
+        $props_array = array();
+        foreach($search_adverts as $key=>$val)
+        {
 
+            $props_display = array();
+            $photos = array();
+            $xml = new SimpleXMLElement($val['props_xml']);
+            foreach($xml->block as $bkey=>$bval)
+            {
+                foreach($bval as $b2key=>$b2val)
+                {
+                    $temp = array();
+                    foreach($b2val->item as $ikey=>$ival)
+                    {
+                        if($ival->hand_input_value != '')
+                        {
+                            $temp[] = (string)$ival->hand_input_value;
+                            if($ival->vibor_type == 'photoblock')
+                            {
+                                if(strlen($ival->hand_input_value) > 0)
+                                {
+                                    $files_str = (string)$ival->hand_input_value;
+                                    if($files_str[strlen($files_str)-1] == ';')
+                                    {
+                                        $files_str = substr($files_str, 0, strlen($files_str)-1);
+                                    }
+                                    $photos = explode(";", $files_str);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            $temp[] = (string)$ival->value;
+                        }
+                    }
+
+                    $props_display[$b2key] = implode(", ", $temp);
+
+                }
+            }
+
+            $val['cost'] = Notice::costCalcAndView($val['cost_valuta'], $val['cost'],
+                    Yii::app()->request->cookies['user_valuta_view']->value).
+                " ".Options::$valutes[Yii::app()->request->cookies['user_valuta_view']->value]['symbol2'];
+
+            $short_advert_display = $shablons_display[$val['r_id']];
+            foreach($props_display as $pkey=>$pval)
+            {
+                $short_advert_display = str_replace('['.$pkey.']', $pval, $short_advert_display);
+            }
+
+            preg_match_all('|\{([a-zA-Z0-9_-]+)\}|siU', $short_advert_display, $matches);
+            //deb::dump($matches[1]);
+            foreach($matches[1] as $match)
+            {
+                $short_advert_display = str_replace('{'.$match.'}', $val[$match], $short_advert_display);
+            }
+
+            // Титул
+            ob_start();
+            $favprefix = "";
+            $favorit_title = '';
+            if(Notice::CheckAdvertInFavorit($val['n_id']))
+            {
+                //$favorit_title = 'В избранном';
+                $favorit_title = '';
+                $favprefix = "_yellow";
+            }
+            ?>
+            <a class="span_lnk favoritstar" advert_id="<?= $val['n_id'];?>" style="background-image: url('/images/favorit<?= $favprefix;?>.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px; margin-left: 0px; text-decoration: none;">
+                <span class="favorit_button" advert_id="<?= $val['n_id'];?>" style="border-bottom: #008CC3 dotted; border-width: 1px;"></span>
+            </a>
+            <?
+            $favoritstar_block = ob_get_contents();
+            ob_end_clean();
+            $short_advert_display = str_replace('[[favoritstar_block]]', $favoritstar_block, $short_advert_display);
+
+            //deb::dump($val);
+            //$short_advert_display = str_replace('[[advert_page_url]]');
+            $short_advert_display = str_replace('[[mestopolozhenie]]', $val['town_name'], $short_advert_display);
+            $date_add_str = date('d.m.Y H:i', $val['date_add']);
+            $start_time = mktime(0,0,0,intval(date("m", $val['date_add'])), intval(date("d", $val['date_add'])), intval(date("Y", $val['date_add'])));
+            if((time() - $start_time) < 86400)
+            {
+                $date_add_str = date('Сегодня H:i', $val['date_add']);
+            }
+            if(((time() - $start_time) > 86400) && (time() - $start_time < 86400*2))
+            {
+                $date_add_str = date('Вчера H:i', $val['date_add']);
+            }
+            $short_advert_display = str_replace('[[date_add]]', $date_add_str, $short_advert_display);
+
+            // Генерация ссылки на объяву
+            $transliter = new Supporter();
+            $advert_page_url = $val['town_transname']."/".$rubriks_all_array[$val['r_id']]->transname."/".$transliter->TranslitForUrl($val['title'])."_".$val['daynumber_id'];
+            //deb::dump($advert_page_url);
+            $short_advert_display = str_replace('[[advert_page_url]]', Yii::app()->createUrl($advert_page_url), $short_advert_display);
+
+            $props_array[$key]['props_display'] = $short_advert_display;
+            $props_array[$key]['photos'] = $photos;
+
+
+        }
+
+        return $props_array;
+    }
 
 
 

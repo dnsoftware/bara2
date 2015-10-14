@@ -79,6 +79,52 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
 
     <td style="800px; vertical-align: top">
 
+        <table style="">
+            <?
+            //deb::dump(count($search_adverts));
+            foreach($search_adverts as $key=>$val)
+            {
+                ?>
+                <tr style=""  id="row_favorit_<?= $val['n_id'];?>">
+                    <td style="padding: 0 10px 0 0; margin: 0; width: 140px; height: 105px; vertical-align: middle; text-align: center; border: #000 solid 0px;">
+                        <div style="position: relative;">
+                        <?
+                        if(count($props_array[$key]['photos']) > 0)
+                        {
+                            $transliter = new Supporter();
+                            $advert_page_url = "/".$val['town_transname']."/".$rubriks_all_array[$val['r_id']]->transname."/".$transliter->TranslitForUrl($val['title'])."_".$val['daynumber_id'];
+                            ?>
+                            <a href="<?= $advert_page_url;?>"><img src="/photos/<?= Notice::getPhotoName($props_array[$key]['photos'][0], "_medium");?>"></a>
+                            <?
+                            if(count($props_array[$key]['photos']) > 1)
+                            {
+                                ?>
+                                <div class="colphoto"><div><?= count($props_array[$key]['photos']);?></div></div>
+                            <?
+                            }
+                            ?>
+
+                        <?
+                        }
+                        ?>
+                        </div>
+                    </td>
+                    <td style="vertical-align: top; padding: 0; margin: 0; padding-left: 10px;">
+                        <?= $props_array[$key]['props_display'];?>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="height: 10px;"></td><td></td>
+                </tr>
+            <?
+            }
+            ?>
+        </table>
+
+    <?
+    if(0)
+    {/*
+    ?>
     <table style=" border-right: #ddd solid 0px;  border-bottom: #ddd solid 0px; ">
     <?
     if(count($useradverts) > 0)
@@ -149,6 +195,9 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
     }
     ?>
     </table>
+    <?
+    */}
+    ?>
 
     </td>
 </tr>
