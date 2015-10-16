@@ -84,35 +84,24 @@ class RegistrationController extends Controller
                         if (Yii::app()->controller->module->sendActivationMail) {
                             $activation_url = $this->createAbsoluteUrl('/user/activation/activation',array("activkey" => $model->activkey, "email" => $model->email));
 
-                            ob_start();
-                            ?>
-                            <p>
-                                Здравствуйте!
-                            </p>
-                            <p>
-                                Вы получили это письмо, потому что Ваш e-mail (<?= $model->email;?>) был указан при регистрации аккаунта на сайте частных бесплатных объявлений <a href="http://baraholka.ru">baraholka.ru</a>.
-                            </p>
-                            <p>
-                                Чтобы подтвердить регистрацию, нажмите на эту ссылку до <?= date("d.m.Y", time()+86400*30);?>: <a href="<?= $activation_url;?>"><?= $activation_url;?></a>.
-                            </p>
-                            <p>
-                                Если ссылка не открывается, скопируйте ее в адресную строку своего браузера.
-                            </p>
-                            <p>
-                                Если Вы не регистрировались на сайте baraholka.ru, то просто оставьте это письмо без дополнительных действий. Аккаунт не будет верифицирован и никто не сможет подавать объявления, указывая Ваш e-mail.
-                            </p>
-                            <p>
-                                __________________________<br>
-                                С наилучшими пожеланиями,<br>
-                                коллектив сайта baraholka.ru
-                            </p>
+                            $emessage = $this->renderFile(Yii::app()->basePath.'/data/mailtemplates/registration.php',
+                                array(
+                                    'user_email'=>$model->email,
+                                    'privat_name'=>$model->privat_name,
+                                    'link_expire_date'=>date("d.m.Y", time()+86400*30),
+                                    'activation_link'=>$activation_url
+                                ),
+                                true);
 
-                            <?
-                            $emessage = ob_get_contents();
-                            ob_end_clean();
+                            $result = BaraholkaMailer::SendSmtpMail(Yii::app()->params['smtp1_connect_data'], array(
+                                'mailto'=>$model->email,
+                                'nameto'=>$model->privat_name,
+                                'html_tag'=>true,
+                                'subject'=>"Подтвердите свой e-mail для завершения регистрации",
+                                'message'=>$emessage
+                            ));
 
-                            UserModule::sendMailFrom($model->email, "Подтвердите свой e-mail для завершения регистрации", $emessage, "baraholka.ru <".Yii::app()->params['noreplyEmail'].">");
-
+                            //UserModule::sendMailFrom($model->email, "Подтвердите свой e-mail для завершения регистрации", $emessage, "baraholka.ru <".Yii::app()->params['noreplyEmail'].">");
 
                         }
 
@@ -127,9 +116,9 @@ class RegistrationController extends Controller
                             } elseif(Yii::app()->controller->module->activeAfterRegister&&Yii::app()->controller->module->sendActivationMail==false) {
                                 Yii::app()->user->setFlash('registration',UserModule::t("Thank you for your registration. Please {{login}}.",array('{{login}}'=>CHtml::link(UserModule::t('Login'),Yii::app()->controller->module->loginUrl))));
                             } elseif(Yii::app()->controller->module->loginNotActiv) {
-                                Yii::app()->user->setFlash('registration',UserModule::t("Thank you for your registration. Please check your email or login."));
+                                Yii::app()->user->setFlash('registration', UserModule::t("Thank you for your registration. Please check your email or login."));
                             } else {
-                                Yii::app()->user->setFlash('registration',UserModule::t("Thank you for your registration. Please check your email."));
+                                Yii::app()->user->setFlash('registration', "Для завершения регистрации необходимо нажать на ссылку, содержащуюся в письме, отправленном на указанный Вами при регистрации e-mail.");
                             }
                             $this->refresh();
                         }

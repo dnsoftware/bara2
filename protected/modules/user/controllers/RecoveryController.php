@@ -45,6 +45,7 @@ class RecoveryController extends Controller
                             if ($user->email_status){
                                 $activation_url = 'http://' . $_SERVER['HTTP_HOST'].$this->createUrl(implode(Yii::app()->controller->module->recoveryUrl),array("activkey" => $user->activkey, "email" => $user->email));
 
+/*
                                 $subject = UserModule::t("You have requested the password recovery site {site_name}",
                                     array(
                                         '{site_name}'=>Yii::app()->name,
@@ -56,6 +57,24 @@ class RecoveryController extends Controller
                                     ));
 
                                 UserModule::sendMail($user->email,$subject,$message);
+*/
+
+                                $emessage = $this->renderFile(Yii::app()->basePath.'/data/mailtemplates/recoverypassword.php',
+                                    array(
+                                        'user_privat_name'=>$user->privat_name,
+                                        'user_email'=>$user->email,
+                                        'recovery_link'=>$activation_url
+                                    ),
+                                    true);
+
+                                $result = BaraholkaMailer::SendSmtpMail(Yii::app()->params['smtp1_connect_data'], array(
+                                    'mailto'=>$user->email,
+                                    'nameto'=>$user->privat_name,
+                                    'html_tag'=>true,
+                                    'subject'=>"Запрос на восстановление пароля",
+                                    'message'=>$emessage
+                                ));
+
 
                                 Yii::app()->user->setFlash('recoveryMessage',UserModule::t("Please check your email. An instructions was sent to your email address."));
                                 $this->refresh();

@@ -2427,7 +2427,25 @@ class AdvertController extends Controller
 
                             // отправка мыла с верификацией
                             $activation_url = $this->createAbsoluteUrl('/user/activation/activation',array("activkey" => $model->activkey, "email" => $model->email));
-                            UserModule::sendMail($model->email,UserModule::t("You registered from {site_name}",array('{site_name}'=>Yii::app()->name)),UserModule::t("Please activate you account go to {activation_url}",array('{activation_url}'=>$activation_url)));
+
+                            //UserModule::sendMail($model->email,UserModule::t("You registered from {site_name}",array('{site_name}'=>Yii::app()->name)),UserModule::t("Please activate you account go to {activation_url}",array('{activation_url}'=>$activation_url)));
+
+                            $emessage = $this->renderFile(Yii::app()->basePath.'/data/mailtemplates/registration.php',
+                                array(
+                                    'user_email'=>$model->email,
+                                    'link_expire_date'=>date("d.m.Y", time()+86400*30),
+                                    'activation_link'=>$activation_url
+                                ),
+                                true);
+
+                            $result = BaraholkaMailer::SendSmtpMail(Yii::app()->params['smtp1_connect_data'], array(
+                                'mailto'=>$model->email,
+                                'nameto'=>$model->privat_name,
+                                'html_tag'=>true,
+                                'subject'=>"Подтвердите свой e-mail для завершения регистрации",
+                                'message'=>$emessage
+                            ));
+
 
                             Yii::app()->session['add_user_id'] = $model->id;
 
@@ -2529,6 +2547,7 @@ class AdvertController extends Controller
                     $trans_title = $transliter->TranslitForUrl($advert->title);
                     $advert_page_url = $town->transname."/".$rubrik->transname."/".$trans_title."_".$advert->daynumber_id;
 
+/*
                     ob_start();
                     ?>
                     <p>Здравствуйте, <?= $advert->client_name;?>!</p>
@@ -2547,8 +2566,30 @@ class AdvertController extends Controller
                     <?
                     $emessage = ob_get_contents();
                     ob_end_clean();
+*/
 
-                    if(UserModule::sendMail($advert->client_email, 'Вопрос по вашему объявлению "'.addslashes($advert->title).'"', $emessage))
+                    $advert_page_url = "http://".$_SERVER['HTTP_HOST']."/".$advert_page_url;
+                    $emessage = $this->renderFile(Yii::app()->basePath.'/data/mailtemplates/writeauthor.php',
+                        array(
+                            'advert_client_name'=>$advert->client_name,
+                            'advert_page_url'=>$advert_page_url,
+                            'advert_title'=>$advert->title,
+                            'writeauthor_name'=>$writeauthor->name,
+                            'writeauthor_email'=>$writeauthor->email,
+                            'writeauthor_message'=>$writeauthor->message
+                        ),
+                        true);
+
+                    $result = BaraholkaMailer::SendSmtpMail(Yii::app()->params['smtp1_connect_data'], array(
+                        'mailto'=>$advert->client_email,
+                        'nameto'=>$advert->client_name,
+                        'html_tag'=>true,
+                        'subject'=>'Вопрос по вашему объявлению "'.addslashes($advert->title).'"',
+                        'message'=>$emessage
+                    ));
+
+                    //if(UserModule::sendMail($advert->client_email, 'Вопрос по вашему объявлению "'.addslashes($advert->title).'"', $emessage))
+                    if($result == 'ok')
                     {
                         $result = array('status'=>'ok');
                         echo function_exists('json_encode') ? json_encode($result) : CJSON::encode($result);
@@ -2614,6 +2655,7 @@ class AdvertController extends Controller
                 $trans_title = $transliter->TranslitForUrl($advert->title);
                 $advert_page_url = $town->transname."/".$rubrik->transname."/".$trans_title."_".$advert->daynumber_id;
 
+/*
                 ob_start();
                 ?>
                 <p>
@@ -2631,8 +2673,28 @@ class AdvertController extends Controller
                 <?
                 $emessage = ob_get_contents();
                 ob_end_clean();
+*/
+                $advert_page_url = "http://".$_SERVER['HTTP_HOST']."/".$advert_page_url;
+                $emessage = $this->renderFile(Yii::app()->basePath.'/data/mailtemplates/advertabuse.php',
+                    array(
+                        'abusemessage'=>$abusemessage,
+                        'advert_page_url'=>$advert_page_url,
+                        'advert_title'=>$advert->title,
+                        'sender_ip'=>$_SERVER['REMOTE_ADDR']
+                    ),
+                    true);
 
-                if(UserModule::sendMail(Yii::app()->params['adminEmail'], 'Поступила жалоба на объявление', $emessage))
+                $result = BaraholkaMailer::SendSmtpMail(Yii::app()->params['smtp1_connect_data'], array(
+                    'mailto'=>Yii::app()->params['adminEmail'],
+                    'nameto'=>'Админ',
+                    'html_tag'=>true,
+                    'subject'=>"Поступила жалоба на объявление",
+                    'message'=>$emessage
+                ));
+
+
+                //if(UserModule::sendMail(Yii::app()->params['adminEmail'], 'Поступила жалоба на объявление', $emessage))
+                if($result == 'ok')
                 {
                     $ret['status'] = 'ok';
                     $ret['message'] = 'Ваша жалоба успешно отправлена!';
@@ -2640,7 +2702,7 @@ class AdvertController extends Controller
                 else
                 {
                     $ret['status'] = 'error';
-                    $ret['message'] = 'При отправке возник сбой!';
+                    $ret['message'] = $result;
                 }
 
 
@@ -2773,7 +2835,7 @@ class AdvertController extends Controller
             $transliter = new Supporter();
             $trans_title = $transliter->TranslitForUrl($advert->title);
             $advert_page_url = $town->transname."/".$rubrik->transname."/".$trans_title."_".$advert->daynumber_id;
-
+/*
             ob_start();
             ?>
             <p>
@@ -2792,8 +2854,30 @@ class AdvertController extends Controller
             <?
             $emessage = ob_get_contents();
             ob_end_clean();
+*/
+            $advert_page_url = "http://".$_SERVER['HTTP_HOST']."/".$advert_page_url;
+            $emessage = $this->renderFile(Yii::app()->basePath.'/data/mailtemplates/sendshare.php',
+                array(
+                    'friend_name'=>$friend_name,
+                    'your_name'=>$your_name,
+                    'your_email'=>$your_email,
+                    'friend_email'=>$friend_email,
+                    'advert_page_url'=>$advert_page_url,
+                    'advert_title'=>$advert->title
+                ),
+                true);
 
-            if(UserModule::sendMailFrom($friend_email, 'Вам порекомендовали объявление', $emessage, Yii::app()->params['noreplyEmail']))
+            $result = BaraholkaMailer::SendSmtpMail(Yii::app()->params['smtp1_connect_data'], array(
+                'mailto'=>$friend_email,
+                'nameto'=>$friend_name,
+                'html_tag'=>true,
+                'subject'=>"Вам порекомендовали объявление на сайте baraholka.ru",
+                'message'=>$emessage
+            ));
+
+
+            //if(UserModule::sendMailFrom($friend_email, 'Вам порекомендовали объявление', $emessage, Yii::app()->params['noreplyEmail']))
+            if($result == 'ok')
             {
                 $ret['status'] = 'ok';
                 $ret['message'] = 'Ссылка вашему другу успешно отправлена!';
@@ -2801,7 +2885,7 @@ class AdvertController extends Controller
             else
             {
                 $ret['status'] = 'error';
-                $ret['message'] = 'При отправке возник сбой!';
+                $ret['message'] = $result;
             }
 
         }

@@ -62,8 +62,25 @@ class ProfileController extends Controller
                     $model->activkey=UserModule::encrypting(microtime().rand(12345, 987654));
                     $model->email_status=0;
                     $activation_url = $this->createAbsoluteUrl('/user/activation/emailactivate',array("activkey" => $model->activkey, "email" => $model->email));
-
+/*
                     UserModule::sendMail($model->email,UserModule::t("Вы поменяли e-mail на {site_name}",array('{site_name}'=>Yii::app()->name)),UserModule::t("Пожалуйста, подтвердите его перейдя по ссылке {activation_url}",array('{activation_url}'=>$activation_url)));
+*/
+
+                    $emessage = $this->renderFile(Yii::app()->basePath.'/data/mailtemplates/emailchange.php',
+                        array(
+                            'user_email'=>$model->email,
+                            'activation_url'=>$activation_url
+                        ),
+                        true);
+
+                    $result = BaraholkaMailer::SendSmtpMail(Yii::app()->params['smtp1_connect_data'], array(
+                        'mailto'=>$model->email,
+                        'nameto'=>$profile->first_name,
+                        'html_tag'=>true,
+                        'subject'=>"Смена e-mail на сайте baraholka.ru",
+                        'message'=>$emessage
+                    ));
+
 
                     $model->save();
 

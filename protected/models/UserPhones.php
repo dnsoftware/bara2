@@ -73,7 +73,7 @@ class UserPhones extends CActiveRecord
 			array('phone', 'length', 'max'=>16),
 			array('date_add', 'length', 'max'=>14),
 
-            //array('phone', 'validatephone'),
+            array('phone', 'validatephone'),
 
             // The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
@@ -84,6 +84,7 @@ class UserPhones extends CActiveRecord
     // Проверка корректности ввода телефона
     public function validatephone($attr, $params)
     {
+
         // если регистрация, то или пустое поле или заполненное но отсутствующее в базе
         if(Yii::app()->controller->action->id == 'registration')
         {
@@ -101,6 +102,7 @@ class UserPhones extends CActiveRecord
                 $this->addError($attr, 'Необходимо заполнить поле Телефон');
             }
         }
+
     }
 
 

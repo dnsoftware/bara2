@@ -24,39 +24,34 @@ class SupportController extends Controller
 
     public function actionSendmail()
     {
+        $message = $_POST['message'];
+/*
+        $message = $this->renderFile(Yii::app()->basePath.'/data/mailtemplates/registration.php',
+            array(
+                'user_email'=>'medzhis@gmail.com',
+                'link_expire_date'=>date("d.m.Y", time()+86400*30),
+                'activation_link'=>'http://baraholka.ru/user/activation/activation?activkey=dkshfkgajsgdjhasgdas&email=test2015@mail'
+            ),
+            true);
+*/
 
-        $mail = new PHPMailer;
+        $result = BaraholkaMailer::SendSmtpMail(Yii::app()->params['smtp1_connect_data'], array(
+            'mailto'=>$_POST['mailto'],
+            'nameto'=>$_POST['nameto'],
+            'html_tag'=>true,
+            'subject'=>$_POST['subject'],
+            'message'=>$message
+        ));
 
-        $mail->isSMTP();                                      // Set mailer to use SMTP
-        $mail->Host = 'baraholka.ru';                         // Specify main and backup SMTP servers
-        $mail->SMTPAuth = true;                               // Enable SMTP authentication
-        $mail->Username = 'noreply@baraholka.ru';                 // SMTP username
-        $mail->Password = 'Bac12345';                           // SMTP password
-        //$mail->SMTPSecure = 'tls';                            // Enable TLS encryption, `ssl` also accepted
-        //$mail->Port = 587;                                    // TCP port to connect to
 
-        $mail->setFrom('noreply@baraholka.ru');
-        $mail->addAddress($_POST['mailto'], $_POST['nameto']);     // Add a recipient
-        //$mail->addReplyTo('info@example.com', 'Information');
 
-        $mail->isHTML(true);                                  // Set email format to HTML
 
-        $mail->Subject = $_POST['subject'];
-        $mail->Body    = $_POST['message'];
 
-        if(!$mail->send()) {
-            echo 'Message could not be sent.';
-            echo 'Mailer Error: ' . $mail->ErrorInfo;
+        if($result != 'ok') {
+            echo $result;
         } else {
             echo 'ok';
         }
-
-        /*
-        Yii::app()->mailer->AddAddressWithName($_POST['mailto']);
-        Yii::app()->mailer->Subject = $_POST['subject'];
-        Yii::app()->mailer->MsgHTML($_POST['message']);
-        Yii::app()->mailer->Send();
-        */
 
         //UserModule::sendMailFrom($_POST['mailto'], $_POST['subject'], $_POST['message'], "baraholka.ru <".Yii::app()->params['noreplyEmail'].">");
 

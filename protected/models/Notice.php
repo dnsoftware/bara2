@@ -517,6 +517,18 @@ class Notice extends CActiveRecord
 
 
 
+    // Подсчет кодичества объявлений пользователя
+    public static function GetUserCountAllAdverts($u_id)
+    {
+        $count = Notice::model()->count(array(
+            'select'=>'n_id',
+            'condition'=>'u_id = '.$u_id
+        ));
+
+        return $count;
+    }
+
+
     /*
         public static function getImageArray($uploadfiles, $uploadmainfile)
         {

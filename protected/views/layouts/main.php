@@ -59,20 +59,60 @@ header("Content-type: text/html; charset=utf-8");
                 <span style="background: url('/images/lastvisit.png'); background-position: left center; background-repeat: no-repeat; padding-left: 23px;">
                 <a href="<?= Yii::app()->createUrl('/user/lastvisit');?>" class="baralink" style="margin-right: 20px;">Недавнее: <span id="lastvisit_count"><?= Notice::GetLastvisitCount();?></span></a></span>
 
-                <span style="background: url('/images/favorit.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px;">
+                <span style="background: url('/images/favorit.png'); background-position: left center; background-repeat: no-repeat; padding-left: 18px;">
                 <a href="<?= Yii::app()->createUrl('/user/favorit');?>" class="baralink" style="margin-right: 20px;">Избранное: <span id="favorit_count"><?= Notice::GetFavoritCount();?></span></a></span>
 
-            <?
+                <?
+                $usernotcount = Notice::GetUserCountAllAdverts(Yii::app()->user->id);
+                if(isset(Yii::app()->user->id) && Yii::app()->user->id > 0)
+                {
+                    ?>
+                    <span style="background: url('/images/alladvert-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;">
+                <a href="<?= Yii::app()->createUrl('/usercab/adverts');?>" class="baralink" style="margin-right: 20px;">Мои объявления: <span id="useradverts_count"><?= $usernotcount;?></span></a></span>
+                <?
+                }
+                ?>
+
+                <?
             if(Yii::app()->user->isGuest)
             {
             ?>
-                <a class="baralink" href="/user/login">Вход или регистрация</a>
+                <span style="background: url('/images/loginicon.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;"><a class="baralink" href="<?= Yii::app()->createUrl('/user/login');?>" class="baralink">Вход или регистрация</a></span>
             <?
             }
             else
             {
             ?>
-                <a class="baralink" href="/user/logout">Выход</a>
+                <span style="background: url('/images/loginicon.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;"><a class="baralink" href="<?= Yii::app()->createUrl('/user/logout');?>" class="baralink"><?= Yii::app()->user->email;?></a></span>
+
+
+                <div id="usermenu">
+                <?php
+                $this->widget('zii.widgets.CMenu', array(
+                    'items'=>array(
+                        array('label'=>'Home',   'url'=>array('site/index')),
+                        array('label'=>'Products', 'url'=>array('product/index'),
+                            'items'=>array(
+                            array('label'=>'New Arrivals', 'url'=>array('product/new')),
+                            array('label'=>'Most Popular', 'url'=>array('product/index')),
+                            array('label'=>'Another', 'url'=>array('product/index'), 'items'=>array(
+                                array('label'=>'Level 3 One', 'url'=>array('product/new')),
+                                array('label'=>'Level 3 Two', 'url'=>array('product/index')),
+                                array('label'=>'Level 3 Three', 'url'=>array('product/index'), 'items'=>array(
+                                    array('label'=>'Level 4 One', 'url'=>array('product/new')),
+                                    array('label'=>'Level 4 Two', 'url'=>array('product/index')),
+                                )),
+                            )),
+                        )),
+                        array('label'=>'Login', 'url'=>array('site/login')),
+                    ),
+                ));                ?>
+                </div>
+
+
+
+
+
             <?
             }
             ?>

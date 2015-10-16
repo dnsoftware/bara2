@@ -123,7 +123,7 @@ class User extends CActiveRecord
                 'condition'=>'superuser=1',
             ),
             'notsafe'=>array(
-            	'select' => 'id, username, password, email, activkey, create_at, lastvisit_at, superuser, status, email_status',
+            	'select' => 'id, privat_name, username, password, email, activkey, create_at, lastvisit_at, superuser, status, email_status',
             ),
         );
     }
