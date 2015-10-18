@@ -53,7 +53,7 @@ header("Content-type: text/html; charset=utf-8");
                 <a href="<?= $main_url;?>"><img src="/images/logo.png" style="border: #000 solid 0px; margin-top: 7px;"></a>
             </div>
             </td>
-            <td style="border: #111 solid 0px; text-align: right; vertical-align: top;">
+            <td style="border: #111 solid 0px; text-align: right; vertical-align: top; margin-top: 0px">
 
             <div style="margin-bottom: 5px; margin-top: 2px; ">
                 <span style="background: url('/images/lastvisit.png'); background-position: left center; background-repeat: no-repeat; padding-left: 23px;">
@@ -67,8 +67,8 @@ header("Content-type: text/html; charset=utf-8");
                 if(isset(Yii::app()->user->id) && Yii::app()->user->id > 0)
                 {
                     ?>
-                    <span style="background: url('/images/alladvert-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;">
-                <a href="<?= Yii::app()->createUrl('/usercab/adverts');?>" class="baralink" style="margin-right: 20px;">Мои объявления: <span id="useradverts_count"><?= $usernotcount;?></span></a></span>
+                    <span style="background: url('/images/alladvert-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px; border: #000 solid 0px; ">
+                <a href="<?= Yii::app()->createUrl('/usercab/adverts');?>" class="baralink" style="margin-right: 20px; ">Мои объявления: <span id="useradverts_count"><?= $usernotcount;?></span></a></span>
                 <?
                 }
                 ?>
@@ -83,33 +83,35 @@ header("Content-type: text/html; charset=utf-8");
             else
             {
             ?>
-                <span style="background: url('/images/loginicon.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;"><a class="baralink" href="<?= Yii::app()->createUrl('/user/logout');?>" class="baralink"><?= Yii::app()->user->email;?></a></span>
+                <!--<span style="background: url('/images/loginicon.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;"><a class="baralink" href="<?= Yii::app()->createUrl('/user/logout');?>" class="baralink"><?= Yii::app()->user->email;?></a></span>-->
 
 
-                <div id="usermenu">
-                <?php
-                $this->widget('zii.widgets.CMenu', array(
-                    'items'=>array(
-                        array('label'=>'Home',   'url'=>array('site/index')),
-                        array('label'=>'Products', 'url'=>array('product/index'),
-                            'items'=>array(
-                            array('label'=>'New Arrivals', 'url'=>array('product/new')),
-                            array('label'=>'Most Popular', 'url'=>array('product/index')),
-                            array('label'=>'Another', 'url'=>array('product/index'), 'items'=>array(
-                                array('label'=>'Level 3 One', 'url'=>array('product/new')),
-                                array('label'=>'Level 3 Two', 'url'=>array('product/index')),
-                                array('label'=>'Level 3 Three', 'url'=>array('product/index'), 'items'=>array(
-                                    array('label'=>'Level 4 One', 'url'=>array('product/new')),
-                                    array('label'=>'Level 4 Two', 'url'=>array('product/index')),
-                                )),
-                            )),
-                        )),
-                        array('label'=>'Login', 'url'=>array('site/login')),
-                    ),
-                ));                ?>
-                </div>
+                    <?php $this->widget('zii.widgets.CMenu',array(
+                        'id'=>'menu_goriz',
+                        'items'=>array(
+                            array(
+                                'encodeLabel'=>false,
+                                'label'=>"<span id='usermenuemail' style=''>".Yii::app()->user->email."</span>",
+                                'itemOptions'=>array('class'=>'baramenu', 'style'=>"background: url('/images/loginicon.png');  background-position: 1px 2px; background-repeat: no-repeat; width: 117px; height: 13px; display: inline-block; padding-bottom: 5px; padding-left: 21px; padding-top:2px; margin-top:0px; text-align: left; border: #000 solid 0px;"),
+                                'items'=>array(
+                                    array('label'=>'Профиль', 'url'=>array('/user/profile'), 'visible'=>!Yii::app()->user->isGuest),
+                                    array('label'=>'Кабинет', 'url'=>array('/usercab/adverts'), 'visible'=>!Yii::app()->user->isGuest),
+                                    array('label'=>'Админка', 'url'=>array('/adminka/'), 'visible'=>Yii::app()->user->checkAccess('Admin')),
+                                    array('label'=>'RBAC', 'url'=>array('/rights'), 'visible'=>Yii::app()->user->checkAccess('Admin')),
+                                    array('label'=>'Рубрикация', 'url'=>array('/adminka/property/index'), 'visible'=>Yii::app()->user->checkAccess('Admin')),
+                                    array('label'=>'Типы свойств', 'url'=>array('/adminka/proptypes/index'), 'visible'=>Yii::app()->user->checkAccess('Admin')),
+                                    array('label'=>'Рубрикатор', 'url'=>array('/adminka/rubriks/index'), 'visible'=>Yii::app()->user->checkAccess('Admin')),
+                                    array('label'=>'Выход', 'url'=>array('/user/logout')),
+
+                                ),
+
+                            )
+                        ),
 
 
+
+                    )); ?>
+                <!-- mainmenu -->
 
 
 
@@ -117,51 +119,42 @@ header("Content-type: text/html; charset=utf-8");
             }
             ?>
             </div>
+            <br style="height: 1px;">
 
-            <a href="/advert/addadvert" style="display: inline-block; padding: 9px 18px; margin-top: 15px; color: #fff; text-decoration: none; background-color: #0D9D0D; font-size: 15px;
+
+            <div style="float: right; border: #000099 solid 0px;">
+            <a href="/advert/addadvert" style="display: inline-block; padding: 9px 18px; margin-top: -3px; color: #fff; text-decoration: none; background-color: #0D9D0D; font-size: 15px;
 -moz-border-radius: 3px;
 -webkit-border-radius: 3px;
 -khtml-border-radius: 3px;
 border-radius: 3px;">
                 Добавить объявление
             </a>
+            </div>
 
             </td>
         </tr>
         </table>
 	</div><!-- header -->
 
-	<div id="mainmenu">
-		<?php $this->widget('zii.widgets.CMenu',array(
-			'items'=>array(
-				//array('label'=>'Подать', 'url'=>array('/advert/addadvert')),
-				//array('label'=>'Contact', 'url'=>array('/site/contact')),
-				//array('label'=>'Вход', 'url'=>array('/user/login'), 'visible'=>Yii::app()->user->isGuest),
-				//array('label'=>'Выход ('.Yii::app()->user->name.')', 'url'=>array('/user/logout'), 'visible'=>!Yii::app()->user->isGuest),
-                array('label'=>'Профиль', 'url'=>array('/user/profile'), 'visible'=>!Yii::app()->user->isGuest),
-                array('label'=>'Кабинет', 'url'=>array('/usercab/adverts'), 'visible'=>!Yii::app()->user->isGuest),
-				array('label'=>'Админка', 'url'=>array('/adminka/'), 'visible'=>Yii::app()->user->checkAccess('Admin')),
-				array('label'=>'RBAC', 'url'=>array('/rights'), 'visible'=>Yii::app()->user->checkAccess('Admin')),
-                array('label'=>'Рубрикация', 'url'=>array('/adminka/property/index'), 'visible'=>Yii::app()->user->checkAccess('Admin')),
-                array('label'=>'Типы свойств', 'url'=>array('/adminka/proptypes/index'), 'visible'=>Yii::app()->user->checkAccess('Admin')),
-                array('label'=>'Рубрикатор', 'url'=>array('/adminka/rubriks/index'), 'visible'=>Yii::app()->user->checkAccess('Admin')),
-
-                //array('label'=>'', 'url'=>array('/')),
-
-            ),
-		)); ?>
-	</div><!-- mainmenu -->
 
 	<?php echo $content; ?>
 
 	<div class="clear"></div>
 
+    <?
+    if(Yii::app()->controller->id != 'profile')
+    {
+    ?>
     <div style="text-align: center; padding-left: 0; margin-top: 10px; height: 120px; width: 1050px; border: #000099 solid 0px;">
         <?
         $banner_operator = Yii::app()->params['banners_raspred'][2];
         include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/bottom_horizont.php");
         ?>
     </div>
+    <?
+    }
+    ?>
 
 
     <div id="footer" style="">

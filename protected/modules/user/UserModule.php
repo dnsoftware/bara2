@@ -245,7 +245,10 @@ class UserModule extends CWebModule
             $id = Yii::app()->user->id;
 		if ($id) {
             if (!isset(self::$_users[$id])||$clearCache)
-                self::$_users[$id] = User::model()->with(array('profile'))->findbyPk($id);
+            {
+                self::$_users[$id] = User::model()->findbyPk($id);
+                //deb::dump(self::$_users[$id]);
+            }
 			return self::$_users[$id];
         } else return false;
 	}

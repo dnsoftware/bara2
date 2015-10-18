@@ -84,23 +84,60 @@ class UserPhones extends CActiveRecord
     // Проверка корректности ввода телефона
     public function validatephone($attr, $params)
     {
-
-        // если регистрация, то или пустое поле или заполненное но отсутствующее в базе
-        if(Yii::app()->controller->action->id == 'registration')
+        if(Yii::app()->controller->id == 'registration')
         {
-            if($phonerow = self::model()->findByAttributes(array('phone'=>$this->phone)))
+            // если регистрация, то или пустое поле или заполненное но отсутствующее в базе
+            if(Yii::app()->controller->action->id == 'registration')
             {
-                $this->addError($attr, 'Указанный телефон уже присутствует в базе!');
-            }
+                if($phonerow = self::model()->findByAttributes(array('phone'=>$this->phone)))
+                {
+                    $this->addError($attr, 'Указанный телефон уже присутствует в базе!');
+                }
 
+            }
+            else
+            {
+                // Проверка на обязательное поле, если экшн - не регистрация
+                if(strlen($this->phone) < 10)
+                {
+                    $this->addError($attr, 'Необходимо заполнить поле Телефон');
+                }
+            }
         }
-        else
+
+        if(Yii::app()->controller->id == 'profile')
         {
-            // Проверка на обязательное поле, если экшн - не регистрация
-            if(strlen($this->phone) < 10)
+            $ph_id = intval($_POST['UserPhones']['ph_id']);
+            $c_id = intval($_POST['UserPhones']['c_id']);
+            $phone = htmlspecialchars($_POST['UserPhones']['phone']);
+
+            if($ph_id <= 0) // Новый телефон
             {
-                $this->addError($attr, 'Необходимо заполнить поле Телефон');
+                if($phoneinbase = UserPhones::model()->find(array(
+                    'select'=>'*',
+                    'condition'=>'c_id='. $c_id . " AND phone = '".$phone."'"
+                )))
+                {
+                    $this->addError($attr, 'Такой телефон уже есть в базе');
+                }
             }
+            else
+            {
+                if(strlen($phone) < 10)
+                {
+                    $this->addError($attr, 'Укажите номер телефона!');
+                }
+
+                if($phoneinbase = UserPhones::model()->find(array(
+                    'select'=>'*',
+                    'condition'=>'ph_id <> '.$ph_id.' AND c_id='. $c_id . " AND phone = '".$phone."'"
+                )))
+                {
+                    $this->addError($attr, 'Такой телефон уже есть в базе');
+                }
+            }
+
+            //$this->addError($attr, serialize($_POST['UserPhones']));
         }
 
     }

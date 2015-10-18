@@ -3,7 +3,7 @@
 class ProfileController extends Controller
 {
 	public $defaultAction = 'profile';
-	public $layout='//layouts/column2';
+	public $layout='//layouts/column1';
 
 	/**
 	 * @var CActiveRecord the currently loaded data model instance.
@@ -39,13 +39,34 @@ class ProfileController extends Controller
 	{
 		$model = $this->loadUser();
 		$profile=$model->profile;
+        if(!$modelphone = UserPhones::model()->find(array(
+            'select'=>'*',
+            'condition'=>'u_id = '.$model->id,
+            'order'=>'ph_id ASC'
+        )))
+        {
+            $modelphone = new UserPhones();
+            $modelphone->u_id = Yii::app()->user->id;
+            $modelphone->date_add = time();
+        }
 
+//deb::dump($modelphone->attributes);
         $old_email = $model->email;
+
+        // Страны
+        $countries = Countries::model()->findAll(array('order'=>'sort_number'));
+        $countries_array = array();
+        $mask_array = array();
+        foreach($countries as $country)
+        {
+            $countries_array[$country->c_id] = $country->name . " (+".$country->phone_kod.")";
+            $mask_array[$country->c_id] = UserPhones::PhoneMaskGenerate($country->phone_kod);
+        }
 
 		// ajax validator
 		if(isset($_POST['ajax']) && $_POST['ajax']==='profile-form')
 		{
-			echo UActiveForm::validate(array($model,$profile));
+			echo UActiveForm::validate(array($model, $profile, $modelphone));
 			Yii::app()->end();
 		}
 		
@@ -53,10 +74,30 @@ class ProfileController extends Controller
 		{
 			$model->attributes=$_POST['User'];
 			$profile->attributes=$_POST['Profile'];
+            $modelphone->attributes=$_POST['UserPhones'];
 
-			if($model->validate()&&$profile->validate()) {
+            $modelphone->validate();
+
+			if($model->validate()&&$profile->validate()&&$modelphone->validate()) {
 				$model->save();
 				$profile->save();
+
+                if($modelphone->ph_id > 0)
+                {
+                    $old_modelphone = UserPhones::model()->findByPk($modelphone->ph_id);
+                    if($old_modelphone->phone != $modelphone->phone)
+                    {
+                        $modelphone->verify_tag = 0;
+                    }
+                    $modelphone->save();
+                }
+
+                if($modelphone->ph_id == 0 && strlen($modelphone->phone) > 9)
+                {
+                    unset($modelphone->ph_id);
+                    $modelphone->save();
+                }
+
 
                 if ($old_email != $model->email){
                     $model->activkey=UserModule::encrypting(microtime().rand(12345, 987654));
@@ -101,6 +142,9 @@ class ProfileController extends Controller
 			'model'=>$model,
 			'profile'=>$profile,
             'params'=>$params,
+            'modelphone'=>$modelphone,
+            'countries_array'=>$countries_array,
+            'mask_array'=>$mask_array,
 		));
 	}
 	

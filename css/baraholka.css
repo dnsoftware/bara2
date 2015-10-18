@@ -151,35 +151,146 @@ tr.trbotline td
 }
 
 
-#usermenu
+
+
+
+
+
+
+
+
+
+.baramenu
 {
-    background:white url(bg.gif) repeat-x left top;
+    color: #008cc3;
+    text-decoration: none;
+    font-size: 12px;
+    text-align: right;
 }
 
-#usermenu ul
-{
-    padding:6px 20px 5px 20px;
-    margin:0px;
-}
 
-#usermenu ul li
-{
+ul#menu_goriz {
+    /*width:100%;*/
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background: #fff;
+    height: 30px;
+    font: normal 12px Verdana, Arial;
+    text-align: center;
+    z-index: 1100;
+    width: 157px;
     display: inline;
 }
 
-#usermenu ul li a
-{
-    color:#ffffff;
-    background-color:transparent;
-    font-size:12px;
-    font-weight:bold;
-    text-decoration:none;
-    padding:5px 8px;
+ul#menu_goriz li {
+    border: 0 none;
+    padding: 0;
+    /*float: right;*/
+    display: inline;
+    list-style: none;
+    position: relative;
+    width:157px;
+    z-index: 1100;
+    border:  #000020 solid 0px;
+    margin-top: 0px;
+    font-weight: normal;
+    font-family: Arial;
+    cursor: pointer;
 }
 
-#usermenu ul li a:hover, #usermenu ul li.active a
+ul#menu_goriz ul {
+    margin: 0;
+    border: 0 none;
+    padding: 0;
+    width: 157px;
+    list-style: none;
+    display: none;
+    position: absolute;
+    top: 19px;
+    left: -19px;
+    z-index: 1100;
+    border: #000099 solid 0px;
+    box-shadow: 0 0 5px;
+}
+
+ul#menu_goriz ul li {
+    width: 157px;
+    float: left;
+    display: block !important;
+    display: inline;
+    margin: 0;
+    z-index: 1100;
+    text-align: center;
+}
+
+/* Main Menu */
+ul#menu_goriz a {
+    border: 0px;
+    padding: 0px;
+    float: none !important;
+    float: left;
+    display: block;
+    /*background: #228B22;*/
+    background: #fff;
+    /*color: 	#fff;*/
+    color: 	#008CC3;
+    font: normal 13px/30px Verdana, Arial;
+    text-decoration: none;
+    height: auto !important;
+    height: 1%;
+}
+
+/* Main Menu */
+ul#menu_goriz a {
+    border: 0px;
+    padding: 0px;
+    float: none !important;
+    float: left;
+    display: block;
+    background: #fff;
+    color: 	#008CC3;
+    font: normal 13px/30px Verdana, Arial;
+    text-decoration: none;
+    height: auto !important;
+    height: 1%;
+}
+
+#menu_goriz  li a:hover {color:#fff;background:#008CC3;}
+
+/* Second Menu Hover */
+ul#menu_goriz li:hover li a:hover,
+ul#menu_goriz li:hover li:hover a,
+ul#menu_goriz li.iehover li a:hover,
+ul#menu_goriz li.iehover li.iehover a {
+    /*border-top: 2px solid #FFFFFF;*/
+    color:#fff;
+}
+
+
+ul#menu_goriz ul ul {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 157px;
+}
+
+ul#menu_goriz li:hover ul ul,
+ul#menu_goriz li.iehover ul ul {
+    display: none;
+}
+
+ul#menu_goriz li:hover ul,
+ul#menu_goriz ul li:hover ul,
+ul#menu_goriz li.iehover ul,
+ul#menu_goriz ul li.iehover ul {
+    display: block;
+    margin: 0;
+}
+
+
+#usermenuemail:hover
 {
-    color: #6399cd;
-    background-color:#EFF4FA;
-    text-decoration:none;
+    color: #09f;
+
 }

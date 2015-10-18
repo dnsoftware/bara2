@@ -54,24 +54,67 @@ class User extends CActiveRecord
 			array('email', 'email'),
 			array('username', 'unique', 'message' => UserModule::t("This user's name already exists.")),
 			array('email', 'unique', 'message' => UserModule::t("This user's email address already exists.")),
-			array('username', 'match', 'pattern' => '/^[A-Za-z0-9_]+$/u','message' => UserModule::t("Incorrect symbols (A-z0-9).")),
+			array('username', 'match', 'pattern' => '/^[A-Za-z0-9_.]+$/u','message' => UserModule::t("Incorrect symbols (A-z0-9).")),
 			array('status', 'in', 'range'=>array(self::STATUS_NOACTIVE,self::STATUS_ACTIVE,self::STATUS_BANNED)),
             //array('email_status', 'in', 'range'=>array(0,1)),
 			array('superuser', 'in', 'range'=>array(0,1)),
             array('create_at', 'default', 'value' => date('Y-m-d H:i:s'), 'setOnEmpty' => true, 'on' => 'insert'),
             array('lastvisit_at', 'default', 'value' => '0000-00-00 00:00:00', 'setOnEmpty' => true, 'on' => 'insert'),
 			array('username, email, superuser, status', 'required'),
-			array('superuser, status', 'numerical', 'integerOnly'=>true),
-			array('id, username, password, email, activkey, create_at, lastvisit_at, superuser, status', 'safe', 'on'=>'search'),
+
+            /****************************************/
+            array('user_type', 'length', 'min'=>1),
+            array('privat_name', 'privat_name_validate'),
+            array('company_name', 'company_name_validate'),
+            /****************************************/
+
+            array('superuser, status', 'numerical', 'integerOnly'=>true),
+            array('id, username, password, email, activkey, create_at, lastvisit_at, superuser, status', 'safe', 'on'=>'search'),
 		):((Yii::app()->user->id==$this->id)?array(
 			array('username, email', 'required'),
 			array('username', 'length', 'max'=>20, 'min' => 3,'message' => UserModule::t("Incorrect username (length between 3 and 20 characters).")),
 			array('email', 'email'),
-			array('username', 'unique', 'message' => UserModule::t("This user's name already exists.")),
-			array('username', 'match', 'pattern' => '/^[A-Za-z0-9_]+$/u','message' => UserModule::t("Incorrect symbols (A-z0-9).")),
+
+            /****************************************/
+            array('user_type', 'length', 'min'=>1),
+            array('privat_name', 'privat_name_validate'),
+            array('company_name', 'company_name_validate'),
+            /****************************************/
+
+
+            array('username', 'unique', 'message' => UserModule::t("This user's name already exists.")),
+			array('username', 'match', 'pattern' => '/^[A-Za-z0-9_.]+$/u','message' => UserModule::t("Incorrect symbols (A-z0-9).")),
 			array('email', 'unique', 'message' => UserModule::t("This user's email address already exists.")),
 		):array()));
 	}
+
+
+    // Проверка имени пользователя
+    public function privat_name_validate($attr, $params)
+    {
+        if($this->user_type == 'p' && trim($this->privat_name) == '')
+        {
+            $this->addError('privat_name', 'Укажите ваше имя!');
+        }
+
+    }
+
+    // Проверка имени компании
+    public function company_name_validate($attr, $params)
+    {
+        if($this->user_type == 'c')
+        {
+            if(trim($this->privat_name) == '')
+            {
+                $this->addError('privat_name', 'Укажите ваше имя!');
+            }
+
+            if(trim($this->company_name) == '')
+            {
+                $this->addError('company_name', 'Укажите название компании!');
+            }
+        }
+    }
 
 
     /**
@@ -92,6 +135,8 @@ class User extends CActiveRecord
 	{
 		return array(
 			'id' => UserModule::t("Id"),
+            'company_name'=>'Название компании',
+            'privat_name'=>'Ваше имя',
 			'username'=>UserModule::t("username"),
 			'password'=>UserModule::t("password"),
 			'verifyPassword'=>UserModule::t("Retype Password"),
@@ -132,7 +177,7 @@ class User extends CActiveRecord
     {
         return CMap::mergeArray(Yii::app()->getModule('user')->defaultScope,array(
             'alias'=>'user',
-            'select' => 'user.id, user.username, user.email, user.create_at, user.lastvisit_at, user.superuser, user.status, user.email_status',
+            'select' => 'user.id, user.user_type, user.privat_name, user.company_name,  user.username, user.email, user.create_at, user.lastvisit_at, user.superuser, user.status, user.email_status',
         ));
     }
 	
