@@ -8,7 +8,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/f
 
 ?>
 
-<div id="form_search" style="margin-bottom: 25px; ">
+<div id="form_search" style="margin-bottom: 15px; ">
 
 
 <?
@@ -60,7 +60,7 @@ $this->renderPartial('/filter/_search_form', array(
 </div>
 
 
-<div style="text-align: center; padding-left: 0px;">
+<div style="text-align: center; padding-left: 0px; border: #000099 solid 0px;">
     <?
     $banner_operator = Yii::app()->params['banners_raspred'][0];
     include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizont.php");
@@ -127,18 +127,19 @@ $this->renderPartial('/filter/_search_form', array(
 
 </div>
 
-
+<div style="margin-bottom: 15px; text-align: left;">
 <?
-
 foreach ($rubrik_groups as $rkey=>$rval)
 {
 
 ?>
-    <a style="margin-left: 10px;" class="baralink_plus" href="<?= Yii::app()->createUrl($rval['path']);?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
+    <a style="margin-right: 0px;" class="baralink_plus" href="<?= Yii::app()->createUrl($rval['path']);?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
 <?
 }
 //deb::dump($props_array);
 ?>
+</div>
+
 <table style="" cellpadding="0" cellspacing="0" >
 <tr>
     <td style="vertical-align: top;  border: #000020 solid 0px; width: 720px; padding: 0;">

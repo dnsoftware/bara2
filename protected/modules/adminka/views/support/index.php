@@ -12,7 +12,9 @@ $this->renderPartial('/default/_admin_menu');
 
 <a href="<?= Yii::app()->createUrl('/adminka/support/testmail');?>">Тестирование отправки мыла</a>
 
+<a style="margin-left: 20px;" href="<?= Yii::app()->createUrl('/adminka/support/importolduserbase');?>">Импорт старой базы пользователей</a>
 
+<a style="margin-left: 20px;" href="<?= Yii::app()->createUrl('/adminka/support/importoldadvertsmenu');?>">Импорт старых объявлений</a>
 
 
 

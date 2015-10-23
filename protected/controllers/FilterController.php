@@ -524,10 +524,16 @@ class FilterController extends Controller
                         $where_filter_sql
                         ".$where_n.$q_sql."
                         AND n1.n_id = n.n_id
-                        AND n.t_id = t.t_id ";
-                //deb::dump($sql);
+                        AND n.t_id = t.t_id
+                        ORDER BY n.date_add DESC";
+                //deb::dump($_GET['params']['q']);
+
                 $command=$connection->createCommand($sql);
-                $command->bindParam(":q_sql", "%".$_GET['params']['q']."%", PDO::PARAM_STR);
+
+                if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
+                {
+                    $command->bindParam(":q_sql", "%".$_GET['params']['q']."%", PDO::PARAM_STR);
+                }
 
 
                 $start_time = microtime();
@@ -560,6 +566,7 @@ class FilterController extends Controller
                             $where_filter_sql
                             ".$where_n."
                             AND n1.n_id = n.n_id
+                            AND n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0
                             AND n.n_id = nsub.n_id AND nsub.rp_id = ".$subprop_rp_id . "
                             AND nsub.ps_id = ps.ps_id
                             GROUP BY nsub.ps_id, ps.value, ps.transname ";
@@ -596,6 +603,7 @@ class FilterController extends Controller
                     'select'=>'*, town.name as town_name, town.transname as town_transname',
                     'condition'=>' active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND '.
                                 $mesto_rub_sql." AND ".$rubrik_sql.$q_sql,
+                    'order'=>'t.date_add DESC',
                     'params'=>array(':q_sql'=>'%'.$_GET['params']['q'].'%')
                 )
             );

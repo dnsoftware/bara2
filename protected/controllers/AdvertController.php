@@ -1917,8 +1917,12 @@ class AdvertController extends Controller
         $newmodel->date_expire = $newmodel->date_add + $expire_period*86400;
 
         // Поиск дублей
-        $control_string = $newmodel->client_name . $newmodel->client_email . $newmodel->client_phone . $newmodel->r_id . $newmodel->title . $newmodel->notice_type_id . $newmodel->notice_text;
+        /*
+        $control_string = $newmodel->client_name . $newmodel->client_email . $newmodel->client_phone . $newmodel->r_id . $newmodel->title . $newmodel->notice_text;
         $newmodel->checksum = md5($control_string);
+        */
+        $newmodel->checksum = Notice::GetChecksum($newmodel);
+
         // Доделать поиск дублей
         // ...
 

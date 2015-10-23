@@ -33,18 +33,18 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
     <tr>
             <td><a  class="baralink" href="/user/uadverts/<?= $u_id;?>/<?= $pval->transname;?>/"><?= $pval->name;?></a></td> <td><?= $parent_ids_count[$pval->r_id];?></td>
     </tr>
-    <?
-    foreach($subrub_array as $skey=>$sval)
-    {
-    ?>
-    <tr>
-        <td style="padding-left: 20px; "><a  class="baralink" href="/user/uadverts/<?= $u_id;?>/<?= $pval->transname;?>/<?= $sval->transname;?>/"><?= $sval->name;?></a></td> <td><?= $rub_counter[$sval->r_id];?></td>
-    </tr>
-    <?
-    }
+        <?
+        foreach($subrub_array[$pval->r_id] as $skey=>$sval)
+        {
+        ?>
+        <tr>
+            <td style="padding-left: 20px; "><a  class="baralink" href="/user/uadverts/<?= $u_id;?>/<?= $pval->transname;?>/<?= $sval->transname;?>/"><?= $sval->name;?></a></td> <td><?= $rub_counter[$sval->r_id];?></td>
+        </tr>
+        <?
+        }
 
-    }
-    ?>
+        }
+        ?>
     </table>
 
     <div style="text-align: left; padding-left: 14px; margin-top: 10px; ">

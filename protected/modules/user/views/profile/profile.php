@@ -12,8 +12,8 @@ $this->menu=array(
     array('label'=>UserModule::t('Logout'), 'url'=>array('/user/logout')),
 );
 
-
-?><h1 style="font-size: 18px; text-align: center; margin-top: 20px; margin-bottom: 20px;">Ваш профиль</h1>
+$user_status = array('1'=>'активирован', '0'=>'неактивен');
+?><h1 style="font-size: 18px; text-align: center; margin-top: 20px; margin-bottom: 20px;">Профиль ID <?= $model->id;?>, <?= $user_status[$model->status];?></h1>
 
 <?php if(Yii::app()->user->hasFlash('profileMessage')): ?>
 <div class="success">
@@ -23,6 +23,25 @@ $this->menu=array(
 
 <table>
 <tr>
+    <td style="vertical-align: top;">
+
+        <div style="background: #fff;">
+            <table>
+                <tr>
+                    <td><a href="<?= Yii::app()->createUrl('/user/profile/edit');?>" class="baralink">Редактировать</td>
+                </tr>
+                <tr>
+                    <td><a href="<?= Yii::app()->createUrl('/user/profile/changepassword');?>" class="baralink">Изменить пароль</td>
+                </tr>
+            </table>
+        </div>
+
+        <?
+        $this->renderPartial('application.views.usercab.usercabmenu');
+        ?>
+
+    </td>
+
     <td>
     <table class="dataGrid">
 
@@ -47,10 +66,6 @@ $this->menu=array(
         ?>
         <?*/?>
 
-        <tr>
-            <th class="label"><?php echo CHtml::encode($model->getAttributeLabel('id')); ?></th>
-            <td><?php echo CHtml::encode($model->id); ?></td>
-        </tr>
         <?
         if($model->user_type == 'c')
         {
@@ -64,7 +79,7 @@ $this->menu=array(
         ?>
 
         <tr>
-            <th class="label"><?php echo CHtml::encode($model->getAttributeLabel('privat_name')); ?></th>
+            <th class="label">Имя</th>
             <td><?php echo CHtml::encode($model->privat_name); ?></td>
         </tr>
         <tr>
@@ -75,6 +90,7 @@ $this->menu=array(
             <th class="label"><?php echo CHtml::encode($model->getAttributeLabel('create_at')); ?></th>
             <td><?php echo $model->create_at; ?></td>
         </tr>
+        <!--
         <tr>
             <?
             $lastvisit = $model->lastvisit_at;
@@ -86,24 +102,8 @@ $this->menu=array(
             <th class="label"><?php echo CHtml::encode($model->getAttributeLabel('lastvisit_at')); ?></th>
             <td><?php echo $lastvisit; ?></td>
         </tr>
-        <tr>
-            <th class="label"><?php echo CHtml::encode($model->getAttributeLabel('status')); ?></th>
-            <td><?php echo CHtml::encode(User::itemAlias("UserStatus",$model->status)); ?></td>
-        </tr>
+        -->
     </table>
-    </td>
-    <td style="vertical-align: top;">
-
-    <div style="background: #eee;">
-        <table>
-        <tr>
-            <td><a href="<?= Yii::app()->createUrl('/user/profile/edit');?>" class="baralink">Редактировать</td>
-        </tr>
-        <tr>
-            <td><a href="<?= Yii::app()->createUrl('/user/profile/changepassword');?>" class="baralink">Изменить пароль</td>
-        </tr>
-        </table>
-    </div>
     </td>
 </tr>
 </table>

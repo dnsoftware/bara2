@@ -121,7 +121,7 @@ class UadvertsController extends Controller
         {
             foreach($rubriks as $rkey=>$rval)
             {
-                $subrub_array[$rval->r_id] = $rval;
+                $subrub_array[$rval->parent_id][$rval->r_id] = $rval;
                 $parent_ids[$rval->parent_id] = $rval->parent_id;
                 $parent_ids_count[$rval->parent_id] += $rub_counter[$rval->r_id];
             }
@@ -312,7 +312,7 @@ class UadvertsController extends Controller
                 {
                     foreach($rubriks as $rkey=>$rval)
                     {
-                        $subrub_array[$rval->r_id] = $rval;
+                        $subrub_array[$rval->parent_id][$rval->r_id] = $rval;
                         $parent_ids[$rval->parent_id] = $rval->parent_id;
                         $parent_ids_count[$rval->parent_id] += $rub_counter[$rval->r_id];
                     }
@@ -519,7 +519,7 @@ class UadvertsController extends Controller
             {
                 foreach($rubriks as $rkey=>$rval)
                 {
-                    $subrub_array[$rval->r_id] = $rval;
+                    $subrub_array[$rval->parent_id][$rval->r_id] = $rval;
                     $parent_ids[$rval->parent_id] = $rval->parent_id;
                     $parent_ids_count[$rval->parent_id] += $rub_counter[$rval->r_id];
                 }

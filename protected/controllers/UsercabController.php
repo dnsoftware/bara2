@@ -71,7 +71,7 @@ class UsercabController extends Controller
                 $towns_ids[$uval->t_id] = $uval->t_id;
             }
 
-            // Ãîðîäà
+            // Ð“Ð¾Ñ€Ð¾Ð´Ð°
             $towns = Towns::model()->findAll(array(
                 'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
             ));
@@ -99,10 +99,11 @@ class UsercabController extends Controller
                 $search_adverts[$uval->n_id]['town_transname'] = $towns_array[$uval->t_id]->transname;
             }
 
-            // Ïîäãîòîâêà äàííûõ äëÿ îòîáðàæåíèÿ
-            //// Øàáëîíû îòîáðàæåíèÿ èç ðóáðèê
+            // ÐŸÐ¾Ð´Ð³Ð¾Ñ‚Ð¾Ð²ÐºÐ° Ð´Ð°Ð½Ð½Ñ‹Ñ… Ð´Ð»Ñ Ð¾Ñ‚Ð¾Ð±Ñ€Ð°Ð¶ÐµÐ½Ð¸Ñ
+            //// Ð¨Ð°Ð±Ð»Ð¾Ð½Ñ‹ Ð¾Ñ‚Ð¾Ð±Ñ€Ð°Ð¶ÐµÐ½Ð¸Ñ Ð¸Ð· Ñ€ÑƒÐ±Ñ€Ð¸Ðº
             $shablons_display = Rubriks::GetShablonsDisplay();
             $rubriks_all_array = Rubriks::get_all_subrubs();
+            //deb::dump($rubriks_all_array);
             $props_array = Notice::DisplayAdvertsList($search_adverts, $shablons_display, $rubriks_all_array);
 
         }
@@ -117,7 +118,7 @@ class UsercabController extends Controller
             {
                 foreach($rubriks as $rkey=>$rval)
                 {
-                    $subrub_array[$rval->r_id] = $rval;
+                    $subrub_array[$rval->parent_id][$rval->r_id] = $rval;
                     $parent_ids[$rval->parent_id] = $rval->parent_id;
                     $parent_ids_count[$rval->parent_id] += $rub_counter[$rval->r_id];
                 }
@@ -133,11 +134,11 @@ class UsercabController extends Controller
         }
 
 
-        // Äàííûå äëÿ ôîðìû ïîèñêà
+        // Ð”Ð°Ð½Ð½Ñ‹Ðµ Ð´Ð»Ñ Ñ„Ð¾Ñ€Ð¼Ñ‹ Ð¿Ð¾Ð¸ÑÐºÐ°
         $rub_array = Rubriks::get_rublist();
 
-        $props_sprav_sorted_array = array();    // Çàãëóøêà, ïðè íåîáõîäèìîñòè íóæíî íîðìàëüíî èíèöèàëèçèðîâàòü
-        $rubriks_props_array = array();    // Çàãëóøêà, ïðè íåîáõîäèìîñòè íóæíî íîðìàëüíî èíèöèàëèçèðîâàòü
+        $props_sprav_sorted_array = array();    // Ð—Ð°Ð³Ð»ÑƒÑˆÐºÐ°, Ð¿Ñ€Ð¸ Ð½ÐµÐ¾Ð±Ñ…Ð¾Ð´Ð¸Ð¼Ð¾ÑÑ‚Ð¸ Ð½ÑƒÐ¶Ð½Ð¾ Ð½Ð¾Ñ€Ð¼Ð°Ð»ÑŒÐ½Ð¾ Ð¸Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ
+        $rubriks_props_array = array();    // Ð—Ð°Ð³Ð»ÑƒÑˆÐºÐ°, Ð¿Ñ€Ð¸ Ð½ÐµÐ¾Ð±Ñ…Ð¾Ð´Ð¸Ð¼Ð¾ÑÑ‚Ð¸ Ð½ÑƒÐ¶Ð½Ð¾ Ð½Ð¾Ñ€Ð¼Ð°Ð»ÑŒÐ½Ð¾ Ð¸Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ
 
         if(Yii::app()->request->cookies->contains('geo_mytown'))
         {
@@ -171,7 +172,7 @@ class UsercabController extends Controller
             'search_adverts'=>$search_adverts,
             'props_array'=>$props_array,
 
-            /********äëÿ ôîðìû ïîèñêà*********/
+            /********Ð´Ð»Ñ Ñ„Ð¾Ñ€Ð¼Ñ‹ Ð¿Ð¾Ð¸ÑÐºÐ°*********/
             'rub_array'=>$rub_array,
             'mselector'=>$mselector,
             'm_id'=>$m_id,
@@ -229,8 +230,91 @@ class UsercabController extends Controller
     }
 
 
+    // Ð¢ÐµÑ…Ð¿Ð¾Ð´Ð´ÐµÑ€Ð¶ÐºÐ°
+    public function actionSupport()
+    {
 
-	// Uncomment the following methods and override them if needed
+        $this->render('support');
+    }
+
+
+    public function actionShowSupportCaptcha()
+    {
+        $captcha = new BaraholkaCaptcha();
+        $captcha->renderImage();
+        Yii::app()->session['supportcaptcha'] = $captcha->code;
+    }
+
+    public function actionSendSupport()
+    {
+        $ret = array();
+
+        if(strlen($_POST['subject']) < 3)
+        {
+            $ret['status'] = 'error';
+            $ret['message'] = 'Ð£ÐºÐ°Ð¶Ð¸Ñ‚Ðµ Ñ‚ÐµÐ¼Ñƒ Ð·Ð°Ð¿Ñ€Ð¾ÑÐ°';
+        }
+        if(strlen($_POST['message']) < 10)
+        {
+            $ret['status'] = 'error';
+            $ret['message'] = 'Ð¢ÐµÐºÑÑ‚ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ñ ÑÐ»Ð¸ÑˆÐºÐ¾Ð¼ ÐºÐ¾Ñ€Ð¾Ñ‚ÐºÐ¸Ð¹';
+        }
+
+        if(isset($ret['status']) && $ret['status'] == 'error')
+        {
+            echo json_encode($ret);
+            Yii::app()->end();
+        }
+
+        if(strtolower(Yii::app()->session['supportcaptcha']) == strtolower($_POST['verifycode']) )
+        {
+            $user = Users::model()->findByPk(Yii::app()->user->id);
+            $user_page_url = "http://".$_SERVER['HTTP_HOST']."/user/uadverts/".Yii::app()->user->id;
+
+            $emessage = $this->renderFile(Yii::app()->basePath.'/data/mailtemplates/mailtosupport.php',
+                array(
+                    'user_page_url'=>$user_page_url,
+                    'privat_name'=>$user->privat_name,
+                    'subject'=>$_POST['subject'],
+                    'message'=>$_POST['message'],
+                    'userid'=>Yii::app()->user->id
+                ),
+                true);
+
+            $result = BaraholkaMailer::SendSmtpMail(Yii::app()->params['smtp1_connect_data'], array(
+                'mailto'=>Yii::app()->params['adminEmail'],
+                'nameto'=>'Webmaster',
+                'html_tag'=>true,
+                'subject'=>"Ð—Ð°Ð¿Ñ€Ð¾Ñ Ð² Ñ‚ÐµÑ…Ð¿Ð¾Ð´Ð´ÐµÑ€Ð¶ÐºÑƒ",
+                'message'=>$emessage
+            ));
+
+
+            if($result == 'ok')
+            {
+                $ret['status'] = 'ok';
+                $ret['message'] = 'Ð’Ð°ÑˆÐ° Ð·Ð°Ð¿Ñ€Ð¾Ñ ÑƒÑÐ¿ÐµÑˆÐ½Ð¾ Ð¾Ñ‚Ð¿Ñ€Ð°Ð²Ð»ÐµÐ½!';
+            }
+            else
+            {
+                $ret['status'] = 'error';
+                $ret['message'] = $result;
+            }
+
+        }
+        else
+        {
+            $ret['status'] = 'error';
+            $ret['message'] = 'ÐÐµÐ²ÐµÑ€Ð½Ñ‹Ð¹ ÐºÐ¾Ð´ Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ¸!';
+        }
+
+
+        echo json_encode($ret);
+        Yii::app()->end();
+
+    }
+
+    // Uncomment the following methods and override them if needed
 	/*
 	public function filters()
 	{

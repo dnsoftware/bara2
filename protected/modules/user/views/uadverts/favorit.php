@@ -51,9 +51,9 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
                 <td><a class="baralink" href="/user/favorit/<?= $pval->transname;?>/"><?= $pval->name;?></a></td> <td><?= $parent_ids_count[$pval->r_id];?></td>
         </tr>
         <?
-            if(count($subrub_array) > 0)
+            if(count($subrub_array[$pval->r_id]) > 0)
             {
-                foreach($subrub_array as $skey=>$sval)
+                foreach($subrub_array[$pval->r_id] as $skey=>$sval)
                 {
                 ?>
                 <tr>

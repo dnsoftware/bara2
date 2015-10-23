@@ -12,12 +12,14 @@ $this->renderPartial('application.views.filter._search_form', array(
 ));
 ?>
 
+<?/*?>
 <div style="text-align: center; padding-left: 0px; margin-top: 10px; height: 120px;">
     <?
     $banner_operator = Yii::app()->params['banners_raspred'][0];
     include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizont.php");
     ?>
 </div>
+<?*/?>
 
 <h1 style=" text-align: center; font-size: 18px; margin-top: 15px; margin-left: 10px;">Мои объявления</h1>
 
@@ -39,9 +41,9 @@ $this->renderPartial('application.views.filter._search_form', array(
                             <td><a  class="baralink" href="/usercab/adverts/<?= $pval->transname;?>/"><?= $pval->name;?></a></td> <td><?= $parent_ids_count[$pval->r_id];?></td>
                         </tr>
                         <?
-                        if(count($subrub_array) > 0)
+                        if(count($subrub_array[$pval->r_id]) > 0)
                         {
-                            foreach($subrub_array as $skey=>$sval)
+                            foreach($subrub_array[$pval->r_id] as $skey=>$sval)
                             {
                                 ?>
                                 <tr>
@@ -56,12 +58,18 @@ $this->renderPartial('application.views.filter._search_form', array(
                 ?>
             </table>
 
+            <?
+            $this->renderPartial('usercabmenu');
+            ?>
+
+            <?/*?>
             <div style="text-align: left; padding-left: 14px; margin-top: 10px; ">
                 <?
                 $banner_operator = Yii::app()->params['banners_raspred'][1];
                 include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/right_300.php");
                 ?>
             </div>
+            <?*/?>
 
         </td>
 

@@ -553,6 +553,21 @@ class Notice extends CActiveRecord
         }
     */
 
+
+    // Подсчет контрольной суммы объявы для поиска дублей и т.п.
+    public static function GetChecksum($newmodel)
+    {
+        $control_string = $newmodel->client_name . $newmodel->client_email . $newmodel->client_phone . $newmodel->r_id . $newmodel->title . $newmodel->notice_text;
+        $checksum = md5($control_string);
+
+        return $checksum;
+    }
+
+
+
+
+
+
 	/**
 	 * @return array relational rules.
 	 */

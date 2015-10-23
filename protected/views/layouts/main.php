@@ -64,6 +64,8 @@ header("Content-type: text/html; charset=utf-8");
 
                 <?
                 $usernotcount = Notice::GetUserCountAllAdverts(Yii::app()->user->id);
+                Yii::app()->session->add('usernotcount', $usernotcount);
+
                 if(isset(Yii::app()->user->id) && Yii::app()->user->id > 0)
                 {
                     ?>
@@ -94,7 +96,6 @@ header("Content-type: text/html; charset=utf-8");
                                 'label'=>"<span id='usermenuemail' style=''>".Yii::app()->user->email."</span>",
                                 'itemOptions'=>array('class'=>'baramenu', 'style'=>"background: url('/images/loginicon.png');  background-position: 1px 2px; background-repeat: no-repeat; width: 117px; height: 13px; display: inline-block; padding-bottom: 5px; padding-left: 21px; padding-top:2px; margin-top:0px; text-align: left; border: #000 solid 0px;"),
                                 'items'=>array(
-                                    array('label'=>'Профиль', 'url'=>array('/user/profile'), 'visible'=>!Yii::app()->user->isGuest),
                                     array('label'=>'Кабинет', 'url'=>array('/usercab/adverts'), 'visible'=>!Yii::app()->user->isGuest),
                                     array('label'=>'Админка', 'url'=>array('/adminka/'), 'visible'=>Yii::app()->user->checkAccess('Admin')),
                                     array('label'=>'RBAC', 'url'=>array('/rights'), 'visible'=>Yii::app()->user->checkAccess('Admin')),
@@ -143,7 +144,9 @@ border-radius: 3px;">
 	<div class="clear"></div>
 
     <?
-    if(Yii::app()->controller->id != 'profile')
+    //deb::dump(Yii::app()->controller->module->id);
+    if(Yii::app()->controller->id != 'profile' && Yii::app()->controller->id != 'usercab'
+        && Yii::app()->controller->module->id != 'adminka')
     {
     ?>
     <div style="text-align: center; padding-left: 0; margin-top: 10px; height: 120px; width: 1050px; border: #000099 solid 0px;">
