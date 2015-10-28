@@ -31,7 +31,17 @@ class BaraholkaUrlRule extends CBaseUrlRule
         //deb::dump($query_array);
         //deb::dump($request);
         $parts = explode("/", $pathInfo);
-        //deb::dump($parts);
+
+        // Проверка на старую ссылку
+        if(isset($parts[0]) && count($parts) == 1 && strpos($parts[0], '.html'))
+        {
+            preg_match('|_([0-9]{13})\.html|siU', $parts[0], $match);
+
+            $_GET = null;
+            $_GET['daynumber_id'] = $match[1];
+            $controller_action_url = 'advert/oldadvertredirect';
+            return $controller_action_url;
+        }
 
         if($parts[0] == '')
         {
@@ -134,6 +144,7 @@ class BaraholkaUrlRule extends CBaseUrlRule
                     $_GET = array_merge($_GET, $query_array);
 //                    deb::dump($_GET);
                     $controller_action_url = 'advert/viewadvert';
+                    //deb::dump($_GET);
                     return $controller_action_url;
                 }
             }

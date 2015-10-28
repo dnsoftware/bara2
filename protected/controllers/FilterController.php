@@ -35,6 +35,14 @@ class FilterController extends Controller
             $m_id = intval($parts[1]);
         }
 
+        // Показ архивных
+        $expire_sql = " date_expire > '".time()."' AND ";
+        if(isset($_GET['viewarchive']) && $_GET['viewarchive'] == 1)
+        {
+            $expire_sql = " ";
+        }
+        // Конец Показ архивных
+
         // Куки местоположения
         if(isset($_GET['filter_submit_button']))
         {
@@ -519,7 +527,7 @@ class FilterController extends Controller
                         FROM ". $connection->tablePrefix . "notice n,
                         ".$from_tables_sql.",
                         ". $connection->tablePrefix . "towns t
-                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND
+                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
                         $mesto_sql AND $rubrik_prop_sql AND
                         $where_filter_sql
                         ".$where_n.$q_sql."
@@ -567,7 +575,7 @@ class FilterController extends Controller
                             ".$where_n."
                             AND n1.n_id = n.n_id
                             AND n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0
-                            AND n.n_id = nsub.n_id AND nsub.rp_id = ".$subprop_rp_id . "
+                            AND $expire_sql n.n_id = nsub.n_id AND nsub.rp_id = ".$subprop_rp_id . "
                             AND nsub.ps_id = ps.ps_id
                             GROUP BY nsub.ps_id, ps.value, ps.transname ";
                     //deb::dump($sql);
@@ -601,7 +609,7 @@ class FilterController extends Controller
             $adverts = Notice::model()->with('town')->findAll(
                 array(
                     'select'=>'*, town.name as town_name, town.transname as town_transname',
-                    'condition'=>' active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND '.
+                    'condition'=>' active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND '.$expire_sql.
                                 $mesto_rub_sql." AND ".$rubrik_sql.$q_sql,
                     'order'=>'t.date_add DESC',
                     'params'=>array(':q_sql'=>'%'.$_GET['params']['q'].'%')
@@ -627,7 +635,7 @@ class FilterController extends Controller
                         FROM
                         ". $connection->tablePrefix . "notice n,
                         ". $connection->tablePrefix . "rubriks r
-                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND
+                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
                         ".$mesto_sql." AND ".$rubrik_simple_sql."
                         AND r.parent_id <> 0 AND n.r_id = r.r_id
                         GROUP BY r.name, r.transname ";
@@ -664,7 +672,7 @@ class FilterController extends Controller
                         ". $connection->tablePrefix . "notice n,
                         ". $connection->tablePrefix . "rubriks r,
                         ". $connection->tablePrefix . "notice_props p
-                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND
+                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
                         n.r_id = ".intval($_GET['mainblock']['r_id'])."
                         AND $mesto_simple_sql
                         AND n.r_id = r.r_id AND n.n_id = p.n_id
@@ -696,7 +704,7 @@ class FilterController extends Controller
                         ". $connection->tablePrefix . "notice n,
                         ". $connection->tablePrefix . "rubriks r,
                         ". $connection->tablePrefix . "rubriks r2
-                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND
+                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
                         ".$mesto_sql." AND r.parent_id = 0 AND r2.parent_id = r.r_id
                         AND n.r_id = r2.r_id
                         GROUP BY r.name, r.transname ";

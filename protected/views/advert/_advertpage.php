@@ -73,6 +73,10 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                 <div style="background-image: url('/images/lupa_s.png'); background-position: 0px 0px; width: 20px; height: 20px;"></div>
             </div>
 
+            <?
+            if($mainblock['date_expire'] > time())
+            {
+            ?>
             <div style="margin-top: 10px; font-weight: normal; width: 682px; border: #000000 solid 0px;">
 
                 <span style="padding-left: 20px; background-image: url('/images/client.png'); background-position: left center; background-repeat: no-repeat; font-weight: bold;" title="Имя"><a style="color: inherit; text-decoration: none;" href="/user/uadverts/<?= $mainblock['u_id'];?>"><?= $mainblock['client_name'];?></a></span>
@@ -109,6 +113,36 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                 </div>
 
             </div>
+            <?
+            }
+            else
+            {
+            ?>
+                <div style="margin-top: 5px; width: 682px;">
+                <span style="padding-left: 15px; margin-left: 3px; font-weight: bold; background-image: url('/images/location.png'); background-position: left center; background-repeat: no-repeat;" title="Город">
+                <?
+                $region_str = $mainblock_data['region']->name;
+                if($mainblock_data['region']->name != $mainblock_data['town']->name)
+                {
+                    $region_str = $mainblock_data['town']->name;
+                }
+                ?>
+                <?= $region_str.", ".$mainblock_data['country']->name;?>
+                </span>
+
+                    <div style="background-color: #f00; color: #fff; font-size: 14px;">
+                    К сожалению, данное объявление потеряло актуальность за сроком давности. Сейчас Вы будете автоматически перенаправлены на похожие объявления в Вашем городе. Нажмите <a class="baralink" style="font-size: 14px;" href="/<?= $advert_url_category;?>">здесь</a>, если Ваш браузер не поддерживает автоматическую переадресацию.
+                    <?
+                    Yii::app()->clientScript->registerMetaTag("5; URL=/".$advert_url_category, "archive", "refresh");
+                    ?>
+                    </div>
+
+                </div>
+            <?
+            }
+
+            ?>
+
 
             <div id="properties" style="border: #000 solid 0px; margin-top: 5px;">
                 <table style="width: auto; margin: 0px; padding: 0px;">
@@ -197,19 +231,27 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
             <div style="width: 682px; margin-top: 10px;">
                 <div style="font-weight: bold;">Похожие объявления:</div>
 
-                <table>
+                <table style="width: auto;">
                     <tr>
                         <?
                         if(count($similar_adverts) > 0)
                         {
+                            $i=0;
                             foreach($similar_adverts as $skey=>$sval)
                             {
+                                //deb::dump($sval);
+                                if(!preg_match('|<item><rp_id>[\d]+</rp_id><name>[^<]+</name><selector>[^<]+</selector><vibor_type>photoblock</vibor_type><ps_id>[\d]+</ps_id><hand_input_value>([^<]+)</hand_input_value>|siU', $sval['props_xml'], $match))
+                                {
+                                    continue;
+                                }
+
+                                $i++;
                                 ?>
-                                <td style="vertical-align: top; text-align: center;">
+                                <td style="vertical-align: top; text-align: center; width: 120px;">
                                     <?
                                     if(isset($similar_photos[$sval['n_id']][0]))
                                     {
-                                        $photoname = str_replace(".", "_thumb.", $similar_photos[$sval['n_id']][0]);
+                                        $photoname = str_replace(".", "_medium.", $similar_photos[$sval['n_id']][0]);
                                         ?>
                                         <img style="height: 80px;" src="/photos/<?= $photoname;?>">
                                     <?
@@ -233,6 +275,11 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
 
                                 </td>
                             <?
+                                if($i == 5)
+                                {
+                                    break;
+                                }
+
                             }
                         }
                         ?>

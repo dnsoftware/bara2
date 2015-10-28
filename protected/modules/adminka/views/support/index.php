@@ -16,8 +16,10 @@ $this->renderPartial('/default/_admin_menu');
 
 <a style="margin-left: 20px;" href="<?= Yii::app()->createUrl('/adminka/support/importoldadvertsmenu');?>">Импорт старых объявлений</a>
 
+<a style="margin-left: 20px;" href="<?= Yii::app()->createUrl('/adminka/support/oldphonescorrect');?>">Корректировка телефонов в старом формате</a>
 
-
+<br>
+<a style="margin-left: 20px;" href="<?= Yii::app()->createUrl('/adminka/support/imageimportmenu');?>">Импорт изображений</a>
 
 
 

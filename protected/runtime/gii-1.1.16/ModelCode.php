@@ -2,7 +2,7 @@
 return array (
   'template' => 'default',
   'connectionId' => 'db',
-  'tablePrefix' => 'tbl_',
+  'tablePrefix' => 'ohtbsfvre_',
   'modelPath' => 'application.models',
   'baseClass' => 'CActiveRecord',
   'buildRelations' => '1',

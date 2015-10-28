@@ -98,7 +98,7 @@ class Notice extends CActiveRecord
             array('u_id, r_id, t_id, reg_id, c_id, expire_period, active_tag, verify_tag, deactive_moder_id, moder_tag, moder_id, views_count, deleted_tag, otkaz_id, moder_counted_tag', 'numerical', 'integerOnly'=>true),
 			array('date_add, date_lastedit, date_expire, date_deactive, date_moder, date_delete, date_sort', 'length', 'max'=>14),
 			array('client_name, client_email, client_phone, phone_search, reject_reason', 'length', 'max'=>256),
-            array('title', 'length', 'max'=>80),
+            array('title', 'length', 'max'=>256),
 			array('notice_type_id, from_ip', 'length', 'max'=>16),
 			array('checksum', 'length', 'max'=>32),
 

@@ -25,6 +25,7 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
 
 <div style="margin: 10px 0px 10px 0px">
     <?
+    //deb::dump($breadcrumbs);
     $url_parts = array();
     $url = '';
     $bread_count = count($breadcrumbs);
@@ -83,7 +84,7 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
             ?>
                 <td style="text-align:center; border-bottom: #ccc solid  1px; border-width: 1px;">
 
-                <a class="baralink" href="<?= Yii::app()->createUrl('supporter/setvalutaview', array('valuta_view'=>$vval['abbr']));?>"><?= $vval['name_rodit'];?></a>
+                <a class="baralink" style="border-bottom: #008CC3 dotted 1px;" href="<?= Yii::app()->createUrl('supporter/setvalutaview', array('valuta_view'=>$vval['abbr']));?>"><?= $vval['name_rodit'];?></a>
                 <?
                 if($vval['abbr'] != 'RUB')
                 {
@@ -137,7 +138,9 @@ $this->renderPartial('_advertpage', array(
     'similar_photos'=>$similar_photos,
     'subrub_array'=>$subrub_array,
     'towns_array'=>$towns_array,
-    'user'=>$user
+    'user'=>$user,
+    'path_category'=>$path_category,
+    'advert_url_category'=>$breadcrumbs[-2]['transname']."/".$breadcrumbs[0]['transname']."/".$path_category,
 
 ));
 

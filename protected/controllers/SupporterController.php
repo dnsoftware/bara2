@@ -17,6 +17,10 @@ class SupporterController extends Controller
         preg_match('|<ValCurs Date="([^\"]+)"|siU', $content, $match);
         deb::dump($match);
         $temp = explode("/", $match[1]);
+        if(count($temp) != 3)
+        {
+            $temp = explode(".", $match[1]);
+        }
         $kurs_date = mktime(12,0,0, intval($temp[1]), intval($temp[0]), intval($temp[2]));
 
         preg_match_all('|<NumCode>([0-9]+)</NumCode>[\n\t\r\s ]*<CharCode>([A-Z]+)</CharCode>[\n\t\r\s ]*<Nominal>([0-9]+)</Nominal>[\n\t\r\s ]*<Name>(.+)</Name>[\n\t\r\s ]*<Value>(.+)</Value>[\n\t\r\s ]*|siU', $content, $matches);

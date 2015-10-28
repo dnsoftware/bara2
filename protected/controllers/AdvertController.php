@@ -2078,6 +2078,7 @@ class AdvertController extends Controller
     // Просмотр страницы с объявлением
     public function actionViewadvert($daynumber_id)
     {
+        //deb::dump(time());
         /*********** Для верхней формы поиска ***********/
         $mesto_isset_tag = 0;
         $mselector = '';
@@ -2106,6 +2107,20 @@ class AdvertController extends Controller
 //deb::dump(Yii::app()->session['addfield']);
 
             $this->MakeDataForView($mainblock, $addfield);
+//deb::dump($this->addfield_data['props_data']);
+
+            // Для ссылки на категорию для архивных объяв
+            $sub_path = array();
+            $path_category = '';
+            foreach($props_relate as $pkey=>$pval)
+            {
+                if($pval->hierarhy_tag == 1)
+                {
+                    $sub_path[] = $this->addfield_data['props_data'][$pval->notice_props[0]->ps_id]->transname;
+                }
+            }
+            $path_category = implode("/", $sub_path);
+            //deb::dump($path_category);
 
             /*********** Для верхней формы поиска ***********/
             $mesto_isset_tag = 1;
@@ -2122,6 +2137,7 @@ class AdvertController extends Controller
             $i=0;
             $tables_array = array();
             $where_array = array();
+//deb::dump($props_relate);
             foreach($props_relate as $pkey=>$pval)
             {
                 if($pval['hierarhy_tag'] == 1)
@@ -2139,15 +2155,20 @@ class AdvertController extends Controller
             $tables_sql = implode(", ", $tables_array);
             $where_sql = implode(" ", $where_array);
 
+            $expire_sql = " date_expire > '".time()."' AND ";
+            if(isset($_GET['viewarchive']) && $_GET['viewarchive'] == 1)
+            {
+                $expire_sql = " ";
+            }
             $sql = "SELECT DISTINCT n.*
                         FROM ". $connection->tablePrefix . "notice n,
                         ".$tables_sql."
                         WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0
-                        AND n.n_id <> ".$advert->n_id."
+                        AND $expire_sql n.n_id <> ".$advert->n_id."
                         AND n.r_id = ".$advert->r_id . " AND n.t_id = ".$advert->t_id.
                         $where_sql . " AND n1.n_id = n.n_id
                         ORDER BY date_add DESC
-                        LIMIT 0, 5";
+                        LIMIT 0, 15";
             //deb::dump($sql);
             $command = $connection->createCommand($sql);
             $dataReader=$command->query();
@@ -2270,7 +2291,8 @@ class AdvertController extends Controller
             'similar_adverts'=>$similar_adverts,
             'similar_photos'=>$similar_photos,
             'subrub_array'=>$subrub_array,
-            'towns_array'=>$towns_array
+            'towns_array'=>$towns_array,
+            'path_category'=>$path_category,
         ));
 
 
@@ -2905,6 +2927,21 @@ class AdvertController extends Controller
 
 
     }
+
+
+    // Редирект для перехода по старой ссылке
+    public function actionOldAdvertRedirect($daynumber_id)
+    {
+        $advert = Notice::model()->with('town', 'rubriks')->findByAttributes(array(
+            'daynumber_id'=>$daynumber_id
+        ));
+        $transliter = new Supporter();
+        $redirect_page_url = "/".$advert->town->transname."/".$advert->rubriks->transname."/".$transliter->TranslitForUrl($advert->title)."_".$daynumber_id;
+
+        $this->redirect($redirect_page_url, true, 301);
+
+    }
+
 
     // Uncomment the following methods and override them if needed
 	/*
