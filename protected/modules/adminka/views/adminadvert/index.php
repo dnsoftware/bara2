@@ -1,9 +1,9 @@
 <?php
-/* @var $this AdminadvertController */
+Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/jquery.sumoselect.min.js');
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/sumoselect.css');
 
-$this->breadcrumbs=array(
-	'Adminadvert',
-);
+Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/filtercontroller.js');
+
 
 $this->renderPartial('/default/_admin_menu');
 
@@ -11,8 +11,29 @@ $this->renderPartial('/default/_admin_menu');
 
 <h1 style="margin: 5px; font-size: 16px;">Админка: Работа с объявлениями</h1>
 
+<div>
+    <?php
+    $this->renderPartial('_search_form', array(
+        'rub_array'=>$rub_array,
+        'mselector'=>$mselector,
+        'm_id'=>$m_id,
+        'props_sprav_sorted_array'=>$props_sprav_sorted_array,
+        'rubriks_props_array'=>$rubriks_props_array,
+        'rub_old_array'=>$rub_old_array,
+
+        'col_on_page'=>$col_on_page,
+        'page'=>$page,
+        'col_pages'=>$col_pages
+
+
+    ));
+
+    ?>
+</div>
+
 <table>
     <tr>
+        <td class="f12b" style=""><input type="checkbox" id="check_all"></td>
         <td class="f12b" style="width: 8%;">Дата</td>
         <td class="f12b" style="width: 80%;">Объявление</td>
         <td class="f12b" style="width: 3%;">А</td>
@@ -23,25 +44,44 @@ $this->renderPartial('/default/_admin_menu');
     <?
     foreach ($adverts as $akey=>$aval)
     {
+        $expired_tag = 0;
+        if($aval['date_expire'] < time())
+        {
+            $expired_tag = 1;
+        }
+        //deb::dump($aval);
         ?>
         <tr class="trbotline" id="tradv_<?= $aval->n_id;?>" style="background-color: #fafafa;">
             <td class="f11">
-                <?= date('d-m-Y', $aval->date_add);?><br>
-                <?= date('H:i:s', $aval->date_add);?>
+                <input type="checkbox" class="check_advert" name="advert[<?= $aval['n_id'];?>]">
+            </td>
+            <td class="not_act" style="font-size: 11px;">
+                <?= date('d-m-Y', $aval['date_add']);?><br>
+                <?= date('H:i:s', $aval['date_add']);?>
+                <?
+                if($expired_tag == 1)
+                {
+                ?>
+                <div style="background-color: #ddb602; ">
+                    ПРОСРОЧЕНО
+                </div>
+                <?
+                }
+                ?>
             </td>
 
             <td class="not_text">
-                <div class="not_rub"><?= $rubriks[$rubriks[$aval->r_id]->parent_id]->name . " / " . $rubriks[$aval->r_id]->name;?></div>
+                <div class="not_rub"><?= $rubriks[$rubriks[$aval['r_id']]->parent_id]->name . " / " . $rubriks[$aval['r_id']]->name;?></div>
 
-                <div class="not_title" id="advtitul_<?= $aval->n_id;?>"><?= $aval->title;?></div>
+                <div class="not_title" id="advtitul_<?= $aval['n_id'];?>"><?= $aval['title'];?></div>
 
-                <div class="not_desc"><?= $aval->notice_text;?></div>
+                <div class="not_desc"><?= $aval['notice_text'];?></div>
 
                 <?
-                if(count($props_array[$aval->n_id]['photos']) > 0)
+                if(count($props_array[$aval['n_id']]['photos']) > 0)
                 {
-                    ?>
-                    <img width="100" src="/photos/<?= Notice::getPhotoName($props_array[$aval->n_id]['photos'][0], "_thumb");?>">
+                ?>
+                    <img width="100" src="/photos/<?= Notice::getPhotoName($props_array[$aval['n_id']]['photos'][0], "_thumb");?>">
                 <?
                 }
                 ?>
@@ -106,6 +146,47 @@ $this->renderPartial('/default/_admin_menu');
     <span style="border: #aaa solid 1px; padding: 3px; cursor: pointer; margin-left: 50px;" onclick="$('#advert_del').css('display', 'none');">&nbsp;Отмена&nbsp;</span>
 
 </div>
+
+
+
+<?
+Yii::app()->clientScript->registerCssFile('/css/abottom_menu.css');
+?>
+<style>
+    #stickey_footer { /* This will make your footer stay where it is */
+        background: none repeat scroll 0 0 #ddd;
+        border: 1px solid rgba(0, 0, 0, 0.3);
+        bottom: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        height: auto;
+        left: 50%;
+        margin: 0 auto 0 -540px;
+        padding: 0 70px;
+        position: fixed;
+        /*text-shadow: 1px 1px 1px #000000;*/
+        width: 960px;
+    }
+    /* border curves */
+    #stickey_footer {
+        -moz-border-radius: 10px 10px 0px 0px;
+        -webkit-border-radius: 10px 10px 0px 0px;
+        border-radius: 10px 10px 0px 0px;
+    }
+    /* shadow for the footer*/
+    #stickey_footer {
+        -moz-box-shadow:0px 0px 5px #191919;
+        -webkit-box-shadow:0px 0px 5px #191919;
+        box-shadow:0px 0px 5px #191919;
+    }
+
+</style>
+<div id="stickey_footer">
+    <div style="">
+
+    </div>
+</div>
+
+
 
 
 <script>

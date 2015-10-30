@@ -269,6 +269,7 @@ class SupportController extends Controller
                 $inbaserow->r_id = $mainblock['r_id'];
                 $rubrow = Rubriks::model()->findByPk($mainblock['r_id']);
                 $inbaserow->parent_r_id = $rubrow->parent_id;
+                $inbaserow->old_r_id = $oldbase['rubold'];
                 $inbaserow->save();
 
                 $errors = $inbaserow->getErrors();
@@ -362,6 +363,7 @@ class SupportController extends Controller
                 $newadv->counter_daily = 0;
                 $newadv->counter_date = time();
                 $newadv->old_base_tag = 1;
+                $newadv->old_r_id = $oldbase['rubold'];
 
                 $newadv->checksum = Notice::GetChecksum($newadv);
 
@@ -508,11 +510,12 @@ class SupportController extends Controller
             'select'=>'*',
             'condition'=>'old_base_tag = 1 AND img_import_tag = 0 ',    //AND n_id=1198638
             'order'=>'n_id ',
-            'limit'=>200
+            'limit'=>2000
         ));
 
         foreach($notices as $nkey=>$nval)
         {
+            //deb::dump($nval);
             if($noticeimages = NoticeImagesOld::model()->findAll(array(
                 'select'=>'*',
                 'condition'=>'n_id = '.$nval->n_id,

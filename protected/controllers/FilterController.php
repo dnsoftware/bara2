@@ -540,7 +540,8 @@ class FilterController extends Controller
 
                 if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
                 {
-                    $command->bindParam(":q_sql", "%".$_GET['params']['q']."%", PDO::PARAM_STR);
+                    $substr = "%".$_GET['params']['q']."%";
+                    $command->bindParam(":q_sql", $substr, PDO::PARAM_STR);
                 }
 
 
