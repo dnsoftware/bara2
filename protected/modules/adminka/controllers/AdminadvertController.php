@@ -817,7 +817,129 @@ class AdminadvertController extends Controller
     }
 
 
+    // Формирование списка свойсв рубрики для формы панели групповой смены свойств
+    public function actionGetPanelProps()
+    {
+        $connection=Yii::app()->db;
 
+        $panel = $_POST['panel'];
+        $r_id = intval($panel['r_id']);
+
+        $rubriks_props = RubriksProps::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'r_id = '.$r_id . ' AND
+                    (vibor_type = "selector"
+                     OR vibor_type = "listitem"
+                     OR vibor_type = "autoload"
+                     OR vibor_type = "autoload_with_listitem" )',
+            'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
+            //'limit'=>'10'
+        ));
+
+        //deb::dump($rubriks_props);
+
+        $rprops_array = array();
+
+        foreach($rubriks_props as $pkey=>$pval)
+        {
+            if($pval->parent_id <= 0)
+            {
+                $prop_items = PropsSprav::model()->findAll(array(
+                    'select'=>'*',
+                    'condition'=>'rp_id = '. $pval->rp_id,
+                    'order'=>'sort_number'
+                ));
+
+                $temp = $pval->attributes;
+                foreach($prop_items as $pikey=>$pival)
+                {
+                    //deb::dump($pival->ps_id);
+                    $temp['sprav_items'][$pival->ps_id] = $pival->attributes;
+                }
+
+                $rprops_array[$pval->rp_id] = $temp;
+            }
+            else
+            {
+                $parent_rubriks_props = RubriksProps::model()->findByPk($pval->parent_id);
+
+                $temp = $pval->attributes;
+
+                if(isset($_POST['panel'][$parent_rubriks_props->selector])
+                    && intval($_POST['panel'][$parent_rubriks_props->selector]) > 0)
+                {
+//            deb::dump($parent_rubriks_props);
+//            die();
+                    $parent_ps_id = intval($_POST['panel'][$parent_rubriks_props->selector]);
+
+                    $sql = "SELECT *
+                        FROM
+                        ". $connection->tablePrefix . "props_relations pr,
+                        ". $connection->tablePrefix . "props_sprav ps
+                        WHERE pr.parent_ps_id = $parent_ps_id AND pr.child_ps_id = ps.ps_id
+                                AND ps.rp_id = ".$pval->rp_id."
+                        ORDER BY ps.sort_number " ;
+                    //deb::dump($sql);
+                    $command = $connection->createCommand($sql);
+                    $dataReader = $command->query();
+                    while(($row = $dataReader->read())!==false)
+                    {
+                        $temp['sprav_items'][$row['ps_id']] = $row;
+                    }
+
+                    $rprops_array[$pval->rp_id] = $temp;
+                }
+
+            }
+
+
+
+        }
+
+        ?>
+        <div style="margin-top: 5px;">Свойства:</div>
+        <div style="border: #999 solid 1px; padding: 5px;">
+        <?
+        // Выводим сформированные списки
+        foreach($rprops_array as $rkey=>$rval)
+        {
+            ?>
+            <div style="float: left;">
+            <?= $rval['name'];?>:<br>
+            <select class="prop_item" name="panel[<?= $rval['selector'];?>]" style="width: 200px;">
+                <option value="0">-- выберите свойство --</option>
+            <?
+            foreach($rval['sprav_items'] as $ikey=>$ival)
+            {
+                $selected = " ";
+                if($ival['ps_id'] == $_POST['panel'][$rval['selector']])
+                {
+                    $selected = " selected ";
+                }
+            ?>
+                <option <?= $selected;?> value="<?= $ival['ps_id'];?>"><?= $ival['value'];?></option>
+            <?
+            }
+            ?>
+            </select>
+            </div>
+            <?
+        }
+        ?>
+            <br clear="all">
+        </div>
+        <?
+        //deb::dump($rprops_array);
+        ?>
+
+        <script>
+            $('.prop_item').change(function(){
+                GetPanelProps();
+            });
+        </script>
+        <?
+
+    }
 
 
 

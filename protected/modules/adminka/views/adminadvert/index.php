@@ -31,9 +31,10 @@ $this->renderPartial('/default/_admin_menu');
     ?>
 </div>
 
+<form name="search_adverts_form">
 <table>
     <tr>
-        <td class="f12b" style=""><input type="checkbox" id="check_all"></td>
+        <td class="f12b" style=""><input type="checkbox" id="checkall"></td>
         <td class="f12b" style="width: 8%;">Дата</td>
         <td class="f12b" style="width: 80%;">Объявление</td>
         <td class="f12b" style="width: 3%;">А</td>
@@ -53,7 +54,7 @@ $this->renderPartial('/default/_admin_menu');
         ?>
         <tr class="trbotline" id="tradv_<?= $aval->n_id;?>" style="background-color: #fafafa;">
             <td class="f11">
-                <input type="checkbox" class="check_advert" name="advert[<?= $aval['n_id'];?>]">
+                <input type="checkbox" class="chadvert" name="advert[<?= $aval['n_id'];?>]">
             </td>
             <td class="not_act" style="font-size: 11px;">
                 <?= date('d-m-Y', $aval['date_add']);?><br>
@@ -134,6 +135,7 @@ $this->renderPartial('/default/_admin_menu');
     }
     ?>
 </table>
+</form>
 
 
 <div id="advert_del" style="background-color: #eee; border: #aaa solid 1px; width: 250px; height: 100px; position: absolute; top: 50px; text-align: center; display: none;">
@@ -180,8 +182,53 @@ Yii::app()->clientScript->registerCssFile('/css/abottom_menu.css');
     }
 
 </style>
+
 <div id="stickey_footer">
     <div style="">
+        <div>Рубрика</div>
+
+        <div style="margin-bottom: 10px;">
+            <form name="panel_form" id="panel_form">
+
+            <select class="panel_rubriks" id="panel_r_id" name="panel[r_id]" style="margin: 0px; width: 250px;">
+                <option value="">--- выберите категорию  ---</option>
+                <?
+                foreach ($rub_array as $rkey=>$rval)
+                {
+                    $selected = " ";
+                    if($rkey == intval($_SESSION['panel']['r_id']))
+                    {
+                        $selected = " selected ";
+                    }
+                    ?>
+                    <option <?= $selected;?> disabled style="color:#000; font-weight: bold;" value="<?= $rval['parent']->r_id;?>"><?= $rval['parent']->name;?></option>
+                    <?
+                    foreach ($rval['childs'] as $ckey=>$cval)
+                    {
+                        $selected = " ";
+                        if($ckey == intval($_SESSION['panel']['r_id']))
+                        {
+                            $selected = " selected ";
+                        }
+                        ?>
+                        <option <?= $selected;?> value="<?= $cval->r_id;?>">&nbsp;<?= $cval->name;?></option>
+                    <?
+                    }
+                }
+                ?>
+            </select>
+
+            <div id="props_data" style="overflow: auto">
+
+            </div>
+
+                <div style="margin: 10px 10px; float: right;">
+                    <input type="button" value="Изменить рубрику и свойства">
+                </div>
+
+            </form>
+
+        </div>
 
     </div>
 </div>
@@ -298,6 +345,38 @@ Yii::app()->clientScript->registerCssFile('/css/abottom_menu.css');
 
     });
 
+
+    $('#checkall').change(function(){
+        //$(this).attr('checked', true);
+        if($(this).is(':checked') )
+        {
+            $('.chadvert').prop('checked', true);
+        }
+        else
+        {
+            $('.chadvert').prop('checked', false);
+        }
+    });
+
+
+    $('#panel_r_id').change(function(){
+
+        GetPanelProps();
+
+    });
+
+    function GetPanelProps()
+    {
+        $.ajax({
+            type: 'POST',
+            url: '<?= Yii::app()->createUrl('adminka/adminadvert/getpanelprops');?>',
+            data: $('#panel_form').serialize(),
+            success: function(msg){
+                $('#props_data').html(msg);
+            }
+        });
+
+    }
 
 </script>
 
