@@ -565,10 +565,13 @@ class AdminadvertController extends Controller
 
         $rub_old_array = RubriksOld::get_rublist();
 //deb::dump($rub_old_array);
+        $transliter = new Supporter();
+
         $this->render('index', array(
             'adverts'=>$search_adverts,
             'rubriks'=>$rubriks,
             'props_array'=>$props_array,
+            'transliter'=>$transliter,
 
             //для формы поиска
             'rub_array'=>$rub_array,
@@ -820,10 +823,14 @@ class AdminadvertController extends Controller
     // Формирование списка свойсв рубрики для формы панели групповой смены свойств
     public function actionGetPanelProps()
     {
-        $connection=Yii::app()->db;
+        $connection = Yii::app()->db;
 
-        $panel = $_POST['panel'];
-        $r_id = intval($panel['r_id']);
+        if(isset($_POST['panel']))
+        {
+            Yii::app()->session['panel'] = $_POST['panel'];
+        }
+        $panel = Yii::app()->session['panel'];
+        $r_id = intval($_SESSION['panel']['r_id']);
 
         $rubriks_props = RubriksProps::model()->findAll(array(
             'select'=>'*',
@@ -865,12 +872,12 @@ class AdminadvertController extends Controller
 
                 $temp = $pval->attributes;
 
-                if(isset($_POST['panel'][$parent_rubriks_props->selector])
-                    && intval($_POST['panel'][$parent_rubriks_props->selector]) > 0)
+                if(isset($_SESSION['panel'][$parent_rubriks_props->selector])
+                    && intval($_SESSION['panel'][$parent_rubriks_props->selector]) > 0)
                 {
 //            deb::dump($parent_rubriks_props);
 //            die();
-                    $parent_ps_id = intval($_POST['panel'][$parent_rubriks_props->selector]);
+                    $parent_ps_id = intval($_SESSION['panel'][$parent_rubriks_props->selector]);
 
                     $sql = "SELECT *
                         FROM
@@ -896,6 +903,7 @@ class AdminadvertController extends Controller
 
         }
 
+//deb::dump(Yii::app()->session['panel']);
         ?>
         <div style="margin-top: 5px;">Свойства:</div>
         <div style="border: #999 solid 1px; padding: 5px;">
@@ -912,7 +920,7 @@ class AdminadvertController extends Controller
             foreach($rval['sprav_items'] as $ikey=>$ival)
             {
                 $selected = " ";
-                if($ival['ps_id'] == $_POST['panel'][$rval['selector']])
+                if($ival['ps_id'] == $_SESSION['panel'][$rval['selector']])
                 {
                     $selected = " selected ";
                 }
@@ -942,7 +950,110 @@ class AdminadvertController extends Controller
     }
 
 
+    // Установка рубрики и свойств для одной объявы
+    public function actionSetnewprops()
+    {
+        sleep(1);
 
+        $n_id = intval($_POST['n_id']);
+        $advert = Notice::model()->findByPk($n_id);
+
+        $panel = $_POST['panel'];
+
+        $r_id = intval($panel['r_id']);
+        if($r_id > 0)
+        {
+            $props_array = array();
+            foreach($panel as $pkey=>$pval)
+            {
+                if($pkey == 'r_id')
+                {
+                    continue;
+                }
+
+                if($pval > 0)
+                {
+                    $rubprop = RubriksProps::model()->findByAttributes(array('selector'=>$pkey));
+                    //deb::dump($rubprop);
+                    $temprow = array();
+                    $temprow['n_id'] = $n_id;
+                    $temprow['rp_id'] = $rubprop->rp_id;
+                    $temprow['ps_id'] = $pval;
+                    $temprow['hand_input_value'] = '';
+                    $props_array[] = $temprow;
+                }
+            }
+
+            // Удаляем и меняем
+
+            // Нужно сохранить свойство Фотографии,
+            // Для этого получим значение старого свойства notice_props,
+            // и присвоим ему rp_id = rp_id нового rubriks_props
+            $old_photo_rubriks_prop_photoblock = RubriksProps::model()->find(array(
+                'select'=>'*',
+                'condition'=>'r_id = '. $advert->r_id . " AND vibor_type = 'photoblock' "
+            ));
+
+            $old_notice_props_photoblock = NoticeProps::model()->findByAttributes(array(
+                'n_id'=>$n_id,
+                'rp_id'=>$old_photo_rubriks_prop_photoblock->rp_id
+            ));
+
+            $new_photo_rubriks_prop_photoblock = RubriksProps::model()->find(array(
+                'select'=>'*',
+                'condition'=>'r_id = '. $r_id . " AND vibor_type = 'photoblock' "
+            ));
+
+            // Для свойства "фотоблок" есть только одна запись в таблице props_sprav
+            // Находим ее для получения значения ps_id
+            $new_props_sprav_photoblock = PropsSprav::model()->findByAttributes(array(
+                'rp_id'=>$new_photo_rubriks_prop_photoblock->rp_id
+            ));
+
+            if($old_photo_rubriks_prop_photoblock && $new_photo_rubriks_prop_photoblock)
+            {
+                $temprow = array();
+                $temprow['n_id'] = $n_id;
+                $temprow['rp_id'] = $new_photo_rubriks_prop_photoblock->rp_id;
+                $temprow['ps_id'] = $new_props_sprav_photoblock->ps_id;
+                $temprow['hand_input_value'] = $old_notice_props_photoblock->hand_input_value;
+                $props_array[] = $temprow;
+
+            }
+
+            NoticeProps::model()->deleteAll('n_id = '.$n_id);
+
+            $advert->r_id = $r_id;
+            $advert->save();
+            if(count($props_array) > 0)
+            {
+                foreach($props_array as $pkey=>$pval)
+                {
+                    $notice_prop = new NoticeProps();
+                    $notice_prop->n_id = $pval['n_id'];
+                    $notice_prop->rp_id = $pval['rp_id'];
+                    $notice_prop->ps_id = $pval['ps_id'];
+                    $notice_prop->hand_input_value = $pval['hand_input_value'];
+                    $notice_prop->save();
+                }
+            }
+
+            // Формируем xml
+            AdvertController::PropsXmlGenerate($n_id);
+
+            $ret['status'] = 'ok';
+            $ret['message'] = 'Корректировка прошла успешно!';
+
+        }
+        else
+        {
+            $ret['status'] = 'error';
+            $ret['message'] = 'Не выбрана рубрика!';
+        }
+
+
+        echo json_encode($ret);
+    }
 
 
 

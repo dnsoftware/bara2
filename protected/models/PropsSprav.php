@@ -177,16 +177,20 @@ class PropsSprav extends CActiveRecord
     // Получение данных по массиву кодов справочника
     public static function getDataByIds($props_ids)
     {
-        $props_str = implode(", ", $props_ids);
-        $props = self::model()->findAll(array(
-            'select'=>'*',
-            'condition'=>'ps_id IN ('.$props_str.')'
-        ));
-
         $props_data = array();
-        foreach ($props as $pkey=>$pval)
+
+        if(count($props_ids) > 0)
         {
-            $props_data[$pval->ps_id] = $pval;
+            $props_str = implode(", ", $props_ids);
+            $props = self::model()->findAll(array(
+                'select'=>'*',
+                'condition'=>'ps_id IN ('.$props_str.')'
+            ));
+
+            foreach ($props as $pkey=>$pval)
+            {
+                $props_data[$pval->ps_id] = $pval;
+            }
         }
 
         return $props_data;

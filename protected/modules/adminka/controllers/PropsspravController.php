@@ -200,7 +200,9 @@ class PropsspravController extends Controller
         $props_selected_spav_records = PropsSprav::model()->findAll(
             array(
                 'select'=>'*',
-                'condition'=>'rp_id = '.$model_rubriks_props->rp_id.' AND selector = "item"',
+                //'condition'=>'rp_id = '.$model_rubriks_props->rp_id.' AND selector = "item"',
+                //  удалил ' AND selector = "item"'  - возможно вылезет баг
+                'condition'=>'rp_id = '.$model_rubriks_props->rp_id.' ',
                 'order'=>$sort_sql,
                 //'limit'=>'10'
             )

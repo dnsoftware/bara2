@@ -2106,8 +2106,10 @@ class AdvertController extends Controller
             $mainblock['user_date_reg'] = $user->create_at;
 //deb::dump(Yii::app()->session['addfield']);
 
+//        deb::dump($this->addfield_data['props_data']);
+
             $this->MakeDataForView($mainblock, $addfield);
-//deb::dump($this->addfield_data['props_data']);
+//deb::dump($this->addfield_data);
 
             // Для ссылки на категорию для архивных объяв
             $sub_path = array();
@@ -2119,6 +2121,7 @@ class AdvertController extends Controller
                     $sub_path[] = $this->addfield_data['props_data'][$pval->notice_props[0]->ps_id]->transname;
                 }
             }
+
             $path_category = implode("/", $sub_path);
             //deb::dump($path_category);
 
@@ -2160,15 +2163,31 @@ class AdvertController extends Controller
             {
                 $expire_sql = " ";
             }
-            $sql = "SELECT DISTINCT n.*
+
+            $limit = 15;
+            if(trim($where_sql) != '')
+            {
+                $sql = "SELECT DISTINCT n.*
                         FROM ". $connection->tablePrefix . "notice n,
                         ".$tables_sql."
                         WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0
                         AND $expire_sql n.n_id <> ".$advert->n_id."
                         AND n.r_id = ".$advert->r_id . " AND n.t_id = ".$advert->t_id.
-                        $where_sql . " AND n1.n_id = n.n_id
+                    $where_sql . " AND n1.n_id = n.n_id
                         ORDER BY date_add DESC
-                        LIMIT 0, 15";
+                        LIMIT 0, ".$limit;
+            }
+            else
+            {
+                $sql = "SELECT DISTINCT n.*
+                        FROM ". $connection->tablePrefix . "notice n
+                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0
+                        AND $expire_sql n.n_id <> ".$advert->n_id."
+                        AND n.r_id = ".$advert->r_id . " AND n.t_id = ".$advert->t_id.
+                    $where_sql . "
+                        ORDER BY date_add DESC
+                        LIMIT 0, ".$limit;
+            }
             //deb::dump($sql);
             $command = $connection->createCommand($sql);
             $dataReader=$command->query();
@@ -2254,21 +2273,25 @@ class AdvertController extends Controller
             }
         }
 
-        $breadprops = PropsSprav::model()->findAll(
-            array(
-                'select'=>'ps_id, value, transname',
-                'condition'=>'ps_id IN ('.implode(", ", $temp).')'
-            )
-        );
-
-
-
-        foreach($breadprops as $bkey=>$bval)
+        if(count($temp) > 0)
         {
-            $breadcrumbs[$bval->ps_id]['type'] = "prop";
-            $breadcrumbs[$bval->ps_id]['name'] = $bval->value;
-            $breadcrumbs[$bval->ps_id]['transname'] = $bval->transname;
+            $breadprops = PropsSprav::model()->findAll(
+                array(
+                    'select'=>'ps_id, value, transname',
+                    'condition'=>'ps_id IN ('.implode(", ", $temp).')'
+                )
+            );
+
+            foreach($breadprops as $bkey=>$bval)
+            {
+                $breadcrumbs[$bval->ps_id]['type'] = "prop";
+                $breadcrumbs[$bval->ps_id]['name'] = $bval->value;
+                $breadcrumbs[$bval->ps_id]['transname'] = $bval->transname;
+            }
         }
+
+
+
 //deb::dump($breadcrumbs);
 
         $rub_array = Rubriks::get_rublist();

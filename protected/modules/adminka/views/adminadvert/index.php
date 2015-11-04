@@ -52,9 +52,10 @@ $this->renderPartial('/default/_admin_menu');
         }
         //deb::dump($aval);
         ?>
-        <tr class="trbotline" id="tradv_<?= $aval->n_id;?>" style="background-color: #fafafa;">
+        <tr class="trbotline" id="tradv_<?= $aval['n_id'];?>" style="background-color: #fafafa;">
             <td class="f11">
-                <input type="checkbox" class="chadvert" name="advert[<?= $aval['n_id'];?>]">
+                <input type="checkbox" class="chadvert" name="advert[<?= $aval['n_id'];?>]" id="advert_<?= $aval['n_id'];?>" advid="<?= $aval['n_id'];?>">
+                <img style="display: none;" id="loader_<?= $aval['n_id'];?>" src="/images/actions/loader.gif">
             </td>
             <td class="not_act" style="font-size: 11px;">
                 <?= date('d-m-Y', $aval['date_add']);?><br>
@@ -74,7 +75,11 @@ $this->renderPartial('/default/_admin_menu');
             <td class="not_text">
                 <div class="not_rub"><?= $rubriks[$rubriks[$aval['r_id']]->parent_id]->name . " / " . $rubriks[$aval['r_id']]->name;?></div>
 
-                <div class="not_title" id="advtitul_<?= $aval['n_id'];?>"><?= $aval['title'];?></div>
+                <?
+                $advert_page_url = "/".$aval['town_transname']."/".$rubriks_all_array[$aval['r_id']]->transname."/".$transliter->TranslitForUrl($aval['title'])."_".$aval['daynumber_id'];
+
+                ?>
+                <div class="not_title" id="advtitul_<?= $aval['n_id'];?>"><a target="_blank" class="baralink" href="<?= $advert_page_url;?>"><?= $aval['title'];?></a></div>
 
                 <div class="not_desc"><?= $aval['notice_text'];?></div>
 
@@ -86,49 +91,54 @@ $this->renderPartial('/default/_admin_menu');
                 <?
                 }
                 ?>
+
+                <div id="result_<?= $aval['n_id'];?>">
+
+                </div>
+
             </td>
 
             <td class="not_act">
             <?
                 $fname = 'on';
                 $title = 'деактивировать';
-                if($aval->active_tag == 0)
+                if($aval['active_tag'] == 0)
                 {
                     $fname = 'off';
                     $title = 'активировать';
                 }
             ?>
-                <img class="imgnot_act" n_id="<?= $aval->n_id;?>" title="<?= $title;?>" src="/images/actions/<?= $fname;?>.gif">
+                <img class="imgnot_act" n_id="<?= $aval['n_id'];?>" title="<?= $title;?>" src="/images/actions/<?= $fname;?>.gif">
             </td>
 
             <td class="not_ver">
                 <?
                 $fname = 'on';
                 $title = 'отменить верификацию';
-                if($aval->verify_tag == 0)
+                if($aval['verify_tag'] == 0)
                 {
                     $fname = 'off';
                     $title = 'верифицировать';
                 }
                 ?>
-                <img class="imgnot_ver" n_id="<?= $aval->n_id;?>" title="<?= $title;?>" src="/images/actions/<?= $fname;?>.gif">
+                <img class="imgnot_ver" n_id="<?= $aval['n_id'];?>" title="<?= $title;?>" src="/images/actions/<?= $fname;?>.gif">
             </td>
 
             <td class="not_del" >
                 <?
                 $fname = 'on';
                 $title = 'отметить как удаленное';
-                if($aval->deleted_tag == 1)
+                if($aval['deleted_tag'] == 1)
                 {
                     $fname = 'off';
                     $title = 'отменить отметку об удалении';
                 }
                 ?>
-                <img class="imgnot_del" n_id="<?= $aval->n_id;?>" title="<?= $title;?>" src="/images/actions/<?= $fname;?>.gif">
+                <img class="imgnot_del" n_id="<?= $aval['n_id'];?>" title="<?= $title;?>" src="/images/actions/<?= $fname;?>.gif">
             </td>
 
             <td class="not_delplus">
-                <img class="imgnot_delplus" title="удалить навсегда" id="imgdel_<?= $aval->n_id;?>" src="/images/actions/delete.gif" onclick="advert_del(<?= $aval->n_id;?>);">
+                <img class="imgnot_delplus" title="удалить навсегда" id="imgdel_<?= $aval['n_id'];?>" src="/images/actions/delete.gif" onclick="advert_del(<?= $aval['n_id'];?>);">
             </td>
         </tr>
     <?
@@ -219,11 +229,17 @@ Yii::app()->clientScript->registerCssFile('/css/abottom_menu.css');
             </select>
 
             <div id="props_data" style="overflow: auto">
-
+            <?
+                Yii::app()->controller->actionGetPanelProps();
+            ?>
             </div>
+                <div style="color: #f00; margin-top: 5px; float: right;">
+                Внимание! После нажатия этой кнопки все свойства у выбраных объявлений будут обнулены и перезаписаны свойствами, выбранными в этой панели!<br>
+                </div>
 
                 <div style="margin: 10px 10px; float: right;">
-                    <input type="button" value="Изменить рубрику и свойства">
+
+                    <input type="button" id="change_props" value="Изменить рубрику и свойства">
                 </div>
 
             </form>
@@ -365,6 +381,7 @@ Yii::app()->clientScript->registerCssFile('/css/abottom_menu.css');
 
     });
 
+
     function GetPanelProps()
     {
         $.ajax({
@@ -377,6 +394,49 @@ Yii::app()->clientScript->registerCssFile('/css/abottom_menu.css');
         });
 
     }
+
+    $('#change_props').click(function(){
+        $('.chadvert:checked').each(function(i, obj){
+            //console.log(obj);
+
+            scroll_to_elem('advert_'+$(obj).attr('advid'), 1);
+            $('#loader_'+$(obj).attr('advid')).css('display', 'block');
+
+
+            $.ajax({
+                async: false,
+                dataType: 'json',
+                type: 'POST',
+                url: '<?= Yii::app()->createUrl('adminka/adminadvert/setnewprops');?>',
+                data: $('#panel_form').serialize()+'&n_id='+$(obj).attr('advid'),
+                success: function(msg){
+                    if(msg['status'] == 'ok')
+                    {
+                        $('#advert_'+$(obj).attr('advid')).prop('checked', false);
+                        $('#advert_'+$(obj).attr('advid')).attr('disabled', true);
+                        $('#loader_'+$(obj).attr('advid')).css('display', 'none');
+                        $('#result_'+$(obj).attr('advid')).html('<span style="background-color: #6cd114;">Операция выполнена успешно!</span>');
+                    }
+                    else
+                    {
+                        $('#loader_'+$(obj).attr('advid')).css('display', 'none');
+                        $('#result_'+$(obj).attr('advid')).html('<span style="background-color: #f00;">Ошибка: '+msg['message']+'</span>');
+                    }
+
+                }
+            });
+
+
+        });
+    });
+
+    function scroll_to_elem(elem,speed) {
+        if(document.getElementById(elem)) {
+            var destination = jQuery('#'+elem).offset().top;
+            jQuery("html,body").animate({scrollTop: destination}, speed);
+        }
+    }
+
 
 </script>
 
