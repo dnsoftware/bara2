@@ -86,8 +86,10 @@ $this->renderPartial('/default/_admin_menu');
                 <?
                 if(count($props_array[$aval['n_id']]['photos']) > 0)
                 {
+                    $photoname = Notice::getPhotoName($props_array[$aval['n_id']]['photos'][0], "_thumb");
+                    $curr_dir = Notice::getPhotoDir($photoname);
                 ?>
-                    <img width="100" src="/photos/<?= Notice::getPhotoName($props_array[$aval['n_id']]['photos'][0], "_thumb");?>">
+                    <img width="100" src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>">
                 <?
                 }
                 ?>
@@ -226,6 +228,7 @@ Yii::app()->clientScript->registerCssFile('/css/abottom_menu.css');
                     }
                 }
                 ?>
+
             </select>
 
             <div id="props_data" style="overflow: auto">

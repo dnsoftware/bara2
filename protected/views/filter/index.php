@@ -129,12 +129,15 @@ $this->renderPartial('/filter/_search_form', array(
 
 <div style="margin-bottom: 15px; text-align: left;">
 <?
-foreach ($rubrik_groups as $rkey=>$rval)
+if(count($rubrik_groups) > 0)
 {
+    foreach ($rubrik_groups as $rkey=>$rval)
+    {
 
-?>
-    <a style="margin-right: 0px;" class="baralink_plus" href="<?= Yii::app()->createUrl($rval['path']);?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
-<?
+        ?>
+        <a style="margin-right: 0px;" class="baralink_plus" href="<?= Yii::app()->createUrl($rval['path']);?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
+    <?
+    }
 }
 //deb::dump($props_array);
 ?>
@@ -158,7 +161,11 @@ foreach ($rubrik_groups as $rkey=>$rval)
                 $advert_page_url = "/".$val['town_transname']."/".$rubriks_all_array[$val['r_id']]->transname."/".$transliter->TranslitForUrl($val['title'])."_".$val['daynumber_id'];
             ?>
                 <div style="position: relative;">
-                    <a href="<?= $advert_page_url;?>"><img src="/photos/<?= Notice::getPhotoName($props_array[$key]['photos'][0], "_medium");?>"></a>
+                    <?
+                    $photoname = Notice::getPhotoName($props_array[$key]['photos'][0], "_medium");
+                    $curr_dir = Notice::getPhotoDir($photoname);
+                    ?>
+                    <a href="<?= $advert_page_url;?>"><img src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>"></a>
                     <?
                     if(count($props_array[$key]['photos']) > 1)
                     {
@@ -175,7 +182,29 @@ foreach ($rubrik_groups as $rkey=>$rval)
             <td style="vertical-align: top; padding: 0; margin: 0; padding-left: 10px;">
             <?= $props_array[$key]['props_display'];?>
             </td>
+
+
         </tr>
+
+        <?
+        if(isset($_GET['changeprice']))
+        {
+        ?>
+        <tr>
+            <td colspan="2">
+                <div style="padding: 5px; width:160px;; border: #ff4444 solid 2px;" >
+                    <input style="font-size: 26px; width: 150px; border: none;" type="text" class="changeprice" id="pricechange_<?= $val['n_id'];?>" value="<?= $val['cost'];?>">
+
+                    <input type="button" class="changeprice_button" value="Сохранить" cvalue="<?= $val['n_id'];?>">
+                </div>
+                <br><br>
+                <?= $val['notice_text'];?>
+            </td>
+        </tr>
+        <?
+        }
+        ?>
+
         <tr>
             <td style="height: 10px;"></td><td></td>
         </tr>
@@ -183,6 +212,19 @@ foreach ($rubrik_groups as $rkey=>$rval)
         }
         ?>
         </table>
+
+        <?
+        $page_url = preg_replace('|&page=\d+?|siU', '', Yii::app()->getRequest()->getUrl());
+        if($kolpages > 1)
+        {
+            for($i=1; $i<=$kolpages; $i++)
+            {
+            ?>
+                <a href="<?= $page_url;?>&page=<?= $i;?>"><?= $i;?></a>
+            <?
+            }
+        }
+        ?>
     </td>
     <td style="vertical-align: top; height: 1000px;  border: #000020 solid 0px; width: 300px; padding: 0">
         <aside>
@@ -263,4 +305,35 @@ foreach ($rubrik_groups as $rkey=>$rval)
         });
 
     });
+
+
+    $('.changeprice').click(function(){
+        input = $(this);
+
+        input.css('border', '');
+    });
+
+
+    $('.changeprice_button').click(function(){
+        button = $(this);
+
+        $.ajax({
+            url: "<?= Yii::app()->createUrl('/filter/changeprice');?>",
+            method: "post",
+            dataType: 'json',
+            data:{
+                n_id: button.attr('cvalue'),
+                price: $('#pricechange_'+button.attr('cvalue')).val()
+            },
+
+            // обработка успешного выполнения запроса
+            success: function(data){
+                $('#pricechange_'+button.attr('cvalue')).css('border', 'none');
+                $('#pricechange_'+button.attr('cvalue')).css('background-color', '#0f0');
+
+            }
+        });
+
+    });
+
 </script>

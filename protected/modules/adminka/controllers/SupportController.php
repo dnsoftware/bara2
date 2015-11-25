@@ -510,26 +510,29 @@ class SupportController extends Controller
             'select'=>'*',
             'condition'=>'old_base_tag = 1 AND img_import_tag = 0 ',    //AND n_id=1198638
             'order'=>'n_id ',
-            'limit'=>2000
+            'limit'=>70
         ));
 
         foreach($notices as $nkey=>$nval)
         {
-            //deb::dump($nval);
+            deb::dump($nval->n_id);
+            //die();
             if($noticeimages = NoticeImagesOld::model()->findAll(array(
                 'select'=>'*',
                 'condition'=>'n_id = '.$nval->n_id,
                 'order'=>'n_id ASC, titul_tag DESC, fotonumber ASC',
             )))
             {
-                $folder = 'tempphotos';
+                //$folder = 'tempphotos';
+                $folder = Yii::app()->params['photodir'];
                 $files_array = array();
                 foreach($noticeimages as $ikey=>$ival)
                 {
                     //deb::dump($ival);
                     $tofile = md5($ival->filename).".".$ival->file_ext;
                     $tofile_small = md5($ival->filename)."_thumb.".$ival->file_ext;
-                    $output_dir = Yii::app()->basePath."/../".$folder."/";
+                    $curr_dir = Notice::getPhotoDirMake($folder, $tofile);
+                    $output_dir = Yii::app()->basePath."/../".$folder."/".$curr_dir."/";
                     if(copy('http://baraholka.ru/imgnot/'.$ival->filename.".".$ival->file_ext, $output_dir.$tofile))
                     {
                         $files_array[] = $tofile;
@@ -646,7 +649,7 @@ class SupportController extends Controller
 
                 }
 
-                deb::dump($nval->n_id);
+                //deb::dump($nval->n_id);
             }
 
             $nval->img_import_tag = 1;
@@ -655,12 +658,17 @@ class SupportController extends Controller
             // Перегенерируем xml свойства
             AdvertController::PropsXmlGenerate($nval->n_id);
 
-
             //deb::dump($noticeimages);
         }
 
 
+        //$this->redirect('/adminka/support/imageimport/?rnd='.rand(0,9999));
 
+        ?>
+        <script>
+            document.location = '/adminka/support/imageimport/?rnd=<?= rand(0,9999);?>';
+        </script>
+        <?
         //$this->render('imageimport');
     }
 

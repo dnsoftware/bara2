@@ -78,7 +78,7 @@ class AdminadvertController extends Controller
                 //'limit'=>'10'
             )
         );
-
+//deb::dump($rubriks_props);
         // Старая рубрика
         $old_rubrik_sql = " AND 1 ";
         if(isset($_GET['mainblock']['old_r_id']) && $_GET['mainblock']['old_r_id'] != '')
@@ -335,9 +335,10 @@ class AdminadvertController extends Controller
                         ".$where_n.$q_sql."
                         AND n1.n_id = n.n_id
                         AND n.t_id = t.t_id
-                        ORDER BY n.date_add DESC ";
+                        ORDER BY n.date_add DESC
+                        LIMIT 0, 2000";    // патч по количеству, иначе вылетает изза нехватки памяти
 
-                //deb::dump($sql_full);
+//deb::dump($sql_full);
 
                 $command = $connection->createCommand($sql_full);
                 if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
@@ -392,12 +393,14 @@ class AdminadvertController extends Controller
 
             $mesto_rub_sql = str_replace(" n.", " t.", $mesto_sql);
             $q_sql = str_replace(" n.", " t.", $q_sql);
+
             $adverts_full = Notice::model()->with('town')->findAll(
                 array(
                     'select'=>'n_id, town.name as town_name, town.transname as town_transname',
                     'condition'=>' 1 AND '.$expire_sql.
                         $mesto_rub_sql." $old_rubrik_sql AND ".$rubrik_sql.$q_sql,
                     'order'=>'t.date_add DESC',
+                    'limit'=>2000,
                     'params'=>array(':q_sql'=>'%'.$_GET['params']['q'].'%')
                 )
             );
@@ -432,6 +435,7 @@ class AdminadvertController extends Controller
                 $search_adverts[$aval->n_id]['town_name'] = $aval->town['name'];
                 $search_adverts[$aval->n_id]['town_transname'] = $aval->town['transname'];
             }
+
 //deb::dump(count($search_adverts));
 
 
@@ -785,7 +789,7 @@ class AdminadvertController extends Controller
     // Удаление навсегда
     public function actionAdvert_kill()
     {
-        $part_path = '/photos/';
+        $part_path = '/'.Yii::app()->params['photodir'].'/';
         $n_id = intval($_POST['n_id']);
         //$n_id = intval($_GET['n_id']);
 
@@ -804,7 +808,10 @@ class AdminadvertController extends Controller
             {
                 foreach($photo_array as $pkey=>$pval)
                 {
-                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/photos/".$pval);
+                    $curr_dir = Notice::getPhotoDirMake(Yii::app()->params['photodir'], $pval);
+                    $output_dir = $_SERVER['DOCUMENT_ROOT']."/".Yii::app()->params['photodir']."/".$curr_dir."/";
+
+                    @unlink ( $output_dir.$pval);
                 }
             }
 
@@ -830,7 +837,7 @@ class AdminadvertController extends Controller
             Yii::app()->session['panel'] = $_POST['panel'];
         }
         $panel = Yii::app()->session['panel'];
-        $r_id = intval($_SESSION['panel']['r_id']);
+        $r_id = intval($panel['r_id']);
 
         $rubriks_props = RubriksProps::model()->findAll(array(
             'select'=>'*',
@@ -843,7 +850,6 @@ class AdminadvertController extends Controller
             //'limit'=>'10'
         ));
 
-        //deb::dump($rubriks_props);
 
         $rprops_array = array();
 
@@ -917,16 +923,19 @@ class AdminadvertController extends Controller
             <select class="prop_item" name="panel[<?= $rval['selector'];?>]" style="width: 200px;">
                 <option value="0">-- выберите свойство --</option>
             <?
-            foreach($rval['sprav_items'] as $ikey=>$ival)
+            if(count($rval['sprav_items']) > 0)
             {
-                $selected = " ";
-                if($ival['ps_id'] == $_SESSION['panel'][$rval['selector']])
+                foreach($rval['sprav_items'] as $ikey=>$ival)
                 {
-                    $selected = " selected ";
+                    $selected = " ";
+                    if($ival['ps_id'] == $_SESSION['panel'][$rval['selector']])
+                    {
+                        $selected = " selected ";
+                    }
+                ?>
+                    <option <?= $selected;?> value="<?= $ival['ps_id'];?>"><?= $ival['value'];?></option>
+                <?
                 }
-            ?>
-                <option <?= $selected;?> value="<?= $ival['ps_id'];?>"><?= $ival['value'];?></option>
-            <?
             }
             ?>
             </select>

@@ -32,15 +32,17 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                 <div class="galleria" id="galleria" style="width: 600px;">
                     <?
                     //deb::dump($uploadfiles_array);
-                    $part_path = '/photos/';
-                    if($mainblock['n_id'] <= 0)
-                    {
-                        $part_path = '/tmp/';
-                    }
-
                     $i=0;
                     foreach($uploadfiles_array as $ukey=>$uval)
                     {
+                        $curr_dir = Notice::getPhotoDir($uval);
+
+                        $part_path = "/".Yii::app()->params['photodir']."/".$curr_dir."/";
+                        if($mainblock['n_id'] <= 0)
+                        {
+                            $part_path = '/tmp/';
+                        }
+
                         $i++;
                         if(Yii::app()->controller->action->id == 'addpreview')
                         {
@@ -74,7 +76,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
             </div>
 
             <?
-            if($mainblock['date_expire'] > time())
+            if($mainblock['date_expire'] > time() || Yii::app()->controller->action->id == 'addpreview')
             {
             ?>
             <div style="margin-top: 10px; font-weight: normal; width: 682px; border: #000000 solid 0px;">
@@ -253,7 +255,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                                     {
                                         $photoname = str_replace(".", "_medium.", $similar_photos[$sval['n_id']][0]);
                                         ?>
-                                        <img style="height: 80px;" src="/photos/<?= $photoname;?>">
+                                        <img style="height: 80px;" src="/<?= Yii::app()->params['photodir'];?>/<?= $photoname;?>">
                                     <?
                                     }
 

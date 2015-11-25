@@ -1031,7 +1031,8 @@ class AdvertController extends Controller
         {
             foreach ($uploadfiles_array as $fkey=>$fval)
             {
-                if(@copy ( $_SERVER['DOCUMENT_ROOT']."/photos/".$fval, $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval ))
+                $curr_dir = Notice::getPhotoDir($fval);
+                if(@copy ( $_SERVER['DOCUMENT_ROOT']."/".Yii::app()->params['photodir']."/".$curr_dir."/".$fval, $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval ))
                 {
                     // Может нужно, а может и нет
 
@@ -1098,6 +1099,13 @@ class AdvertController extends Controller
                             <div class="ajax-file-upload-red old_load_delete" delfile="<?= $uval;?>" style="">Delete</div>
 
                         </div>
+                        <script>
+                            image = $('[md5id = "<?= md5($uval);?>"]');
+                            photo_filename_md5 = "<?= md5($uval);?>";
+                            fileload_id = "<?= $uval;?>";
+                            RotateImage(image, photo_filename_md5, fileload_id);
+
+                        </script>
                     <?
                     }
                 }
@@ -1208,11 +1216,39 @@ class AdvertController extends Controller
                     image = $('[md5id = '+ $.md5(files[0])+']');
                     image.attr('fileload_id', data[0]);
                     photos_array = photosStrToArray($('.upload_photo_field').val());
-                    console.log(photos_array);
+
                     if(photos_array.length == 1)
                     {
                         image.attr('class', 'mainfileborder');
                     }
+
+                    // Ротатор
+                    photo_filename_md5 = $.md5(files[0]);
+                    fileload_id = data[0];
+                    RotateImage(image, photo_filename_md5, fileload_id);
+
+                    /*
+                    image.before('<div id="rotate_'+photo_filename_md5+'" style="width: 16px; height: 16px; background-image: url(/images/icons/reload.gif);position: relative; left: 0px; top: 0px; float: left;"></div>');
+
+                    rotate = $('#rotate_'+photo_filename_md5);
+                    rotate.click(function(){
+                        $.ajax({
+                            type: 'POST',
+                            url: '<?= Yii::app()->createUrl('advert/rotateimage');?>',
+                            data: 'file='+fileload_id,
+                            success: function(msg){
+                                image = $('[md5id = '+ photo_filename_md5+']');
+                                var src = '/tmp/'+fileload_id + "?" + Math.random();
+                                image.removeAttr('src');//
+                                image.attr('src', src);
+                            }
+                        });
+
+                    });
+                    */
+
+                    // КОНЕЦ Ротатор
+
 
                     image.click(
                         function()
@@ -1650,9 +1686,10 @@ class AdvertController extends Controller
 
                             $files_array = explode(";", $files_str);
                             $files_assoc_array = array();
-                            $output_dir = $_SERVER['DOCUMENT_ROOT']."/photos/";
                             foreach ($files_array as $fkey=>$fval)
                             {
+                                $curr_dir = Notice::getPhotoDirMake(Yii::app()->params['photodir'], $fval);
+                                $output_dir = $_SERVER['DOCUMENT_ROOT']."/".Yii::app()->params['photodir']."/".$curr_dir."/";
                                 if(@copy ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval, $output_dir.$fval ))
                                 {
                                     // дублируем в качестве исходника
@@ -1702,10 +1739,10 @@ class AdvertController extends Controller
                                         $scale_koeff = Notice::HUGE_HEIGHT / Notice::BIG_PREVIEW_HEIGHT * Notice::BASE_KOEFF_WATER_SCALE;
                                     }
                                     // Сохраняем без водяного знака (для использования как исходник в будущем)
-                                    $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root.".".$filename_ext);
+                                    $img->save($output_dir.$filename_root.".".$filename_ext);
 
                                     $img->watermark($_SERVER['DOCUMENT_ROOT']."/images/waterbig.png", 10, 10, CImageHandler::CORNER_RIGHT_BOTTOM, $scale_koeff*$smaller_koeff);
-                                    $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root."_huge.".$filename_ext);
+                                    $img->save($output_dir.$filename_root."_huge.".$filename_ext);
 
                                     // Резайз до средней картинки
                                     $img->reload();
@@ -1735,7 +1772,7 @@ class AdvertController extends Controller
                                     }
 
                                     $img->watermark($_SERVER['DOCUMENT_ROOT']."/images/waterbig.png", 10, 10, CImageHandler::CORNER_RIGHT_BOTTOM, $scale_koeff*$smaller_koeff);
-                                    $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root."_big.".$filename_ext);
+                                    $img->save($output_dir.$filename_root."_big.".$filename_ext);
 
                                     // Средняя превьюшка
                                     $img->reload();
@@ -1748,7 +1785,7 @@ class AdvertController extends Controller
                                         $img->resize(false, Notice::MEDIUM_PREVIEW_HEIGHT);
                                     }
 
-                                    $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root."_medium.".$filename_ext);
+                                    $img->save($output_dir.$filename_root."_medium.".$filename_ext);
 
                                     // Маленькая превьюшка
                                     $img->reload();
@@ -1761,7 +1798,7 @@ class AdvertController extends Controller
                                         $img->resize(false, Notice::PREVIEW_HEIGHT);
                                     }
 
-                                    $img->save($_SERVER['DOCUMENT_ROOT']."/photos/".$filename_root."_thumb.".$filename_ext);
+                                    $img->save($output_dir.$filename_root."_thumb.".$filename_ext);
 
                                     /* КОНЕЦ Наложение водяного знака и генерация картинок разных размеров */
 
@@ -1798,10 +1835,14 @@ class AdvertController extends Controller
                                     $filename_huge = str_replace(".", ".", $ival);
                                     $filename_big = str_replace(".", "_big.", $ival);
                                     $filename_thumb = str_replace(".", "_thumb.", $ival);
-                                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/photos/".$ival);
-                                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/photos/".$filename_huge);
-                                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/photos/".$filename_big);
-                                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/photos/".$filename_thumb);
+
+                                    $curr_dir = Notice::getPhotoDirMake(Yii::app()->params['photodir'], $ival);
+                                    $output_dir = $_SERVER['DOCUMENT_ROOT']."/".Yii::app()->params['photodir']."/".$curr_dir."/";
+
+                                    @unlink ( $output_dir.$ival);
+                                    @unlink ( $output_dir.$filename_huge);
+                                    @unlink ( $output_dir.$filename_big);
+                                    @unlink ( $output_dir.$filename_thumb);
                                 }
                             }
                         }
@@ -2114,6 +2155,7 @@ class AdvertController extends Controller
             // Для ссылки на категорию для архивных объяв
             $sub_path = array();
             $path_category = '';
+
             foreach($props_relate as $pkey=>$pval)
             {
                 if($pval->hierarhy_tag == 1)
@@ -2241,82 +2283,89 @@ class AdvertController extends Controller
                 }
             }
 
-        }
-
-        $town = Towns::model()->findByPk($advert->t_id);
-        $subrubrik = Rubriks::model()->findByPk($advert->r_id);
-        $rubrik = Rubriks::model()->findByPk($subrubrik->parent_id);
-
-        $breadcrumbs = array();
-        $i=-3;
-        $i++;
-        $breadcrumbs[$i]['type'] = "town";
-        $breadcrumbs[$i]['name'] = $town->name . ": все объявления";
-        $breadcrumbs[$i]['transname'] = $town->transname;
-        $i++;
-        $breadcrumbs[$i]['type'] = "rubrik";
-        $breadcrumbs[$i]['name'] = $rubrik->name;
-        $breadcrumbs[$i]['transname'] = $rubrik->transname;
-        $i++;
-        $breadcrumbs[$i]['type'] = "subrubrik";
-        $breadcrumbs[$i]['name'] = $subrubrik->name;
-        $breadcrumbs[$i]['transname'] = $subrubrik->transname;
 
 
-        $temp = array();
-        foreach($props_relate as $pkey=>$pval)
-        {
-            if($pval->hierarhy_tag == 1)
+            $town = Towns::model()->findByPk($advert->t_id);
+            $subrubrik = Rubriks::model()->findByPk($advert->r_id);
+            $rubrik = Rubriks::model()->findByPk($subrubrik->parent_id);
+
+            $breadcrumbs = array();
+            $i=-3;
+            $i++;
+            $breadcrumbs[$i]['type'] = "town";
+            $breadcrumbs[$i]['name'] = $town->name . ": все объявления";
+            $breadcrumbs[$i]['transname'] = $town->transname;
+            $i++;
+            $breadcrumbs[$i]['type'] = "rubrik";
+            $breadcrumbs[$i]['name'] = $rubrik->name;
+            $breadcrumbs[$i]['transname'] = $rubrik->transname;
+            $i++;
+            $breadcrumbs[$i]['type'] = "subrubrik";
+            $breadcrumbs[$i]['name'] = $subrubrik->name;
+            $breadcrumbs[$i]['transname'] = $subrubrik->transname;
+
+
+            $temp = array();
+            foreach($props_relate as $pkey=>$pval)
             {
-                $temp[$pval->rp_id] = $pval->notice_props[0]->ps_id;
-                $breadcrumbs[$pval->notice_props[0]->ps_id] = '';
+                if($pval->hierarhy_tag == 1)
+                {
+                    $temp[$pval->rp_id] = $pval->notice_props[0]->ps_id;
+                    $breadcrumbs[$pval->notice_props[0]->ps_id] = '';
+                }
             }
-        }
 
-        if(count($temp) > 0)
-        {
-            $breadprops = PropsSprav::model()->findAll(
-                array(
-                    'select'=>'ps_id, value, transname',
-                    'condition'=>'ps_id IN ('.implode(", ", $temp).')'
-                )
-            );
-
-            foreach($breadprops as $bkey=>$bval)
+            if(count($temp) > 0)
             {
-                $breadcrumbs[$bval->ps_id]['type'] = "prop";
-                $breadcrumbs[$bval->ps_id]['name'] = $bval->value;
-                $breadcrumbs[$bval->ps_id]['transname'] = $bval->transname;
+                $breadprops = PropsSprav::model()->findAll(
+                    array(
+                        'select'=>'ps_id, value, transname',
+                        'condition'=>'ps_id IN ('.implode(", ", $temp).')'
+                    )
+                );
+
+                foreach($breadprops as $bkey=>$bval)
+                {
+                    $breadcrumbs[$bval->ps_id]['type'] = "prop";
+                    $breadcrumbs[$bval->ps_id]['name'] = $bval->value;
+                    $breadcrumbs[$bval->ps_id]['transname'] = $bval->transname;
+                }
             }
+
+            $rub_array = Rubriks::get_rublist();
+
+            $this->render('viewadvert', array(
+                'mainblock'=>$mainblock,
+                'addfield'=>$addfield,
+                'uploadfiles_array'=>$this->uploadfiles_array,
+                'mainblock_data'=>$this->mainblock_data,
+                'addfield_data'=>$this->addfield_data,
+                'options'=>$this->options,
+                'rub_array'=>$rub_array,
+                'mselector'=>$mselector,
+                'm_id'=>$m_id,
+                'breadcrumbs'=>$breadcrumbs,
+                'user'=>$user,
+
+                'similar_adverts'=>$similar_adverts,
+                'similar_photos'=>$similar_photos,
+                'subrub_array'=>$subrub_array,
+                'towns_array'=>$towns_array,
+                'path_category'=>$path_category,
+            ));
+
+
         }
+        else
+        {
+            echo "Нет такого объявления";
+        }
+
 
 
 
 //deb::dump($breadcrumbs);
 
-        $rub_array = Rubriks::get_rublist();
-
-
-
-        $this->render('viewadvert', array(
-            'mainblock'=>$mainblock,
-            'addfield'=>$addfield,
-            'uploadfiles_array'=>$this->uploadfiles_array,
-            'mainblock_data'=>$this->mainblock_data,
-            'addfield_data'=>$this->addfield_data,
-            'options'=>$this->options,
-            'rub_array'=>$rub_array,
-            'mselector'=>$mselector,
-            'm_id'=>$m_id,
-            'breadcrumbs'=>$breadcrumbs,
-            'user'=>$user,
-
-            'similar_adverts'=>$similar_adverts,
-            'similar_photos'=>$similar_photos,
-            'subrub_array'=>$subrub_array,
-            'towns_array'=>$towns_array,
-            'path_category'=>$path_category,
-        ));
 
 
     }
@@ -2962,6 +3011,21 @@ class AdvertController extends Controller
         $redirect_page_url = "/".$advert->town->transname."/".$advert->rubriks->transname."/".$transliter->TranslitForUrl($advert->title)."_".$daynumber_id;
 
         $this->redirect($redirect_page_url, true, 301);
+
+    }
+
+
+    // Поворот загруженного изображения
+    public function actionRotateimage()
+    {
+        $file = $_POST['file'];
+        $file = str_replace("/", "", $file);
+
+        $img = new CImageHandler();
+        $full_filename = $_SERVER['DOCUMENT_ROOT']."/tmp/".$file;
+        $img->load($full_filename);
+        $img->rotate(-90);
+        $img->save();
 
     }
 

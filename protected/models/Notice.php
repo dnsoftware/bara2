@@ -564,8 +564,27 @@ class Notice extends CActiveRecord
     }
 
 
+    // Получение названия директории для файла-картинки.
+    // Первые три символа имени файла
+    public static function getPhotoDir($filename)
+    {
+        return substr($filename, 0, 3);
+    }
 
+    // Получение названия директории для файла-картинки. Если директории нет, она создается
+    // $photodir - базовая директория для фотографий
+    public static function getPhotoDirMake($photodir, $filename)
+    {
+        $dirname = self::getPhotoDir($filename);
 
+        $full_dirname = $_SERVER['DOCUMENT_ROOT']."/".$photodir."/".$dirname;
+        if(!is_dir($full_dirname))
+        {
+            mkdir($full_dirname);
+        }
+
+        return $dirname;
+    }
 
 
 	/**

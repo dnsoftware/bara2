@@ -4,6 +4,7 @@
     Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/jquery.md5.js');
     Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/uploadfile.css');
     Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/jquery.maskedinput.min.js');
+    Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/image_rotator.js');
 ?>
 
 

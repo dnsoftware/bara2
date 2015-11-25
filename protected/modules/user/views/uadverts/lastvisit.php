@@ -90,8 +90,11 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
                         {
                             $transliter = new Supporter();
                             $advert_page_url = "/".$val['town_transname']."/".$rubriks_all_array[$val['r_id']]->transname."/".$transliter->TranslitForUrl($val['title'])."_".$val['daynumber_id'];
+
+                            $photoname = Notice::getPhotoName($props_array[$key]['photos'][0], "_medium");
+                            $curr_dir = Notice::getPhotoDir($photoname);
                         ?>
-                            <a href="<?= $advert_page_url;?>"><img src="/photos/<?= Notice::getPhotoName($props_array[$key]['photos'][0], "_medium");?>"></a>
+                            <a href="<?= $advert_page_url;?>"><img src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>"></a>
                             <?
                             if(count($props_array[$key]['photos']) > 1)
                             {
