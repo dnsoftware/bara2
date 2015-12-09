@@ -6,7 +6,7 @@
             <td title="Тип свойства (type_id)" style="background-color: #adffc8;  width: 180px;"><?= $props_type_array[$model->type_id];?></td>
             <td title="Тип выбора (vibor_type)" style="background-color: #adffc8;  width: 180px;"><?= RubriksProps::$vibor_type[$model->vibor_type];?></td>
             <td title="Тип сортировки свойств (sort_props_sprav)" style="background-color: #adffc8;  width: 180px;"><?= RubriksProps::$sort_sprav[$model->sort_props_sprav];?></td>
-            <td title="" style="background-color: #ffe39f;  width: 300px; text-align: center;" rowspan="3">
+            <td title="" style="background-color: #ffe39f;  width: 300px; text-align: center;" rowspan="4">
                 <span class="pointer" onclick="edit_rubriks_props_row(<?= $model->rp_id;?>);">Редактировать</span>
                 &nbsp;&nbsp;|&nbsp;&nbsp;
                 <span class="pointer" onclick="work_props_sprav(<?= $model->rp_id;?>);">Справочник свойств</span>
@@ -61,5 +61,24 @@
             <td title="Тип фильтра (filter_type)" style="background-color: #adffc8;  width: 180px;"><?= RubriksProps::$filter_type[$model->filter_type];?></td>
         </tr>
 
+        <tr>
+            <td title="Код блока просмотра (view_block_type)" style="background-color: #adffc8;">
+                <?= RubriksProps::$view_block_id[$model->view_block_id];?>
+            </td>
+
+            <td title="Правила валидации" style="background-color: #adffc8;">
+                <?= $model->validate_rules;?>
+            </td>
+
+            <td title="" style="background-color: #adffc8;">
+
+            </td>
+
+            <td title="" style="background-color: #adffc8;">
+
+            </td>
+
+            <td title="" style="background-color: #adffc8;  width: 180px;"></td>
+        </tr>
     </table>
 </div>

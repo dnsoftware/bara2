@@ -46,6 +46,13 @@ class RubriksProps extends CActiveRecord
         'none' => 'не используется'
     );
 
+    public static $view_block_id = array(
+        'main'=>'основной',
+        'notrequire'=>'необязательный'
+    );
+
+
+
 	/**
 	 * @return string the associated database table name
 	 */
@@ -62,10 +69,11 @@ class RubriksProps extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('r_id, selector, name, type_id, vibor_type, sort_props_sprav, ptype, filter_type', 'required'),
+			array('r_id, selector, name, type_id, vibor_type, sort_props_sprav, ptype, filter_type, view_block_id', 'required'),
             array('selector', 'unique'),
             array('r_id', 'numerical', 'min'=>1),
 			array('hierarhy_tag, hierarhy_level, display_sort, use_in_filter, parent_id, require_prop_tag, hide_if_no_elems_tag, all_values_in_filter', 'numerical', 'integerOnly'=>true),
+            array('validate_rules', 'safe'),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('rp_id, r_id, hierarhy_tag, hierarhy_level, display_sort, use_in_filter', 'safe', 'on'=>'search'),
@@ -176,6 +184,26 @@ class RubriksProps extends CActiveRecord
         return $require_props_array;
     }
 
+
+    // Получение массива свойств, для которых указаны правила валидации validate_rules
+    public static function getValidatedProps($r_id)
+    {
+        $require_props = self::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'r_id = '.$r_id.' AND validate_rules <> "" ',
+            'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
+            //'limit'=>'10'
+        ));
+
+        $require_props_array = array();
+        foreach($require_props as $val)
+        {
+            $require_props_array[$val->selector] = $val;
+        }
+
+        return $require_props_array;
+    }
+
     // Получение массива всех свойств данной рубрики - индекс selector
     public static function getAllProps($r_id)
     {
@@ -231,6 +259,37 @@ class RubriksProps extends CActiveRecord
         }
 
         return $props_array;
+    }
+
+
+    // Валидатор свойств для полей ручного ввода
+    public static function validateProp($rules, $value)
+    {
+        foreach($rules as $r2key=>$r2val)
+        {
+            //return $r2key."-".$r2val;
+            switch($r2key)
+            {
+                case "length_max":
+                    if(strlen($value) > $r2val)
+                    {
+                        return 'Максимальная длина '.$r2val.' симв.';
+                    }
+                break;
+
+                case "type":
+                    if($r2val == 'numeric')
+                    {
+                        if(preg_match('|[^0-9]+|siU', $value))
+                        {
+                            return 'Только числовые значения!';
+                        }
+                    }
+                break;
+            }
+        }
+
+        return '';
     }
 
 

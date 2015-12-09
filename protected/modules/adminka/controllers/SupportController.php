@@ -421,7 +421,8 @@ class SupportController extends Controller
     {
         $adverts = Notice::model()->findAll(array(
             'select'=>'*',
-            'condition'=>'old_base_tag = 1 AND client_phone = "" '
+            'condition'=>'old_base_tag = 1 AND client_phone = ""  ',
+            'limit'=>10000
         ));
 
         $plus = 0;
@@ -430,45 +431,122 @@ class SupportController extends Controller
             $sph = preg_replace('|[ \-\(\)]*|siU', '', $aval->old_client_phone);
 
             // Россия
-            $solidnum = '';
-            $phone_search = '';
-            if(strlen($sph) == 11
-                && $sph[0] == '8'
-                && $aval->c_id == Yii::app()->params['russia_id'])
+            if($aval['c_id'] == 185)
             {
-                $solidnum = "(".$sph[1].$sph[2].$sph[3].") ".$sph[4].$sph[5].$sph[6]."-".$sph[7].$sph[8]."-".$sph[9].$sph[10];
-                echo "----------";
+                $aval->client_phone_c_id = 185;
+
+                $solidnum = '';
+                $phone_search = '';
+                if(strlen($sph) == 11
+                    && $sph[0] == '8'
+                    && $aval->c_id == Yii::app()->params['russia_id'])
+                {
+                    $solidnum = "(".$sph[1].$sph[2].$sph[3].") ".$sph[4].$sph[5].$sph[6]."-".$sph[7].$sph[8]."-".$sph[9].$sph[10];
+                    echo "----------";
+                }
+                else
+                if(strlen($sph) == 12
+                    && $sph[0] == '+'
+                    && $sph[1] == '7'
+                    && $aval->c_id == Yii::app()->params['russia_id'])
+                {
+                    $solidnum = "(".$sph[2].$sph[3].$sph[4].") ".$sph[5].$sph[6].$sph[7]."-".$sph[8].$sph[9]."-".$sph[10].$sph[11];
+                    echo "----------";
+                }
+                else
+                if(strlen($sph) == 10
+                    && $aval->c_id == Yii::app()->params['russia_id'])
+                {
+                    $solidnum = "(".$sph[0].$sph[1].$sph[2].") ".$sph[3].$sph[4].$sph[5]."-".$sph[6].$sph[7]."-".$sph[8].$sph[9];
+                    echo "----------";
+                }
+                else
+                if(strlen($sph) == 11
+                    && $sph[0] == '7'
+                    && $aval->c_id == Yii::app()->params['russia_id'])
+                {
+                    $solidnum = "(".$sph[1].$sph[2].$sph[3].") ".$sph[4].$sph[5].$sph[6]."-".$sph[7].$sph[8]."-".$sph[9].$sph[10];
+                    echo "----------";
+                }
+
             }
-            else
-            if(strlen($sph) == 12
-                && $sph[0] == '+'
-                && $sph[1] == '+7'
-                && $aval->c_id == Yii::app()->params['russia_id'])
-            {
-                $solidnum = "(".$sph[2].$sph[3].$sph[4].") ".$sph[5].$sph[6].$sph[7]."-".$sph[8].$sph[9]."-".$sph[10].$sph[11];
-                echo "----------";
-            }
-            else
-            if(strlen($sph) == 10
-                && $aval->c_id == Yii::app()->params['russia_id'])
-            {
-                $solidnum = "(".$sph[0].$sph[1].$sph[2].") ".$sph[3].$sph[4].$sph[5]."-".$sph[6].$sph[7]."-".$sph[8].$sph[9];
-                echo "----------";
-            }
-            else
-            if(strlen($sph) == 11
-                && $sph[0] == '7'
-                && $aval->c_id == Yii::app()->params['russia_id'])
-            {
-                $solidnum = "(".$sph[1].$sph[2].$sph[3].") ".$sph[4].$sph[5].$sph[6]."-".$sph[7].$sph[8]."-".$sph[9].$sph[10];
-                echo "----------";
-            }
+
+
+
             // Украина
-            else
-            if(1)
+            if($aval['c_id'] == 222)
             {
-                // Доработать Украину и прочие страны
-                deb::dump($aval->c_id);
+                $aval->client_phone_c_id = 222;
+
+                $solidnum = '';
+                $phone_search = '';
+
+                if(strlen($sph) == 11
+                    && $sph[0] == '8')
+                {
+                    $solidnum = "(".$sph[1].$sph[2].$sph[3].") ".$sph[4].$sph[5].$sph[6]."-".$sph[7].$sph[8]."-".$sph[9].$sph[10];
+                    echo "----------";
+                }
+                else
+                if(strlen($sph) == 13
+                    && $sph[0] == '+'
+                    && $sph[1] == '3'
+                    && $sph[2] == '8')
+                {
+                    $solidnum = "(".$sph[3].$sph[4].$sph[5].") ".$sph[6].$sph[7]."-".$sph[8].$sph[9]."-".$sph[10].$sph[11].$sph[12];
+                    echo "----------";
+                }
+                else
+                if(strlen($sph) == 10)
+                {
+                    $solidnum = "(".$sph[0].$sph[1].$sph[2].") ".$sph[3].$sph[4].$sph[5]."-".$sph[6].$sph[7]."-".$sph[8].$sph[9];
+                    echo "----------";
+                }
+                else
+                if(strlen($sph) == 12
+                    && $sph[0] == '3'
+                    && $sph[1] == '8')
+                {
+                    $solidnum = "(".$sph[2].$sph[3].$sph[4].") ".$sph[5].$sph[6]."-".$sph[7].$sph[8]."-".$sph[9].$sph[10].$sph[11];
+                    echo "----------";
+                }
+            }
+
+            // Казахстан
+            if($aval['c_id'] == 122)
+            {
+                $aval->client_phone_c_id = 122;
+
+                $solidnum = '';
+                $phone_search = '';
+                if(strlen($sph) == 11
+                    && $sph[0] == '8')
+                {
+                    $solidnum = "(".$sph[1].$sph[2].$sph[3].") ".$sph[4].$sph[5].$sph[6]."-".$sph[7].$sph[8]."-".$sph[9].$sph[10];
+                    echo "----------";
+                }
+                else
+                if(strlen($sph) == 12
+                    && $sph[0] == '+'
+                    && $sph[1] == '7')
+                {
+                    $solidnum = "(".$sph[2].$sph[3].$sph[4].") ".$sph[5].$sph[6].$sph[7]."-".$sph[8].$sph[9]."-".$sph[10].$sph[11];
+                    echo "----------";
+                }
+                else
+                if(strlen($sph) == 10)
+                {
+                    $solidnum = "(".$sph[0].$sph[1].$sph[2].") ".$sph[3].$sph[4].$sph[5]."-".$sph[6].$sph[7]."-".$sph[8].$sph[9];
+                    echo "----------";
+                }
+                else
+                if(strlen($sph) == 11
+                    && $sph[0] == '7')
+                {
+                    $solidnum = "(".$sph[1].$sph[2].$sph[3].") ".$sph[4].$sph[5].$sph[6]."-".$sph[7].$sph[8]."-".$sph[9].$sph[10];
+                    echo "----------";
+                }
+
             }
 
             $phone_search = preg_replace('|[\(\) \-]|siU', '', $solidnum);
@@ -476,7 +554,12 @@ class SupportController extends Controller
             echo $sph." - ".$solidnum." - ".$phone_search."<br>";
 
             $aval->client_phone = $solidnum;
+            if($solidnum == '')
+            {
+                $aval->client_phone = '-';
+            }
             $aval->phone_search = $phone_search;
+
             $aval->save();
 
         }

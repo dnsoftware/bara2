@@ -177,6 +177,7 @@
     $('.sumoselect').SumoSelect();
     <?= $select_multi_placeholders;?>
 
+    $('.fchange').unbind('change');
     $('.fchange').change(function ()
     {
         changeFilterReload('<?= Yii::app()->createUrl('filter/getdatafilter');?>');

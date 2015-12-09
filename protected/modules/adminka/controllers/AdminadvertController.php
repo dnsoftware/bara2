@@ -418,7 +418,7 @@ class AdminadvertController extends Controller
                 array(
                     'select'=>'*, town.name as town_name, town.transname as town_transname',
                     'condition'=>' 1 AND '.$expire_sql.
-                        $mesto_rub_sql." $old_rubrik_sql AND ".$rubrik_sql.$q_sql,
+                        $mesto_rub_sql." $old_rubrik_sql AND   ".$rubrik_sql.$q_sql,
                     'order'=>'t.date_add DESC',
                     'limit'=>$col_on_page,
                     'offset'=>$start,
@@ -430,7 +430,7 @@ class AdminadvertController extends Controller
 
             foreach ($adverts as $akey=>$aval)
             {
-                //deb::dump($aval->town['name']);
+                //deb::dump($aval);
                 $search_adverts[$aval->n_id] = $aval->attributes;
                 $search_adverts[$aval->n_id]['town_name'] = $aval->town['name'];
                 $search_adverts[$aval->n_id]['town_transname'] = $aval->town['transname'];

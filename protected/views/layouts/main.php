@@ -144,9 +144,10 @@ border-radius: 3px;">
 	<div class="clear"></div>
 
     <?
-    //deb::dump(Yii::app()->controller->module->id);
+    //deb::dump(Yii::app()->controller->action->id);
     if(Yii::app()->controller->id != 'profile' && Yii::app()->controller->id != 'usercab'
-        && Yii::app()->controller->module->id != 'adminka')
+        && Yii::app()->controller->module->id != 'adminka'
+        && Yii::app()->controller->action->id != 'addadvert')
     {
     ?>
     <div style="text-align: center; padding-left: 0; margin-top: 10px; height: 120px; width: 1050px; border: #000099 solid 0px;">

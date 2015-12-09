@@ -13,11 +13,13 @@ class GeolocatorWidget extends CWidget
      */
     public function run()
     {
+        /*
         $countries = Countries::model()->findAll();
         $regions = Regions::model()->findAll(array(
             'condition'=>'c_id=1',
             'order'=>'name'
         ));
+        */
 
         $path = Yii::getPathOfAlias('webroot');
         $SxGeo = new SxGeo($path.'/sypexgeo/SxGeoCity.dat');
@@ -100,6 +102,22 @@ class GeolocatorWidget extends CWidget
                 }
             }
 
+            /*
+            if($cookie['mytown'] > 0 && $cookie['myregion'] == 0)
+            {
+                $cookie = new CHttpCookie('geo_myregion', $geodata['region']['id']);
+                $cookie->expire = time() + 86400*30;
+                Yii::app()->request->cookies['geo_myregion'] = $cookie;
+
+                $cookie = new CHttpCookie('geo_myregion', $geodata['region']['id']);
+                $cookie->expire = time() + 86400*30;
+                Yii::app()->request->cookies['geo_myregion'] = $cookie;
+
+                $cookie['myregion'] = $geodata['region']['id'];
+                $cookie['myregion'] == $geodata['region']['name_ru'];
+            }
+            */
+
         }
         // Если куки не определены вручную
         else
@@ -121,6 +139,14 @@ class GeolocatorWidget extends CWidget
                 $cookie = new CHttpCookie('geo_mytown_name', $geodata['city']['name_ru']);
                 $cookie->expire = time() + 86400*30;
                 Yii::app()->request->cookies['geo_mytown_name'] = $cookie;
+
+                $cookie = new CHttpCookie('geo_myregion', $geodata['region']['id']);
+                $cookie->expire = time() + 86400*30;
+                Yii::app()->request->cookies['geo_myregion'] = $cookie;
+
+                $cookie = new CHttpCookie('geo_myregion_name', $geodata['region']['name_ru']);
+                $cookie->expire = time() + 86400*30;
+                Yii::app()->request->cookies['geo_myregion_name'] = $cookie;
 
                 $cookie = new CHttpCookie('geo_mycountry', $geodata['country']['id']);
                 $cookie->expire = time() + 86400*30;

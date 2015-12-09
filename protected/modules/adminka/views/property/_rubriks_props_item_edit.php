@@ -116,6 +116,22 @@
                 </td>
             </tr>
 
+            <tr>
+                <td style="background-color: #adffc8; width: 120px;">
+                    <?
+                    echo CHtml::dropDownList('params[view_block_id]', $model->view_block_id, RubriksProps::$view_block_id, array('style'=>'width:140px;'));
+                    ?>
+                </td>
+                <td style="background-color: #adffc8; width: 120px;">
+                    <textarea name="params[validate_rules]" ><?= $model->validate_rules;?></textarea>
+                </td>
+                <td style="background-color: #adffc8; width: 180px;">
+                </td>
+                <td style="background-color: #adffc8; width: 180px;">
+                </td>
+                <td style="background-color: #adffc8; width: 180px;">
+                </td>
+            </tr>
         </table>
 
     </form>

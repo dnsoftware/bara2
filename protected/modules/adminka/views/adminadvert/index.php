@@ -70,6 +70,17 @@ $this->renderPartial('/default/_admin_menu');
                 <?
                 }
                 ?>
+
+                <?
+                if($aval['deleted_tag'] == 1)
+                {
+                    ?>
+                    <div style="background-color: #f00; text-align: center ">
+                        УДАЛЕНО
+                    </div>
+                <?
+                }
+                ?>
             </td>
 
             <td class="not_text">

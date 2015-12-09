@@ -29,8 +29,8 @@ class NoticeProps extends CActiveRecord
 		// will receive user inputs.
 		return array(
 			array('n_id, rp_id, ps_id', 'required'),
-			array('n_id, rp_id, ps_id', 'numerical', 'integerOnly'=>true),
-			array('hand_input_value, hand_input_value_digit', 'length', 'max'=>256),
+			array('n_id, rp_id, ps_id, hand_input_value_digit', 'numerical', 'integerOnly'=>true),
+			array('hand_input_value', 'length', 'max'=>1024),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('np_id, n_id, rp_id, ps_id, hand_input_value', 'safe', 'on'=>'search'),

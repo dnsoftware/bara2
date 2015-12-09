@@ -82,28 +82,60 @@ class PropertyController extends Controller
     {
         $model = RubriksProps::model()->findByPk($_POST['params']['rp_id']);
 
-        $model->hierarhy_tag = 0;
-        $model->use_in_filter = 0;
-        $model->require_prop_tag = 0;
-        $model->hide_if_no_elems_tag = 0;
-        $model->all_values_in_filter = 0;
-        $model->attributes = $_POST['params'];
-
-        if (!$model->save())
+        // Если разрываем зависимость, проверяем, есть ли связанные свойства в таблице props_relations
+        $childs = array();
+        $parent_ps_id_array = array();
+        $child_ps_id_array = array();
+        if($model->parent_id != $_POST['params']['parent_id'])
         {
-            foreach ($model->errors as $ekey=>$eval)
+            $parent_rows = PropsSprav::model()->findAllByAttributes(array('rp_id'=>$model->parent_id));
+
+            foreach($parent_rows as $pkey=>$pval)
             {
-                echo $eval[0]."<br/>";
-            };
+                $parent_ps_id_array[] = $pval->ps_id;
+            }
+
+            if(count($parent_ps_id_array) > 0)
+            {
+                $child_rows = PropsRelations::model()->findAll(array(
+                    'select'=>'*',
+                    'condition'=>'parent_ps_id IN ('.implode(", ", $parent_ps_id_array).')'
+                ));
+            }
+
+
+        }
+
+        if(count($child_rows) > 0)
+        {
+            echo "Есть зависимости. Разрыв/смена зависимости невозможно!";
         }
         else
         {
-            echo "<!--ok-->";
-            $props_type_array = PropTypes::getPropsType();
-            $potential_parents = RubriksProps::getPotentialParents($model->r_id, 0);
+            $model->hierarhy_tag = 0;
+            $model->use_in_filter = 0;
+            $model->require_prop_tag = 0;
+            $model->hide_if_no_elems_tag = 0;
+            $model->all_values_in_filter = 0;
+            $model->attributes = $_POST['params'];
 
-            $this->renderPartial('_rubprops_item',
-                array('model'=>$model, 'props_type_array'=>$props_type_array, 'potential_parents'=>$potential_parents));
+            if (!$model->save())
+            {
+                foreach ($model->errors as $ekey=>$eval)
+                {
+                    echo $model->sort_props_sprav;
+                    echo $eval[0]."<br/>";
+                };
+            }
+            else
+            {
+                echo "<!--ok-->";
+                $props_type_array = PropTypes::getPropsType();
+                $potential_parents = RubriksProps::getPotentialParents($model->r_id, 0);
+
+                $this->renderPartial('_rubprops_item',
+                    array('model'=>$model, 'props_type_array'=>$props_type_array, 'potential_parents'=>$potential_parents));
+            }
         }
 
     }

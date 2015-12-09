@@ -84,6 +84,7 @@ class UserPhones extends CActiveRecord
     // Проверка корректности ввода телефона
     public function validatephone($attr, $params)
     {
+
         if(Yii::app()->controller->id == 'registration')
         {
             // если регистрация, то или пустое поле или заполненное но отсутствующее в базе

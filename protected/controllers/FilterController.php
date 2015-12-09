@@ -8,6 +8,7 @@ class FilterController extends Controller
 
 	public function actionIndex()
 	{
+        //deb::dump($_GET);
         $query_delta = 0;
 
         $connection=Yii::app()->db;

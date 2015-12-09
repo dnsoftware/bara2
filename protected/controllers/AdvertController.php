@@ -54,6 +54,16 @@ class AdvertController extends Controller
             $mask_array[$country->c_id] = UserPhones::PhoneMaskGenerate($country->phone_kod);
         }
 
+        // Список телефонов для залогиненного пользователя
+        $user_phones = array();
+        if(Yii::app()->user->id > 0)
+        {
+            $user_phones = UserPhones::model()->findAllByAttributes(array(
+                'u_id'=>Yii::app()->user->id
+                )
+            );
+        }
+
         // Сброс проверенности телефона
         Yii::app()->session['usercheckphone_tag'] = 0;
 
@@ -61,7 +71,7 @@ class AdvertController extends Controller
         $this->render('addadvert', array('rub_array'=>$rub_array, 'model'=>$model,
                     'mainblock'=>$mainblock, 'n_id'=>$n_id, 'country_array'=>$country_array,
                     'user_phone'=>$user_phone, 'countries_array'=>$countries_array,
-                    'mask_array'=>$mask_array
+                    'mask_array'=>$mask_array, 'user_phones'=>$user_phones
         ));
 
     }
@@ -323,14 +333,22 @@ class AdvertController extends Controller
         $model_items = RubriksProps::model()->findAll(array(
             'select'=>'*',
             'condition'=>'r_id = '.$r_id,
-            'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
+            'order'=>'view_block_id ASC, hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
             //'limit'=>'10'
         ));
 
         $model_items_array = array();
+        $model_items_selector_array = array();
         foreach ($model_items as $mkey=>$mval)
         {
+            $model_items_not_require_array[$mval->rp_id] = 0;
+            if($mval->require_prop_tag == 0 && $mval->parent_id == 0 && $mval->hierarhy_tag == 0)
+            {
+                $model_items_not_require_array[$mval->rp_id] = 1;
+            }
+
             $model_items_array[$mval->rp_id] = $mval;
+            $model_items_selector_array[$mval->selector] = $mval;
         }
     //deb::dump($model_items);
         $props_type_array = PropTypes::getPropsType();
@@ -380,20 +398,53 @@ class AdvertController extends Controller
 
         //deb::dump($props_hierarhy);
 
+        $view_block_id = '';
+        ?>
+        <div>
+        <?
         foreach ($model_items as $mkey=>$mval)
         {
+
             // Расскомментировать!!!
             $block_display = 'block';
 
             $block_display = 'none';
-            if( ($mval->hierarhy_tag == 1 && ($mval->hierarhy_level == 1 || $mval->hierarhy_level == 2)) || $mval->hierarhy_tag == 0 )
+            //if( ($mval->hierarhy_tag == 1 && ($mval->hierarhy_level == 1 || $mval->hierarhy_level == 2)) || $mval->hierarhy_tag == 0 )
+            if( ($mval->hierarhy_tag == 1 && $mval->hierarhy_level == 1) )
             {
                 $block_display = 'block';
             }
 
+            // Класс для необязательных к показу свойств
+            $not_require_class = '';
+            if($model_items_not_require_array[$mval->rp_id] == 1)
+            {
+                $not_require_class = ' not_require_view';
+            }
+
+
+            if($view_block_id != $mval->view_block_id)
+            {
+                $view_block_id = $mval->view_block_id;
+            ?>
+                </div>
+
+                <?
+                $view_block_display = "block";
+                if($mval->view_block_id == 'notrequire')
+                {
+                    $view_block_display = "none";
+                    ?>
+                    <div id="" style="border-bottom: #000020 dotted 1px; margin-bottom: 20px; cursor: pointer; " onclick="$('#view_block_<?= $mval->view_block_id;?>').css('display', 'block');">Необязательные параметры. Чем полнее объявление, тем больше шансов, что оно кого-то заинтересует.</div>
+                    <?
+                }
+                ?>
+                <div id="view_block_<?= $mval->view_block_id;?>" style="margin-top: 10px; border-bottom: #000020 solid 0px; display: <?= $view_block_display;?>;" >
+            <?
+            }
         ?>
          <!--<div id="div_<?= $mval->selector;?>" style="display: <?= $block_display;?>;">-->
-         <div class="prop_block" id="div_<?= $mval->selector;?>" style="display: <?= $block_display;?>;">
+         <div class="prop_block<?= $not_require_class;?>" id="div_<?= $mval->selector;?>" parent_id="<?= $mval->parent_id;?>" style="display: <?= $block_display;?>;">
              <div class="add_hideselector"><?= $mval->selector;?></div>
              <div class="add_hidevibortype"><?= $mval->vibor_type;?></div>
 
@@ -477,13 +528,36 @@ class AdvertController extends Controller
         }
 
         ?>
-
+        </div>
 
 
         <script>
             var props_hierarhy = [];
             props_hierarhy = <?= json_encode($props_hierarhy); ?>;
             //console.log(props_hierarhy);
+
+
+            // Отображение  необязательных если ...
+            <?
+            $session_addfield = Yii::app()->session['addfield'];
+            if(isset($session_addfield) && count($session_addfield) > 0)
+            {
+
+                foreach($session_addfield as $key=>$val)
+                {
+                    if(!is_array($val) && intval($val) > 0)
+                    {
+                        if($model_items_selector_array[$key]->hierarhy_tag == 1)
+                        {
+                        ?>
+                            $('.prop_block').css('display', 'block');
+                        <?
+                        }
+                    }
+                }
+            }
+            ?>
+
         </script>
 
         <?
@@ -508,6 +582,8 @@ class AdvertController extends Controller
 
         // Подготовка к загрузке блоков свойств, счетчик в ноль, отображаем индикатор загрузки и скрываем блок со свойствами
         props_load_stack_count = 0;
+        props_load_page_addadvert_tag = 0;      // 1 - признак что все элементы страницы добавления объявы загружены
+                                                // используется при показе независимых свойств объявы
         $('#div_ajax_loader_icon').css('display', 'block');
         $('#div_props').css('display', 'none');
         // End Подготовка
@@ -557,6 +633,8 @@ class AdvertController extends Controller
                 clearTimeout(props_load_stack_count_timer);
                 $('#div_ajax_loader_icon').css('display', 'none');
                 $('#div_props').css('display', 'block');
+
+                props_load_page_addadvert_tag = 1;
             }
         }, 1000);
         // End Проверка
@@ -612,6 +690,31 @@ class AdvertController extends Controller
 
     }
 
+    // Генерация javascript кода для отображения независимых характеристик
+    // $parent_field_id - поле selector таблицы rubriks_props
+    // $hierarhy_level - уровень иерархии после выбора которого происходит отображение
+    public function generateDisplayNorelateProps($parent_field_id, $hierarhy_level)
+    {
+        if($model_parent_rubriks_props = RubriksProps::model()->find(
+            array(
+                'condition'=>'selector = :selector',
+                'params'=>array(':selector'=>$parent_field_id),
+            )
+        ))
+        {
+            if($model_parent_rubriks_props->hierarhy_level == $hierarhy_level)
+            {
+                ?>
+                if(props_load_page_addadvert_tag == 1)
+                {
+                $('.prop_block[parent_id=0]').css('display', 'block');
+                }
+            <?
+            }
+
+        }
+    }
+
 
     public function actionGetpropslist_selector()
     {
@@ -640,6 +743,9 @@ class AdvertController extends Controller
             'condition'=>'type_id = "'.$model_rubriks_props->type_id.'" AND selector = "item"',
         ));
 
+        // Сокрытие блока где нет подчиненных свойств (если стоит тег hide_if_no_elems_tag)
+        $this->HideBlockIfNoElems($field_id, $parent_field_id, $parent_ps_id, $model_notice, $model_rubriks_props);
+
         $props_sprav = PropsSprav::getPropsListListitem($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
 
         $currvalue = $this->getAddfieldValue($n_id, $field_id, $model_rubriks_props);
@@ -655,12 +761,13 @@ class AdvertController extends Controller
         <td>
 
         <div class="input-error-prop" id="input-error-prop-<?= $field_id;?>">
-        <select class="input-proplist-selector" name="addfield[<?= $field_id;?>]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>">
+        <?
+        $props_sprav = PropsSprav::getPropsListSelector($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
+        //deb::dump($props_sprav);
+        ?>
+        <select class="input-proplist-selector" name="addfield[<?= $field_id;?>]" id="<?= $field_id;?>" prop_id="<?= $field_id;?>" >
             <option <?= $this->getSelectedAttr($currvalue, "");?> value=""></option>
         <?
-
-        $props_sprav = PropsSprav::getPropsListSelector($model_rubriks_props, $prop_types_params_row, $parent_ps_id);
-
         if (count($props_sprav) > 0)
         {
             foreach ($props_sprav as $pkey=>$pval)
@@ -694,16 +801,34 @@ class AdvertController extends Controller
             ChangeRelateProps($(this), <?= $n_id;?>);
         }
         );
+
+
+        <?
+        // Если в списке выбора всего один элемент - активируем его
+        if(count($props_sprav) == 1)
+        {
+            foreach ($props_sprav as $pkey=>$pval)
+            {
+            ?>
+                $('#<?= $field_id;?>').val(<?= $pval->ps_id;?>).change();
+            <?
+            }
+        }
+
+        // Если выбран элемент с указанным уровнем иерархии - отображаем все независимые характеристики
+        $this->generateDisplayNorelateProps($parent_field_id, 1);
+        ?>
+
         </script>
     <?
 
     }
 
 
+
     public function actionGetpropslist_listitem()
     {
         $field_id = $_POST['field_id'];
-        //deb::dump($_POST);
         $parent_field_id = $_POST['parent_field_id'];
         $parent_ps_id = intval($_POST['parent_ps_id']);
 
@@ -717,6 +842,13 @@ class AdvertController extends Controller
             $model_notice = new Notice();
         }
         $model_rubriks_props = RubriksProps::model()->find(
+            array(
+                'condition'=>'selector = :selector',
+                'params'=>array(':selector'=>$field_id),
+            )
+        );
+
+        $model_parent_rubriks_props = RubriksProps::model()->find(
             array(
                 'condition'=>'selector = :selector',
                 'params'=>array(':selector'=>$field_id),
@@ -738,7 +870,7 @@ class AdvertController extends Controller
             foreach ($props_sprav as $pkey=>$pval)
             {
             ?>
-                <span class="radio-listitem rl-<?= $field_id;?>" itemvalue="<?= $pval->ps_id;?>"><?= $pval->value;?></span>
+                <span id="<?= $field_id."-".$pval->ps_id;?>" class="radio-listitem rl-<?= $field_id;?>" itemvalue="<?= $pval->ps_id;?>"><?= $pval->value;?></span>
             <?
             }
         }
@@ -775,6 +907,20 @@ class AdvertController extends Controller
                     }
                 }
             );
+
+            <?
+            // Если в списке выбора всего один элемент - активируем его
+            if(count($props_sprav) == 1)
+            {
+            ?>
+                $('#<?= $field_id."-".$pval->ps_id;?>').click();
+            <?
+            }
+
+            // Если выбран элемент с указанным уровнем иерархии - отображаем все независимые характеристики
+            $this->generateDisplayNorelateProps($parent_field_id, 1);
+            ?>
+
         </script>
         <?
 
@@ -845,6 +991,7 @@ class AdvertController extends Controller
             {
                 DisplayAfterLoad('<?= $field_id;?>');
             }
+
         </script>
     <?
 
@@ -893,7 +1040,7 @@ class AdvertController extends Controller
             foreach ($props_sprav as $pkey=>$pval)
             {
             ?>
-                <?= $pval->value;?> <input style="" <?= $this->getRadioCheckedAttr($value, $pval->ps_id);?> type="radio" class="<?= $model_rubriks_props->selector;?>" name="addfield[<?= $model_rubriks_props->selector;?>]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" prop_id="<?= $model_rubriks_props->selector;?>" value="<?= $pval->ps_id;?>">
+                <input style="" <?= $this->getRadioCheckedAttr($value, $pval->ps_id);?> type="radio" class="<?= $model_rubriks_props->selector;?>" name="addfield[<?= $model_rubriks_props->selector;?>]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" prop_id="<?= $model_rubriks_props->selector;?>" value="<?= $pval->ps_id;?>"> <?= $pval->value;?>
             <?
             }
         }
@@ -1060,7 +1207,7 @@ class AdvertController extends Controller
         <div class="form-row">
 
             <div style="">
-                <div id="fileuploader">Upload</div>
+                <div id="fileuploader">Загрузить</div>
             </div>
 
             <div id="fileuploader_list" style="">
@@ -1686,6 +1833,7 @@ class AdvertController extends Controller
 
                             $files_array = explode(";", $files_str);
                             $files_assoc_array = array();
+                            //Yii::app()->params['photodir'] = 'tmp2';
                             foreach ($files_array as $fkey=>$fval)
                             {
                                 $curr_dir = Notice::getPhotoDirMake(Yii::app()->params['photodir'], $fval);
@@ -1811,16 +1959,15 @@ class AdvertController extends Controller
                                 $files_assoc_array[$fval] = $fval;
                             }
 
-
                             $newprop = new NoticeProps();
                             $newprop->n_id = $newmodel->n_id;
                             $newprop->rp_id = $rval->rp_id;
                             $newprop->ps_id = $addfield_array[$rkey]['ps_id'];
                             $newprop->hand_input_value = $addfield_array[$rkey]['hand_input_value'];
                             $newprop->save();
+
                             //deb::dump($newprop->errors);
                         }
-
 
                         if(isset($params['old_photoblock_prop']->notice_props[0]))
                         {
@@ -1846,6 +1993,7 @@ class AdvertController extends Controller
                                 }
                             }
                         }
+
 
                         break;
                 }
@@ -1984,12 +2132,12 @@ class AdvertController extends Controller
 
     // Проверка обязательных свойств перед подачей объявления
     // $newmodel - модель объявы
-    //
+    // Плюс проверка свойств правилами валидации, если они есть
     public function CheckRequireNoticeProps($newmodel, $addfield_array)
     {
         $return_array = array();
 
-        // Блок проверки свойств
+        // Блок проверки обязательных свойств
         $require_props = RubriksProps::getRequireProps(intval($newmodel->r_id));
         $return_array['errors_props'] = array();
         if(count($require_props) > 0)
@@ -2031,11 +2179,32 @@ class AdvertController extends Controller
                             break;
 
                     }
+
                 }
 
 
             }
 
+        }
+
+
+        // Проверка свойств ручного ввода правилами валидации, если они есть
+        // $return_array['errors_props'][$rval['selector']] = $rval['validate_rules'];
+        $validated_props = RubriksProps::getValidatedProps(intval($newmodel->r_id));
+        if(count($validated_props) > 0)
+        {
+            foreach ($validated_props as $rkey=>$rval)
+            {
+                if(isset($addfield_array[$rkey]))
+                {
+                    $rules = json_decode($rval['validate_rules']);
+                    $res = RubriksProps::validateProp($rules, $addfield_array[$rkey]['hand_input_value']);
+                    if($res != '')
+                    {
+                        $return_array['errors_props'][$rval['selector']] = $res;
+                    }
+                }
+            }
         }
 
         return $return_array;

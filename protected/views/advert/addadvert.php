@@ -11,7 +11,11 @@
 <style>
     .radio-listitem
     {
-        cursor: pointer; background-color: #dddddd;
+        cursor: pointer; background-color: #dddddd; padding: 1px 2px; margin: 1px; display: inline-block;
+    }
+    .radio-listitem:hover
+    {
+        cursor: pointer; background-color: #fff;
     }
 
     .add_hideinput
@@ -118,7 +122,14 @@ if(Yii::app()->controller->action->id == 'advert_edit')
 
     <div class="add-input-block">
         <div class="input-field-border" id="input-error-client_name">
-        <input class="form-input-text" type="text" name="mainblock[client_name]" id="client_name" value="<?= htmlspecialchars($this->getMainblockValue($model, 'client_name'), ENT_COMPAT);?>">
+        <?
+        $client_name = htmlspecialchars($this->getMainblockValue($model, 'client_name'), ENT_COMPAT);
+        if($client_name == '' && Yii::app()->user->id > 0)
+        {
+            $client_name = htmlspecialchars(Yii::app()->user->model()->privat_name);
+        }
+        ?>
+        <input class="form-input-text" type="text" name="mainblock[client_name]" id="client_name" value="<?= $client_name;?>">
         </div>
         <div class="input-error-msg"></div>
     </div>
@@ -149,6 +160,217 @@ if(Yii::app()->controller->action->id == 'advert_edit')
     </div>
 </div>
 
+
+<div class="form-row" style="margin-top: 30px; ">
+    <label id="lbl-client_phone" class="add-form-label"><?= Notice::model()->getAttributeLabel('client_phone');?>: </label>
+
+    <div class="add-input-block">
+        <div class="input-field-border" id="input-error-client_phone">
+            <?
+            //deb::dump(Yii::app()->controller->action->id);
+            ?>
+            <?
+            $client_phone_c_id = $this->getMainblockValue($model, 'client_phone_c_id');
+            if(intval($client_phone_c_id) == 0)
+            {
+                $client_phone_c_id = $c_id;
+            }
+
+            //deb::dump($countries_array[$client_phone_c_id]);
+            ?>
+
+
+            <table>
+                <tr>
+                    <td style="width: auto;">
+
+                        <?
+                        $hand_input_phone_style = "";
+                        if(count($user_phones) > 0 )
+                        {
+                            $list_input_phone_display = "display: block;";
+                            $hand_input_phone_style = "display: none;";
+                            if($this->getMainblockValue($model, 'client_phone') != '')
+                            {
+                                $list_input_phone_display = "display: none;";
+                                $hand_input_phone_style = "display: block;";
+                            }
+                            ?>
+                            <div id="list_input_phone" style="<?= $list_input_phone_display;?>">
+                                <nobr>
+                                    <select id="select_user_phones">
+                                        <?
+                                        foreach($user_phones as $ukey=>$uval)
+                                        {
+                                            $selected = " ";
+                                            if($client_phone_c_id == $uval['c_id'] && $this->getMainblockValue($model, 'client_phone') == $uval['phone'])
+                                            {
+                                                $selected = " selected ";
+                                            }
+                                            ?>
+                                            <option <?= $selected;?> value="<?= $uval['ph_id'];?>" c_id="<?= $uval['c_id'];?>" phone="<?= $uval['phone'];?>"><?= $countries_array[$uval['c_id']]." ".$uval['phone'];?></option>
+                                        <?
+                                        }
+                                        ?>
+                                    </select>
+
+                                    <span id="send_check_phone_change" style="border-bottom: #000 dotted 1px; cursor: pointer;" onclick="SendCheckPhoneChange();">Изменить номер телефона</span>
+                                </nobr>
+                            </div>
+
+                            <?
+                            //$hand_input_phone_style = "display: none;";
+                        }
+                        ?>
+                        <script>
+                            $('#select_user_phones').change(function(){
+                                $('#select_country_code').val($('#select_user_phones option:selected').attr('c_id'));
+                                $('#select_country_code').change();
+                                $('#client_phone').val($('#select_user_phones option:selected').attr('phone'));
+                            });
+                        </script>
+
+
+
+                        <div id="hand_input_phone" style="<?= $hand_input_phone_style;?>">
+                            <div style="width: 800px;">
+                                <nobr><span style="border-bottom: #000 dotted 1px; cursor: pointer;" id="span_country"><?= $countries_array[$client_phone_c_id];?></span>
+
+                                    <select id="select_country_code" name="mainblock[client_phone_c_id]" style="display: none;">
+                                        <?
+                                        foreach($countries_array as $ckey=>$cval)
+                                        {
+                                            ?>
+                                            <option <?= $this->getSelectedAttr($client_phone_c_id, $ckey);?> value="<?= $ckey;?>"><?= $cval;?></option>
+                                        <?
+                                        }
+                                        ?>
+                                    </select>
+
+                                    <?
+                                    ?>
+                                    <input class="form-input-text" style="width: 100px;" type="text" name="mainblock[client_phone]" id="client_phone" value="<?= htmlspecialchars($this->getMainblockValue($model, 'client_phone'), ENT_COMPAT);?>">
+
+
+                                    <?
+                                    $send_check_phone_button_display = 'none';
+                                    if($client_phone_c_id == Yii::app()->params['russia_id'])
+                                    {
+                                        $send_check_phone_button_display = 'inline';
+                                    }
+                                    ?>
+                                    <input type="button" style="display: <?= $send_check_phone_button_display;?>;" id="send_check_phone_button" onclick="SendCheckPhone();" value="Подтвердить телефон">
+
+                                    <?
+                                    if(count($user_phones) > 0)
+                                    {
+                                        ?>
+                                        <span id="select_phone_from_list" style="border-bottom: #000 dotted 1px; cursor: pointer;" >Выбрать телефон из списка</span>
+                                    <?
+                                    }
+                                    ?>
+
+                                </nobr>
+                            </div>
+                        </div>
+
+
+                    </td>
+                </tr>
+                <tr>
+                    <td >
+                        <div id="send_check_phone_error" style="color: #f00;"></div>
+                        <div id="send_check_phone_ok" style="color: #299e12;"></div>
+
+                        <div id="send_check_code" style="border: #999 solid 1px; display: none; padding: 5px;">
+                            На указанный номер отправлено СМС  с кодом подтверждения<br>
+                            <input type="text" id="check_code_field">
+                            <input type="button" value="OK" onclick="SendCheckPhoneKod();">
+                        </div>
+
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+        <div class="input-error-msg"></div>
+    </div>
+
+
+
+
+</div>
+
+
+
+<?
+$mytown_id = Yii::app()->request->cookies->contains('geo_mytown') ?
+    Yii::app()->request->cookies['geo_mytown']->value : 0;
+$myregion_id = Yii::app()->request->cookies->contains('geo_myregion') ?
+    Yii::app()->request->cookies['geo_myregion']->value : 0;
+$mycountry_id = Yii::app()->request->cookies->contains('geo_mycountry') ?
+    Yii::app()->request->cookies['geo_mycountry']->value : 0;
+?>
+<div class="form-row">
+
+    <label id="lbl-client_coord" class="add-form-label">Местоположение:</label>
+    <div class="add-input-block">
+        <table cellpadding="0" cellspacing="0">
+            <tr>
+                <td  style="margin: 0px; padding: 0px;">
+                    <div class="input-field-border" id="input-error-c_id">
+
+                        <select class="add-form-select" name="mainblock[c_id]" id="select_country">
+                            <?
+                            $c_id = intval($this->getMainblockValue($model, 'c_id'));
+                            if($c_id == 0)
+                            {
+                                $c_id = $mycountry_id;
+                            }
+                            Countries::displayCountryList($c_id);
+
+                            ?>
+                        </select>
+                    </div>
+                    <div class="input-error-msg"></div>
+                </td>
+                <td>
+                    <div class="input-field-border" id="input-error-reg_id">
+                        <select class="add-form-select" name="mainblock[reg_id]" id="select_region">
+                            <?
+                            $reg_id = intval($this->getMainblockValue($model, 'reg_id'));
+                            if($reg_id == 0)
+                            {
+                                $reg_id = $myregion_id;
+                            }
+                            Regions::displayRegionList($c_id, $reg_id);
+                            ?>
+                        </select>
+                    </div>
+                    <div class="input-error-msg"></div>
+                </td>
+                <td>
+                    <div class="input-field-border" id="input-error-t_id">
+                        <select class="add-form-select" name="mainblock[t_id]" id="select_town" >
+                            <?
+                            $t_id = intval($this->getMainblockValue($model, 't_id'));
+                            if($t_id == 0)
+                            {
+                                $t_id = $mytown_id;
+                            }
+                            Towns::displayTownList($reg_id, $t_id);
+                            ?>
+                        </select>
+                    </div>
+                    <div class="input-error-msg"></div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+</div>
+
+
 <div class="form-row">
 <?
 $r_id = $this->getMainblockValue($model, 'r_id')
@@ -177,7 +399,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
         <div class="input-error-msg"></div>
 
 
-        <span onclick="$('.selrub').change();" style="cursor: pointer; text-decoration: underline;">Обновить</span>
+        <span onclick="$('.selrub').change();" style="cursor: pointer; text-decoration: underline; display: none;">Обновить</span>
     </div>
 </div>
 
@@ -235,53 +457,6 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 
 
 <div class="form-row">
-
-    <label id="lbl-client_coord" class="add-form-label">Местоположение:</label>
-    <div class="add-input-block">
-        <table cellpadding="0" cellspacing="0">
-            <tr>
-                <td  style="margin: 0px; padding: 0px;">
-                    <div class="input-field-border" id="input-error-c_id">
-
-                        <select class="add-form-select" name="mainblock[c_id]" id="select_country">
-                            <?
-                            $c_id = intval($this->getMainblockValue($model, 'c_id'));
-                            Countries::displayCountryList($c_id);
-
-                            ?>
-                        </select>
-                    </div>
-                    <div class="input-error-msg"></div>
-                </td>
-                <td>
-                    <div class="input-field-border" id="input-error-reg_id">
-                        <select class="add-form-select" name="mainblock[reg_id]" id="select_region">
-                            <?
-                            $reg_id = intval($this->getMainblockValue($model, 'reg_id'));
-                            Regions::displayRegionList($c_id, $reg_id);
-                            ?>
-                        </select>
-                    </div>
-                    <div class="input-error-msg"></div>
-                </td>
-                <td>
-                    <div class="input-field-border" id="input-error-t_id">
-                        <select class="add-form-select" name="mainblock[t_id]" id="select_town" >
-                            <?
-                            $t_id = intval($this->getMainblockValue($model, 't_id'));
-                            Towns::displayTownList($reg_id, $t_id);
-                            ?>
-                        </select>
-                    </div>
-                    <div class="input-error-msg"></div>
-                </td>
-            </tr>
-        </table>
-
-    </div>
-</div>
-
-<div class="form-row">
     <label id="lbl-client_expire_period" class="add-form-label"><?= Notice::model()->getAttributeLabel('expire_period');?>:</label>
     <div class="add-input-block">
         <div class="input-field-border" id="input-error-expire_period">
@@ -305,7 +480,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
     <label id="lbl-title" class="add-form-label"><?= Notice::model()->getAttributeLabel('title');?>:</label>
     <div class="add-input-block">
         <div class="input-field-border" id="input-error-title">
-            <input class="form-input-text" type="text" name="mainblock[title]" id="title" value="<?= htmlspecialchars($this->getMainblockValue($model, 'title'));?>">
+            <input class="form-input-text" style="width: 500px;" type="text" name="mainblock[title]" id="title" value="<?= htmlspecialchars($this->getMainblockValue($model, 'title'));?>">
         </div>
         <div class="input-error-msg"></div>
     </div>
@@ -349,62 +524,6 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 </div>
 
 
-<div class="form-row" style="margin-top: 30px; width: 300px;">
-    <label id="lbl-client_phone" class="add-form-label"><?= Notice::model()->getAttributeLabel('client_phone');?>: </label>
-
-    <div class="add-input-block">
-        <div class="input-field-border" id="input-error-client_phone">
-<?
-//deb::dump(Yii::app()->controller->action->id);
-?>
-            <table>
-            <tr>
-                <td>
-                <select id="select_country_code" name="mainblock[client_phone_c_id]">
-                <?
-                $client_phone_c_id = $this->getMainblockValue($model, 'client_phone_c_id');
-                foreach($countries_array as $ckey=>$cval)
-                {
-                ?>
-                    <option <?= $this->getSelectedAttr($client_phone_c_id, $ckey);?> value="<?= $ckey;?>"><?= $cval;?></option>
-                <?
-                }
-                ?>
-                </select>
-                </td>
-                <td>
-                    <input class="form-input-text" style="width: 100px;" type="text" name="mainblock[client_phone]" id="client_phone" value="<?= htmlspecialchars($this->getMainblockValue($model, 'client_phone'), ENT_COMPAT);?>">
-                </td>
-                <td>
-                    <input type="button" id="send_check_phone_button" onclick="SendCheckPhone();" value="Подтвердить телефон">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <div id="send_check_phone_error" style="color: #f00;"></div>
-                    <div id="send_check_phone_ok" style="color: #299e12;"></div>
-
-                    <div id="send_check_code" style="border: #999 solid 1px; display: none; padding: 5px;">
-                        На указанный номер отправлено СМС  с кодом подтверждения<br>
-                        <input type="text" id="check_code_field">
-                        <input type="button" value="OK" onclick="SendCheckPhoneKod();">
-                    </div>
-
-                    <div id="send_check_phone_change">
-                        <input type="button" value="Изменить номер телефона" onclick="SendCheckPhoneChange();">
-                    </div>
-                </td>
-            </tr>
-            </table>
-
-        </div>
-        <div class="input-error-msg"></div>
-    </div>
-
-
-
-
-</div>
 
 
 <script type="text/javascript">
@@ -419,6 +538,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
             $("#client_phone").mask('9xx xxx-xx-xx');
         }
         //$("#client_phone").attr({'placeholder':'9__ ___ __ __'});
+
     });
 
     var mask_array = new Array();
@@ -438,6 +558,24 @@ $r_id = $this->getMainblockValue($model, 'r_id')
         {
             $("#client_phone").mask('9xx xxx-xx-xx');
         }
+
+        $('#span_country').html($('#select_country_code option:selected').html());
+        $('#span_country').css('display', 'inline');
+        $('#select_country_code').css('display', 'none');
+        if($('#select_country_code').val() == <?= Yii::app()->params['russia_id'];?>)
+        {
+            $('#send_check_phone_button').css('display', 'inline');
+        }
+        else
+        {
+            $('#send_check_phone_button').css('display', 'none');
+        }
+
+    });
+
+    $('#span_country').click(function(){
+        $('#select_country_code').css('display', 'inline');
+        $('#span_country').css('display', 'none');
     });
 
 
@@ -523,12 +661,26 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 
     function SendCheckPhoneChange()
     {
+        $('#hand_input_phone').css('display', 'block');
+        $('#select_country_code').css('display', 'none');
+        $('#list_input_phone').css('display', 'none');
+
         $('#select_country_code').css('background-color', '#fff');
         $('#client_phone').css('background-color', '#fff');
 
         $('#send_check_code').css('display', 'none');
-        $('#send_check_phone_button').css('display', 'block');
+
+        if($('#select_country_code').val() == <?= Yii::app()->params['russia_id'];?>)
+        {
+            $('#send_check_phone_button').css('display', 'inline');
+        }
     }
+
+    $('#select_phone_from_list').click(function(){
+        $('#list_input_phone').css('display', 'inline');
+        $('#hand_input_phone').css('display', 'none');
+        $('#select_user_phones').change();
+    });
 
 </script>
 
@@ -712,6 +864,7 @@ function DisplayAfterLoad(field_id)
 
 function addformsubmit(n_id)
 {
+
     var do_action = '<?= Yii::app()->createUrl('advert/addnew');?>';
     var redirect_action = '<?= Yii::app()->createUrl('advert/addpreview');?>';
 

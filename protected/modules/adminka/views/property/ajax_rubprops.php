@@ -108,6 +108,29 @@
                 ?>
             </td>
         </tr>
+        <tr>
+            <td>
+                view_block_id<br>
+                <?
+                echo CHtml::dropDownList('rubrikprops[view_block_id]', '', RubriksProps::$view_block_id,
+                    array('style'=>'width: 130px;'));
+                ?>
+            </td>
+
+            <td>
+                validate_rules<br>
+                <textarea name="rubrikprops[validate_rules]" ></textarea>
+            </td>
+
+            <td>
+            </td>
+
+            <td>
+            </td>
+
+            <td>
+            </td>
+        </tr>
 
         </table>
 

@@ -1,15 +1,10 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: daemon
- * Date: 12.06.15
- * Time: 17:44
- */
+Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/baraholka.js');
 
 ?>
 
 
-<h1 style="clear: both;"><?= $mainblock['title'];?></h1>
+<div style="clear: both; font-size: 18px; text-align: center; margin-bottom: 20px;">Предварительный просмотр объявления</div>
 
 
 <?
@@ -160,18 +155,6 @@ else
     }
 
 
-
-
-    Galleria.loadTheme('/js/galleria/themes/classic/galleria.classic.min.js');
-    Galleria.run('.galleria', {
-        width: 500,
-        height: 400,
-        //imageCrop: 'landscape'
-        lightbox: true,
-        //overlayBackground: '#ffffff'
-        showImagenav: true,
-
-    })
 </script>
 
 <?

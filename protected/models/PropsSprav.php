@@ -80,10 +80,12 @@ class PropsSprav extends CActiveRecord
         else
         {
             $prop = PropsSprav::model()->findByPk($parent_ps_id);
-            $props_sprav_records = $prop->childs(array('condition'=>'rp_id = :rp_id AND value LIKE :search_str',
-                                                        'params'=>array(':rp_id'=>$rp_id, ':search_str'=>'%'.$search_str.'%')
-                                                       )
-                                                );
+            $props_sprav_records = $prop->childs(array(
+                    'condition'=>'rp_id = :rp_id AND value LIKE :search_str',
+                    'order'=>self::getOrderStr($model_rubriks_props),
+                    'params'=>array(':rp_id'=>$rp_id, ':search_str'=>'%'.$search_str.'%')
+                     )
+                     );
         }
 
         return $props_sprav_records;
@@ -119,7 +121,13 @@ class PropsSprav extends CActiveRecord
         {
 
             $prop = PropsSprav::model()->findByPk($parent_ps_id);
-            $props_sprav_records = $prop->childs(array('condition'=>'rp_id = :rp_id', 'params'=>array(':rp_id'=>$rp_id)));
+            //deb::dump($model_rubriks_props);
+
+            $props_sprav_records = $prop->childs(array(
+                'condition'=>'rp_id = :rp_id',
+                'order'=>self::getOrderStr($model_rubriks_props),
+                'params'=>array(':rp_id'=>$rp_id)
+            ));
         }
 
         return $props_sprav_records;
@@ -156,7 +164,10 @@ class PropsSprav extends CActiveRecord
 
             $prop = PropsSprav::model()->findByPk($parent_ps_id);
 
-            $props_sprav_records = $prop->childs(array('condition'=>'rp_id = :rp_id', 'params'=>array(':rp_id'=>$rp_id)));
+            $props_sprav_records = $prop->childs(array(
+                'condition'=>'rp_id = :rp_id',
+                'order'=>self::getOrderStr($model_rubriks_props),
+                'params'=>array(':rp_id'=>$rp_id)));
 
             //deb::dump($prop);
             //deb::dump($props_sprav_records);
@@ -194,6 +205,37 @@ class PropsSprav extends CActiveRecord
         }
 
         return $props_data;
+    }
+
+
+    // Формирование подстроки ORDER для SQL запроса
+    public static function getOrderStr($model_rubriks_props)
+    {
+        if($model_rubriks_props->sort_props_sprav == 'sort_number')
+        {
+            $order = 'sort_number ASC';
+        }
+        else
+        {
+            $order = 'value '.$model_rubriks_props->sort_props_sprav;
+
+            switch($model_rubriks_props->ptype)
+            {
+                case "int":
+                    $order = 'CAST(value as SIGNED) '.$model_rubriks_props->sort_props_sprav;
+                break;
+
+                case "float":
+                    $order = 'CAST(value*1000 as SIGNED) '.$model_rubriks_props->sort_props_sprav;
+                break;
+
+                case "string":
+                    $order = 'value '.$model_rubriks_props->sort_props_sprav;
+                break;
+            }
+        }
+
+        return $order;
     }
 
 

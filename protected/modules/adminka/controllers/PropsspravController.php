@@ -378,8 +378,14 @@ class PropsspravController extends Controller
 
     public function actionAjax_del_row()
     {
-        $model = PropsSprav::model()->findByPk($_POST['ps_id']);
+        $ps_id = intval($_POST['ps_id']);
+        $model = PropsSprav::model()->findByPk($ps_id);
 
+        if($notice = NoticeProps::model()->findByAttributes(array('ps_id'=>$ps_id)))
+        {
+            echo "Это свойство есть у объявления ".$notice->n_id.". Удаление невозможно!";
+        }
+        else
         if ($model->delete())
         {
             echo "<!--ok-->";
