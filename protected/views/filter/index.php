@@ -6,9 +6,95 @@ Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/sum
 
 Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/filtercontroller.js');
 
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/js/nouislider/nouislider.css');
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/js/nouislider/nouislider.tooltips.css');
+Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/nouislider/nouislider.min.js');
+Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/wNumb.js');
+
 ?>
 
 <div id="form_search" style="margin-bottom: 15px; ">
+
+
+
+
+<div style="margin: 50px;">
+
+    <!--
+    <div id="pips-values"></div>
+    <br><br><br><br>
+    <div id="pips-values-stepped"></div>
+    <br><br><br><br>
+    <div id="baraslide"></div>
+    <div id="slider-limit-value-min">1</div>
+    <div id="slider-limit-value-max">2</div>
+    -->
+
+<script>
+    /*
+    var range_all_sliders = {
+        'min': [     0 ],
+        '10%': [   500,  500 ],
+        '50%': [  4000, 1000 ],
+        'max': [ 10000 ]
+    };
+
+    var range_baraslide = {
+        'min': [ 0 ],
+        'max': [ 5 ]
+    };
+
+    var pipsValues = document.getElementById('pips-values');
+
+    noUiSlider.create(pipsValues, {
+        range: range_all_sliders,
+        start: 0,
+        pips: {
+            mode: 'values',
+            values: [50, 552, 2251, 3200, 5000, 7080, 9000],
+            density: 4
+        }
+    });
+
+    var pipsValuesStepped = document.getElementById('pips-values-stepped');
+    noUiSlider.create(pipsValuesStepped, {
+        range: range_all_sliders,
+        start: 0,
+        pips: {
+            mode: 'values',
+            values: [50, 552, 4651, 4952, 5000, 7080, 9000],
+            density: 4,
+            stepped: true
+        }
+    });
+
+    var tooltipSlider = document.getElementById('baraslide');
+
+    noUiSlider.create(tooltipSlider, {
+        start: [20, 80],
+        behaviour: 'drag',
+        connect: true,
+        tooltips: [ wNumb({ decimals: 1 }), wNumb({ decimals: 1 }) ],
+        range: {
+            'min': 0,
+            'max': 100
+        }
+    });
+
+    var limitFieldMin = document.getElementById('slider-limit-value-min');
+    var limitFieldMax = document.getElementById('slider-limit-value-max');
+
+    tooltipSlider.noUiSlider.on('update', function( values, handle ){
+//        console.log(wNumb({ decimals: 1 }));
+        //val = Number(values[handle]);
+        (handle ? limitFieldMax : limitFieldMin).innerHTML = Number(values[handle]).toFixed(1);
+    });
+    */
+
+</script>
+
+</div>
+
 
 
 <?

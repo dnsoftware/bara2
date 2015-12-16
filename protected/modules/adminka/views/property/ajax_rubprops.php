@@ -123,6 +123,8 @@
             </td>
 
             <td>
+                options<br>
+                <textarea name="rubrikprops[options]" ></textarea>
             </td>
 
             <td>

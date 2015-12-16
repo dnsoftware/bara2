@@ -2309,6 +2309,7 @@ class AdvertController extends Controller
             $this->MakeAddfieldData($props_relate);
 
             $mainblock = $advert->attributes;
+
             $addfield = $this->addfield_array;
 
             $user = Users::model()->findByPk($advert->u_id);
@@ -2319,7 +2320,7 @@ class AdvertController extends Controller
 //        deb::dump($this->addfield_data['props_data']);
 
             $this->MakeDataForView($mainblock, $addfield);
-//deb::dump($this->addfield_data);
+
 
             // Для ссылки на категорию для архивных объяв
             $sub_path = array();
@@ -2457,6 +2458,34 @@ class AdvertController extends Controller
             $town = Towns::model()->findByPk($advert->t_id);
             $subrubrik = Rubriks::model()->findByPk($advert->r_id);
             $rubrik = Rubriks::model()->findByPk($subrubrik->parent_id);
+
+            // Формирование заголовка в зависимости от шаблона в рубрике
+//            deb::dump($addfield);
+        //deb::dump($this->addfield_data['props_data']);
+            if($subrubrik->title_advert_shablon != '')
+            {
+
+                $res = Notice::MakePropsDisplayData($advert->props_xml);
+                $props_display = $res['props_display'];
+                $photos = $res['photos'];
+
+//                deb::dump($rubrik->title_advert_shablon);
+                $mainblock['title'] = $subrubrik->title_advert_shablon;
+                foreach($props_display as $pkey=>$pval)
+                {
+                    $mainblock['title'] = str_replace('['.$pkey.']', $pval, $mainblock['title']);
+                }
+
+                preg_match_all('|\{([a-zA-Z0-9_-]+)\}|siU', $mainblock['title'], $matches);
+
+                foreach($matches[1] as $match)
+                {
+                    $mainblock['title'] = str_replace('{'.$match.'}', $advert->$match, $mainblock['title']);
+                }
+
+            }
+            ///////////END Формирование заголовка в зависимости от шаблона в рубрике/////////////////
+
 
             $breadcrumbs = array();
             $i=-3;

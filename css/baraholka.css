@@ -295,3 +295,39 @@ ul#menu_goriz ul li.iehover ul {
     color: #09f;
 
 }
+
+.range_selector
+{
+    width: 216px; height: 21px; border: #aaa solid 1px; border-radius: 2px;
+    background-color: #fff; margin-top: 1px;
+}
+
+.range_selector span
+{
+    float: left; padding-left: 7px; margin-top: 2px;
+}
+.range_selector i
+{
+    float: right;
+    width: 16px; height: 16px; display: block; box-shadow: none;border-color: transparent;
+    margin-top: 2px; margin-right: 6px;
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+R8AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3wMdBhAJ/fwnjwAAAGFJREFUKM9jYBh+gBFKuzEwMKQwMDB8xaOWlYGB4T4DA0MrsuapDAwM//HgNwwMDDbYTJuGQ8MHBgYGJ1xOYGNgYJiBpuEpAwODHSF/siDZ+ISBgcGClEDqZ2Bg8B6CkQsAPRga0cpRtDEAAAAASUVORK5CYII=');
+    background-repeat: no-repeat;background-position: center center;
+}
+
+.range_selector:hover
+{
+    box-shadow: 0px 0px 2px #7799D0;border-color: #7799D0;
+}
+
+.forpolzun
+{
+    display: none;
+}
+
+.div_polzun
+{
+    position: absolute; margin-left: -15px; background-color: #fff; border: #999 solid 1px;
+    padding: 15px; padding-left: 30px; padding-right: 30px; box-shadow: 0px 0px 4px #999; z-index: 1;
+
+}

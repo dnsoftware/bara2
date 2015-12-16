@@ -41,6 +41,7 @@ class RubriksProps extends CActiveRecord
         'select_one' => 'select один выбор',
         'select_multi' => 'select мультивыбор',
         'range' => 'диапазон, от-до',
+        'range_polzun' => 'диапазон, от-до в виде ползунка',
         'checkbox_list' => 'список с чекбоксами',
         'is_prop' => 'только если есть', // Есть такое свойство у объявы или нет (например с фотографиями или без)
         'none' => 'не используется'
@@ -73,7 +74,7 @@ class RubriksProps extends CActiveRecord
             array('selector', 'unique'),
             array('r_id', 'numerical', 'min'=>1),
 			array('hierarhy_tag, hierarhy_level, display_sort, use_in_filter, parent_id, require_prop_tag, hide_if_no_elems_tag, all_values_in_filter', 'numerical', 'integerOnly'=>true),
-            array('validate_rules', 'safe'),
+            array('validate_rules, options', 'safe'),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('rp_id, r_id, hierarhy_tag, hierarhy_level, display_sort, use_in_filter', 'safe', 'on'=>'search'),

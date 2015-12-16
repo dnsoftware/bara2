@@ -70,8 +70,8 @@
                 <?= $model->validate_rules;?>
             </td>
 
-            <td title="" style="background-color: #adffc8;">
-
+            <td title="Настройки" style="background-color: #adffc8;">
+                <?= $model->options;?>
             </td>
 
             <td title="" style="background-color: #adffc8;">

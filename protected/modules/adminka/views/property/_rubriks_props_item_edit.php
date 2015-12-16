@@ -126,6 +126,7 @@
                     <textarea name="params[validate_rules]" ><?= $model->validate_rules;?></textarea>
                 </td>
                 <td style="background-color: #adffc8; width: 180px;">
+                    <textarea name="params[options]" ><?= $model->options;?></textarea>
                 </td>
                 <td style="background-color: #adffc8; width: 180px;">
                 </td>

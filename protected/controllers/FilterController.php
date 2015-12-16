@@ -494,6 +494,69 @@ class FilterController extends Controller
 
                         break;
 
+                        case "range_polzun":
+                            // В диапазоне не учтены зависимости, возможно это понадобится
+                            if($pubriks_props_by_selector_array[$gkey]->vibor_type == 'string')
+                            {
+                                $from = $gval['from'];
+                                $to = $gval['to'];
+
+                                $from_tables_array[] = $connection->tablePrefix . "notice_props n".$i;
+                                $where_n_array[] = " AND n".$i.".rp_id = ".$switch_rp_id;
+                                $where_n_array[] = " AND  n".$i.".n_id = n".($i+1).".n_id ";
+
+                                if(isset($from) && $from != ''
+                                    && isset($to) && $to != '' )
+                                {
+                                    $where_filter_array[] = "n".$i.".hand_input_value_digit >= ".$from . "
+                                                            AND n".$i.".hand_input_value_digit <= ".$to."";
+                                }
+                                else
+                                    if( (!isset($from) || $from != '')
+                                        && isset($to) && $to != '' )
+                                    {
+                                        $where_filter_array[] = "n".$i.".hand_input_value_digit <= ".$to;
+                                    }
+                                    else
+                                        if( isset($from) && $from != ''
+                                            && (!isset($to) || $to != '') )
+                                        {
+                                            $where_filter_array[] = "n".$i.".hand_input_value_digit >= ".$from;
+                                        }
+                            }
+                            else
+                            {
+                                $from = PropsSprav::model()->findByPk(intval($gval['from']));
+                                $to = PropsSprav::model()->findByPk(intval($gval['to']));
+
+                                $from_tables_array[] = $connection->tablePrefix . "notice_props n".$i;
+                                $from_tables_array[] = $connection->tablePrefix . "props_sprav ps".$i;
+                                $where_n_array[] = " AND n".$i.".ps_id = ps".$i.".ps_id
+                                                     AND n".$i.".rp_id = ".$switch_rp_id;
+                                $where_n_array[] = " AND  n".$i.".n_id = n".($i+1).".n_id ";
+
+                                if(isset($from) && $from->value != ''
+                                    && isset($to) && $to->value != '' )
+                                {
+                                    $where_filter_array[] = "ps".$i.".value >= ".$from->value . "
+                                                            AND ps".$i.".value <= ".$to->value;
+                                }
+
+                                if( (!isset($from) || $from->value != '')
+                                    && isset($to) && $to->value != '' )
+                                {
+                                    $where_filter_array[] = " ps".$i.".value <= ".$to->value;
+                                }
+
+                                if( isset($from) && $from->value != ''
+                                    && (!isset($to) || $to->value != '') )
+                                {
+                                    $where_filter_array[] = " ps".$i.".value >= ".$from->value;
+                                }
+
+                            }
+                        break;
+
                         case "checkbox_list":
                             //deb::dump($gval);
                             $temp = array();
@@ -883,7 +946,7 @@ class FilterController extends Controller
         // *************************** КОНЕЦ Формирование хлебных крошек
 
 
-//deb::dump($props_sprav_sorted_array);
+//deb::dump($rubriks_props_array);
 
 
         $this->render('index', array(
@@ -936,7 +999,7 @@ class FilterController extends Controller
                 'select'=>'*',
                 'condition'=>'r_id = '.$r_id . " AND use_in_filter = 1 ",
 //                'condition'=>'r_id = '.$r_id . " AND use_in_filter = 1 AND (parent_id = 0 OR all_values_in_filter = 1) ",
-                'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
+                'order'=>'view_block_id ASC, hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
                 //'limit'=>'10'
             ));
 
@@ -944,6 +1007,7 @@ class FilterController extends Controller
             $rp_id_ids_array = array();
             foreach ($rubriks_props as $mkey=>$mval)
             {
+                $mval->options = json_decode($mval->options);
                 $rubriks_props_array[$mval->rp_id] = $mval;
                 $rp_id_ids_array[] = $mval->rp_id;
             }

@@ -492,42 +492,9 @@ class Notice extends CActiveRecord
         foreach($search_adverts as $key=>$val)
         {
 
-            $props_display = array();
-            $photos = array();
-            $xml = new SimpleXMLElement($val['props_xml']);
-            foreach($xml->block as $bkey=>$bval)
-            {
-                foreach($bval as $b2key=>$b2val)
-                {
-                    $temp = array();
-                    foreach($b2val->item as $ikey=>$ival)
-                    {
-                        if($ival->hand_input_value != '')
-                        {
-                            $temp[] = (string)$ival->hand_input_value;
-                            if($ival->vibor_type == 'photoblock')
-                            {
-                                if(strlen($ival->hand_input_value) > 0)
-                                {
-                                    $files_str = (string)$ival->hand_input_value;
-                                    if($files_str[strlen($files_str)-1] == ';')
-                                    {
-                                        $files_str = substr($files_str, 0, strlen($files_str)-1);
-                                    }
-                                    $photos = explode(";", $files_str);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            $temp[] = (string)$ival->value;
-                        }
-                    }
-
-                    $props_display[$b2key] = implode(", ", $temp);
-
-                }
-            }
+            $res = self::MakePropsDisplayData($val['props_xml']);
+            $props_display = $res['props_display'];
+            $photos = $res['photos'];
 
             $val['cost'] = Notice::costCalcAndView($val['cost_valuta'], $val['cost'],
                     Yii::app()->request->cookies['user_valuta_view']->value).
@@ -594,6 +561,54 @@ class Notice extends CActiveRecord
 
         return $props_array;
     }
+
+    // Формирование массива 'ключ свойства'=>'значение свойства' для объявления по XML данным
+    public static function MakePropsDisplayData($props_xml)
+    {
+        $props_display = array();
+        $photos = array();
+        $xml = new SimpleXMLElement($props_xml);
+        foreach($xml->block as $bkey=>$bval)
+        {
+            foreach($bval as $b2key=>$b2val)
+            {
+                $temp = array();
+                foreach($b2val->item as $ikey=>$ival)
+                {
+                    if($ival->hand_input_value != '')
+                    {
+                        $temp[] = (string)$ival->hand_input_value;
+                        if($ival->vibor_type == 'photoblock')
+                        {
+                            if(strlen($ival->hand_input_value) > 0)
+                            {
+                                $files_str = (string)$ival->hand_input_value;
+                                if($files_str[strlen($files_str)-1] == ';')
+                                {
+                                    $files_str = substr($files_str, 0, strlen($files_str)-1);
+                                }
+                                $photos = explode(";", $files_str);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        $temp[] = (string)$ival->value;
+                    }
+                }
+
+                $props_display[$b2key] = implode(", ", $temp);
+
+            }
+        }
+
+        $data['props_display'] = $props_display;
+        $data['photos'] = $photos;
+
+        return $data;
+
+    }
+
 
 
 
