@@ -18,6 +18,10 @@
 <a href="<?= Yii::app()->createUrl('/adminka/sypexgeo/index');?>">Обновление Sypexgeo</a>
 &nbsp;
 
+<a href="<?= Yii::app()->createUrl('/adminka/support/seo');?>">SEO</a>
+
+&nbsp;
+
 <a href="<?= Yii::app()->createUrl('/adminka/support/index');?>">Служебные</a>
 
 

@@ -756,11 +756,557 @@ class SupportController extends Controller
     }
 
 
+    // Работа с ключевыми словами
+    public function actionSeo()
+    {
+        $query_delta = 0;
+
+        $query_type = 'all';
+        if(isset($_POST['query_type']))
+        {
+            $query_type = $_POST['query_type'];
+        }
+
+        switch($query_type)
+        {
+            case "all":
+                if(isset($_SESSION['keyword']))
+                {
+                    $keyword = $_SESSION['keyword'];
+                }
+                if(isset($_SESSION['seoparams']))
+                {
+                    $seoparams = $_SESSION['seoparams'];
+                }
+            break;
+
+            case "search":
+                $keyword = $_POST['keyword'];
+                $seoparams = $_POST['seoparams'];
+            break;
+
+            case "edit":
+/*
+                $k_id = intval($_POST['k_id']);
+                $row_keyword = SeoKeywords::model()->findByPk($k_id);
+                $row_props = SeoKeywordsProps::model()->findAllByAttributes(array('k_id'=>$k_id));
+                $keyword = array();
+                $keyword['r_id'] = $row_keyword->r_id;
+                $keyword['seokeyword'] = $row_keyword->keyword;
+
+                $seoparams = array();
+
+                $connection=Yii::app()->db;
+                $sql_full = "SELECT DISTINCT r.selector, p.value
+                        FROM ". $connection->tablePrefix . "seo_keywords_props s,
+                             ". $connection->tablePrefix . "rubriks_props r,
+                             ". $connection->tablePrefix . "props_sprav p
+                        WHERE s.k_id = $k_id AND s.rp_id = r.rp_id AND s.ps_id = p.ps_id ";
+
+//deb::dump($sql_full);
+
+                $command = $connection->createCommand($sql_full);
+                $dataReader = $command->query();
+                while(($row = $dataReader->read())!==false)
+                {
+                    $keyword[$row['selector']] = $row['value'];
+                }
+                //$_SESSION['keyword'] = $keyword;
+*/
+            break;
+        }
+
+        $r_id = 0;
+        if(isset($keyword['r_id']))
+        {
+            $r_id = $keyword['r_id'];
+            unset($keyword['r_id']);
+        }
+        $seokeyword = '';
+        if(isset($keyword['seokeyword']))
+        {
+            $seokeyword = $keyword['seokeyword'];
+            unset($keyword['seokeyword']);
+        }
 
 
 
+        if(count($keyword) > 0)
+        {
+            foreach($keyword as $kkey=>$kval)
+            {
+                if($kval == 0)
+                {
+                    unset($keyword[$kkey]);
+                }
+            }
+        }
+
+//deb::dump($keyword);
+        $page = intval($seoparams['page']);
+        if($page == 0)
+        {
+            $page = 1;
+        }
+        $col_on_page = 500;
+        if(isset($seoparams['col_on_page']) && intval($seoparams['col_on_page'] > 0))
+        {
+            $col_on_page = intval($seoparams['col_on_page']);
+        }
+
+        $connection=Yii::app()->db;
+
+        // Показ архивных
+        $expire_sql = " ";
+
+        // Местоположение
+        $mesto_sql = " 1 ";
+
+        //Рубрика
+        $rubrik_sql = " 1 ";
+        if(isset($r_id) && intval($r_id) > 0)
+        {
+            $rubrik = Rubriks::model()->findByPk($r_id);
+            if($rubrik->parent_id > 0)
+            {
+                $rubrik_sql = " r_id = ".intval($r_id);
+            }
+            else
+            {
+                deb::dump("Можно выбрать только подрубрику");
+                /*
+                $subrubs = Rubriks::model()->findAll(array('condition'=>'parent_id = '.intval($r_id)));
+                $subrubs_ids = array();
+                if($subrubs)
+                {
+                    foreach($subrubs as $key=>$val)
+                    {
+                        $subrubs_ids[] = $val->r_id;
+                    }
+                    $rubrik_sql = " r_id IN (". implode(", ", $subrubs_ids).") ";
+                }
+                */
+            }
+
+        }
+
+        $rubriks_props = RubriksProps::model()->findAll(array(
+                'select'=>'*',
+                'condition'=>$rubrik_sql." AND use_in_filter = 1 ",
+                'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
+                //'limit'=>'10'
+            )
+        );
+
+        $rp_ids = array();
+        $rubriks_props_poryadok_array = array();
+        $rubriks_props_poryadok_by_selector_array = array();
+        $rubriks_poryadok_props_array = array();
+        $i=2;
+        $pubriks_props_array = array();
+        $pubriks_props_by_selector_array = array();
+        foreach ($rubriks_props as $rkey=>$rval)
+        {
+            $rubriks_props_poryadok_array[$rval->rp_id] = $i++;
+            $rubriks_props_poryadok_by_selector_array[$rval->selector] = $rubriks_props_poryadok_array[$rval->rp_id];
+            $rubriks_poryadok_props_array[$i-1] = $rval->rp_id;
+            $rp_ids[$rval->rp_id] = $rval->rp_id;
+            $pubriks_props_array[$rval->rp_id] = $rval;
+            $pubriks_props_by_selector_array[$rval->selector] = $rval;
+        }
 
 
+        $search_keywords = array();  // Найденные ключевики
+
+        if( (isset($keyword) && count($keyword) > 0 ) )
+        {
+            $props_sprav = PropsSprav::model()->findAll(array('condition'=>'rp_id IN ('.implode(", ", $rp_ids).')'));
+            $props_route_items = array();
+            $props_route_items_by_id = array();
+            foreach($props_sprav as $pkey=>$pval)
+            {
+                $props_route_items[$rubriks_props_poryadok_array[$pval->rp_id]][$pval->transname] = $pval;
+                $props_route_items_by_id[$pval->ps_id] = $pval;
+            }
+
+            foreach($keyword as $pkey=>$pval)
+            {
+                if(isset($props_route_items[$pkey][$pval]))
+                {
+                    $ps_id = $props_route_items[$pkey][$pval]->ps_id;
+                }
+            }
+            $current_ps_id = $ps_id;
+
+            // Ищем объявы с совпадением значений всех указанных свойств
+            //if(count($_GET['prop']) == count($props_sql_array))
+            if(1)
+            {
+                $from_tables_array = array();
+                $from_tables_sql = "";
+                $where_n_array = array();
+                $where_n = "";
+                $where_filter_array = array();
+                $where_filter_sql = "";
+
+                $i=0;
+                foreach($keyword as $gkey=>$gval)
+                {
+                    if(intval($gval) > 0)
+                    {
+                        $switch_rp_id = $pubriks_props_by_selector_array[$gkey]->rp_id;
+                        $i++;
+
+//deb::dump($gkey);
+                        $from_tables_array[] = $connection->tablePrefix . "seo_keywords_props n".$i;
+                        $where_n_array[] = " AND n".$i.".rp_id = ".$switch_rp_id;
+                        $where_n_array[] = " AND n".$i.".k_id = n".($i+1).".k_id ";
+                        $where_filter_array[] = "n".$i.".ps_id = ".intval($gval);
+                    }
+
+                }
+//deb::dump($pubriks_props_by_selector_array);
+                $from_tables_sql = implode(", ", $from_tables_array);
+                unset($where_n_array[count($where_n_array)-1]);
+                $where_n = implode(" ", $where_n_array);
+                $where_filter_sql = implode(" AND ", $where_filter_array);
+                //deb::dump($from_tables_sql);
+                //deb::dump($where_n);
+
+                // Полный запрос
+                $rubrik_prop_sql = str_replace("r_id", "n.r_id", $rubrik_sql);
+                $sql_full = "SELECT DISTINCT n.*
+                        FROM ". $connection->tablePrefix . "seo_keywords n,
+                        ".$from_tables_sql."
+                        WHERE 1 AND $expire_sql
+                        $mesto_sql AND $rubrik_prop_sql AND
+                        $where_filter_sql
+                        ".$where_n."
+                        AND n1.k_id = n.k_id
+                        ORDER BY n.k_id DESC ";    // патч по количеству, иначе вылетает изза нехватки памяти
+
+//deb::dump($sql_full);
+
+                $command = $connection->createCommand($sql_full);
+                $dataReader = $command->query();
+                $rowcount = $dataReader->getRowCount();
+                $col_pages = ceil($rowcount / $col_on_page);
+
+                // Постраничный запрос
+                if($page == 0)
+                {
+                    $page = 1;
+                }
+                $start = ($page - 1)*$col_on_page;
+                $stop = $col_on_page;
+                $sql = $sql_full . " LIMIT $start, $stop";
+//deb::dump($col_pages);
+                $start_time = microtime();
+
+                $command = $connection->createCommand($sql);
+                $dataReader = $command->query();
+
+                $stop_time = microtime();
+                $query_delta = $stop_time - $start_time;
+
+                while(($row = $dataReader->read())!==false)
+                {
+                    $search_keywords[$row['k_id']] = $row;
+                }
+//deb::dump($sql);
+                //deb::dump($search_keywords);
+                //die();
+
+            }
+            else    // Нет записей удовлетворяющих критерию
+            {
+
+            }
+
+        }
+        // Если поиск только по местоположению/рубрике - простой запрос
+        else
+        {
+            $adverts_full = SeoKeywords::model()->findAll(
+                array(
+                    'select'=>'*',
+                    'condition'=>' 1 AND '.$rubrik_sql,
+                    'order'=>'k_id DESC',
+                )
+            );
+
+            $rowcount = count($adverts_full);
+            $col_pages = ceil($rowcount / $col_on_page);
+
+            // Постраничный запрос
+            if($page == 0)
+            {
+                $page = 1;
+            }
+            $start = ($page - 1)*$col_on_page;
+            $adverts = SeoKeywords::model()->findAll(
+                array(
+                    'select'=>'*',
+                    'condition'=>' 1 AND '.$rubrik_sql,
+                    'order'=>'k_id DESC',
+                    'limit'=>$col_on_page,
+                    'offset'=>$start
+                )
+            );
+
+
+            foreach ($adverts as $akey=>$aval)
+            {
+                $search_keywords[$aval->k_id] = $aval->attributes;
+            }
+
+        }
+
+
+        $rub_array = Rubriks::get_rublist();
+
+        switch($query_type)
+        {
+            case "all":
+                $this->render('seo', array(
+                    'r_id'=>$r_id,
+                    'seokeyword'=>$seokeyword,
+                    'rub_array'=>$rub_array,
+                    'keyword'=>$keyword,
+                    'search_keywords'=>$search_keywords,
+                    'query_type'=>$query_type
+
+                ));
+            break;
+
+            case "search":
+                $this->renderPartial('seo_keywords', array(
+                    'r_id'=>$r_id,
+                    'seokeyword'=>$seokeyword,
+                    'rub_array'=>$rub_array,
+                    'keyword'=>$keyword,
+                    'search_keywords'=>$search_keywords,
+                    'query_type'=>$query_type
+
+                ));
+            break;
+
+            case "edit":
+                /*
+                $this->renderPartial('seo_form', array(
+                    'r_id'=>$r_id,
+                    'seokeyword'=>$seokeyword,
+                    'rub_array'=>$rub_array,
+                    'keyword'=>$keyword,
+                    'search_keywords'=>$search_keywords,
+                    'query_type'=>$query_type
+
+                ));
+                */
+            break;
+        }
+
+
+    }
+
+
+    // Формирование списка свойств рубрики для формы работы с ключевиками
+    public function actionGetKeywordProps()
+    {
+        $connection = Yii::app()->db;
+
+        if(isset($_POST['keyword']))
+        {
+            Yii::app()->session['keyword'] = $_POST['keyword'];
+            $keyword = Yii::app()->session['keyword'];
+        }
+        else if (isset($_SESSION['keyword']))
+        {
+            $keyword = $_SESSION['keyword'];
+        }
+
+        $r_id = intval($keyword['r_id']);
+
+        $rubriks_props = RubriksProps::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'r_id = '.$r_id . ' AND
+                    (vibor_type = "selector"
+                     OR vibor_type = "listitem"
+                     OR vibor_type = "autoload"
+                     OR vibor_type = "autoload_with_listitem" )',
+            'order'=>'hierarhy_tag DESC, hierarhy_level ASC, display_sort, rp_id',
+            //'limit'=>'10'
+        ));
+
+        $rprops_array = array();
+
+        foreach($rubriks_props as $pkey=>$pval)
+        {
+            if($pval->parent_id <= 0)
+            {
+                $prop_items = PropsSprav::model()->findAll(array(
+                    'select'=>'*',
+                    'condition'=>'rp_id = '. $pval->rp_id,
+                    'order'=>'value'
+                ));
+
+                $temp = $pval->attributes;
+                foreach($prop_items as $pikey=>$pival)
+                {
+                    //deb::dump($pival->ps_id);
+                    $temp['sprav_items'][$pival->ps_id] = $pival->attributes;
+                }
+
+                $rprops_array[$pval->rp_id] = $temp;
+            }
+            else
+            {
+                $parent_rubriks_props = RubriksProps::model()->findByPk($pval->parent_id);
+
+                $temp = $pval->attributes;
+
+                if(isset($keyword[$parent_rubriks_props->selector])
+                    && intval($keyword[$parent_rubriks_props->selector]) > 0)
+                {
+//            deb::dump($parent_rubriks_props);
+//            die();
+                    $parent_ps_id = intval($keyword[$parent_rubriks_props->selector]);
+
+                    $sql = "SELECT *
+                        FROM
+                        ". $connection->tablePrefix . "props_relations pr,
+                        ". $connection->tablePrefix . "props_sprav ps
+                        WHERE pr.parent_ps_id = $parent_ps_id AND pr.child_ps_id = ps.ps_id
+                                AND ps.rp_id = ".$pval->rp_id."
+                        ORDER BY ps.sort_number " ;
+                    //deb::dump($sql);
+                    $command = $connection->createCommand($sql);
+                    $dataReader = $command->query();
+                    while(($row = $dataReader->read())!==false)
+                    {
+                        $temp['sprav_items'][$row['ps_id']] = $row;
+                    }
+
+                    $rprops_array[$pval->rp_id] = $temp;
+                }
+
+            }
+
+
+
+        }
+
+//deb::dump(Yii::app()->session['keyword']);
+        ?>
+        <div style="margin-top: 5px;">Свойства:</div>
+        <div style="border: #999 solid 1px; padding: 5px;">
+            <?
+            // Выводим сформированные списки
+            foreach($rprops_array as $rkey=>$rval)
+            {
+                ?>
+                <div style="float: left;">
+                    <?= $rval['name'];?>:<br>
+                    <select class="prop_item" name="keyword[<?= $rval['selector'];?>]" style="width: 200px;">
+                        <option value="0">-- выберите свойство --</option>
+                        <?
+                        if(count($rval['sprav_items']) > 0)
+                        {
+                            foreach($rval['sprav_items'] as $ikey=>$ival)
+                            {
+                                $selected = " ";
+                                if($ival['ps_id'] == $keyword[$rval['selector']])
+                                {
+                                    $selected = " selected ";
+                                }
+                                ?>
+                                <option <?= $selected;?> value="<?= $ival['ps_id'];?>"><?= $ival['value'];?></option>
+                            <?
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
+            <?
+            }
+            ?>
+            <br clear="all">
+        </div>
+        <?
+        //deb::dump($rprops_array);
+        ?>
+
+        <script>
+            $('.prop_item').change(function(){
+                GetPanelProps();
+            });
+        </script>
+    <?
+
+    }
+
+    // Удаление ключевика
+    public function actionSeokeyworddel()
+    {
+        SeoKeywords::model()->deleteByPk($_POST['k_id']);
+        SeoKeywordsNotice::model()->deleteAllByAttributes(array('k_id'=>$_POST['k_id']));
+        SeoKeywordsProps::model()->deleteAllByAttributes(array('k_id'=>$_POST['k_id']));
+
+    }
+
+
+    public function actionAddNewKeyword()
+    {
+        $keyword = new SeoKeywords();
+
+        $keyword->keyword = $_POST['keyword']['seokeyword'];
+        $keyword->r_id = $_POST['keyword']['r_id'];
+        $keyword->count = 0;
+        $keyword->save();
+
+        $errors = $keyword->getErrors();
+
+        $ret = array();
+        if(count($errors) == 0)
+        {
+            $ret['status'] = 'ok';
+
+            if(count($_POST['keyword']) > 2)
+            {
+                foreach($_POST['keyword'] as $pkey=>$pval)
+                {
+                    if($pkey != 'seokeyword' && $pkey != 'r_id')
+                    {
+                        if($pval > 0)
+                        {
+                            $prop = new SeoKeywordsProps();
+                            $prop->k_id = $keyword->k_id;
+                            $rubrik_props = RubriksProps::model()->findByAttributes(array('selector'=>$pkey));
+                            $prop->rp_id = $rubrik_props->rp_id;
+                            $prop->ps_id = $pval;
+                            $prop->save();
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            $ret['status'] = 'error';
+
+            $errall = array();
+            foreach($errors as $key=>$val)
+            {
+                foreach($val as $key2=>$val2)
+                {
+                    $errall[] = $val2;
+                }
+            }
+            $ret['errors'] = implode("<br>", $errall);
+        }
+
+        echo json_encode($ret);
+    }
 
 
     // Uncomment the following methods and override them if needed
