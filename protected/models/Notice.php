@@ -755,7 +755,7 @@ class Notice extends CActiveRecord
                 if(count($signtemp) > 0)
                 {
                     $seo_keywords = SeoKeywords::model()->findAll(array(
-                        'select'=>'keyword, r_id, position, signature, signature_ps_id, count',
+                        'select'=>'k_id, keyword, r_id, position, signature, signature_ps_id, prop_count, count',
                         'condition'=>'r_id = '.$advert->r_id . " AND position = '".$pkey."'
                            AND prop_count <= $prop_count AND signature_ps_id LIKE '".$signstr."%' ",
                         'order'=>'prop_count DESC, count ASC, k_id DESC'
@@ -766,7 +766,7 @@ class Notice extends CActiveRecord
                 else
                 {
                     $seo_keywords = SeoKeywords::model()->findAll(array(
-                        'select'=>'keyword, r_id, position, signature, signature_ps_id, count',
+                        'select'=>'k_id, keyword, r_id, position, signature, signature_ps_id, prop_count, count',
                         'condition'=>'r_id = '.$advert->r_id . " AND position = '".$pkey."' ",
                         'order'=>'prop_count ASC, count ASC, k_id DESC'
                     ));
@@ -812,9 +812,41 @@ class Notice extends CActiveRecord
 
         }
 
-        self::KeywordByShablonGenerate($advert, $retsign['rp_selector'], $keywords_pos);
+        $keywords_maked = self::KeywordByShablonGenerate($advert, $retsign['rp_selector'], $keywords_pos);
 
-        return $keywords_pos;
+        foreach($keywords_maked as $k2key=>$k2val)
+        {
+            $advert->{'keyword_'.$k2key} = $k2val;
+        }
+
+        if($advert->save())
+        {
+            foreach($keywords_pos as $kpkey=>$kpval)
+            {
+                if(!$skn = SeoKeywordsNotice::model()->findByAttributes(array(
+                    'k_id'=>$kpval->k_id,
+                    'n_id'=>$advert->n_id
+                )))
+                {
+                    $seokeynot = new SeoKeywordsNotice();
+                    $seokeynot->k_id = $kpval->k_id;
+                    $seokeynot->n_id = $advert->n_id;
+                    $seokeynot->save();
+
+                    // Подсчет кол-ва
+                    $kpval->count = SeoKeywordsNotice::model()->count('k_id = '.$kpval->k_id);
+                    $kpval->save();
+
+                    //deb::dump($kpval);
+                }
+            }
+        }
+
+
+
+        //deb::dump($advert);
+
+        //return $keywords_pos;
 
 
     }
@@ -823,33 +855,86 @@ class Notice extends CActiveRecord
     // Формирование ключевой фразы по шаблону
     public static function KeywordByShablonGenerate($advert, $pr_selector_array, $keywords_pos)
     {
+        $keywords_maked = array();
+        $replace_fields = array();
+        $replace_props = array();
+//deb::dump($keywords_pos);
         foreach($keywords_pos as $kkey=>$keyword)
         {
-            deb::dump($keyword->keyword);
-            preg_match_all('|(<[^>]+>)|siU', $keyword->keyword, $matches);
-            deb::dump($matches[1]);
-        }
-
-        $props_array = array();
-        if(count($pr_selector_array) > 0)
-        {
-            if($props = PropsSprav::model()->findAll(array(
-                'select'=>'*',
-                'condition'=>'ps_id IN ('.implode(", ", $pr_selector_array).')'
-            )))
+            //deb::dump($keyword->keyword);
+            if(preg_match_all('|(<[^>]+>)|siU', $keyword->keyword, $matches))
             {
-                foreach($props as $pkey=>$pval)
+                foreach($matches[1] as $mkey=>$mval)
                 {
-                    $props_array[$pval->ps_id] = $pval;
+                    $replace_fields[$mval] = $mval;
                 }
             }
 
+            if(preg_match_all('|\[([^\]]+)\]|siU', $keyword->keyword, $matches))
+            {
+                foreach($matches[1] as $mkey=>$mval)
+                {
+                    $replace_props[$mval] = $mval;
+                }
+            }
+
+            $keywords_maked[$kkey] = $keyword->keyword;
+
+            if(count($replace_props) > 0)
+            {
+                $props_array = array();
+                if(count($pr_selector_array) > 0)
+                {
+                    if($props = PropsSprav::model()->findAll(array(
+                        'select'=>'*',
+                        'condition'=>'ps_id IN ('.implode(", ", $pr_selector_array).')'
+                    )))
+                    {
+                        foreach($props as $pkey=>$pval)
+                        {
+                            $props_array[$pval->ps_id] = $pval;
+                        }
+                    }
+                }
+
+                foreach($replace_props as $rkey=>$rval)
+                {
+                    $keywords_maked[$kkey] = str_replace("[".$rval."]", $props_array[$pr_selector_array[$rval]]->value, $keywords_maked[$kkey]);
+                }
+
+            }
+
+            if(count($replace_fields) > 0)
+            {
+                foreach($replace_fields as $rkey=>$rval)
+                {
+                    switch($rval)
+                    {
+                        case "<город>":
+                            $town = Towns::model()->findByPk($advert->t_id);
+                            $keywords_maked[$kkey] = str_replace($rval, $town->name, $keywords_maked[$kkey]);
+                        break;
+
+                        case "<регион>":
+                            $region = Regions::model()->findByPk($advert->reg_id);
+                            $keywords_maked[$kkey] = str_replace($rval, $region->name, $keywords_maked[$kkey]);
+                        break;
+
+                    }
+                }
+            }
+
+//deb::dump($keywords_maked);
+
 
         }
 
-        deb::dump($props_array);
+//        deb::dump($replace_fields);
+//        deb::dump($replace_props);
 
-        die();
+        return $keywords_maked;
+
+        //die();
     }
 
 

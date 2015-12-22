@@ -163,6 +163,12 @@ border-radius: 3px;">
 
     <div id="footer" style="">
         baraholka.ru
+        <?
+            if(Yii::app()->params['footer_keyword'] != '')
+            {
+                echo " - ".Yii::app()->params['footer_keyword'];
+            }
+        ?>
 
         <div style="float: right;">
         <!--LiveInternet counter--><script type="text/javascript"><!--

@@ -1671,6 +1671,8 @@ class AdvertController extends Controller
             unset(Yii::app()->session['usercheckphone_message_id']);
 
 
+            // Генерация ключевиков
+            Notice::KeywordsGenerate($newmodel->n_id);
 
             $user_url = $this->createAbsoluteUrl('/usercab/adverts');
             $this->redirect($user_url);
@@ -2309,8 +2311,6 @@ class AdvertController extends Controller
 
             $this->MakeAddfieldData($props_relate);
 
-            $keywords_pos = Notice::KeywordsGenerate($advert->n_id);
-
             $mainblock = $advert->attributes;
 
             $addfield = $this->addfield_array;
@@ -2534,6 +2534,7 @@ class AdvertController extends Controller
             }
 
             $rub_array = Rubriks::get_rublist();
+            Yii::app()->params['footer_keyword'] = $mainblock['keyword_2'];
 
             $this->render('viewadvert', array(
                 'mainblock'=>$mainblock,

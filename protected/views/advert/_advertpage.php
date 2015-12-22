@@ -302,7 +302,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
             </div>
 
             <div style="width: 682px; margin-top: 10px;">
-                <div style="font-weight: bold;">Похожие объявления:</div>
+                <div style="font-weight: bold;">Похожие<?= " ".$mainblock['keyword_1'];?>:</div>
 
                 <table style="width: auto;">
                     <tr>
