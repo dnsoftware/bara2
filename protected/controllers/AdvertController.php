@@ -285,12 +285,13 @@ class AdvertController extends Controller
             //deb::dump('----------------------');
             switch($pval->vibor_type)
             {
+                case "autoload":
                 case "autoload_with_listitem":
                 case "selector":
                 case "listitem":
                 case "radio":
                     $this->addfield_array[$pval->selector] = $pval->notice_props[0]->ps_id;
-                    break;
+                break;
 
                 case "checkbox":
                     foreach($pval->notice_props as $nkey=>$nval)
@@ -2307,6 +2308,8 @@ class AdvertController extends Controller
             ));
 
             $this->MakeAddfieldData($props_relate);
+
+            $keywords_pos = Notice::KeywordsGenerate($advert->n_id);
 
             $mainblock = $advert->attributes;
 

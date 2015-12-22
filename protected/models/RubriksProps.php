@@ -304,7 +304,8 @@ class RubriksProps extends CActiveRecord
 		return array(
             'notice_props'=>array(self::HAS_MANY, 'NoticeProps', 'rp_id'),
             'notices'=>array(self::BELONGS_TO, 'Notice', 'r_id'),
-            'props_sprav'=>array(self::HAS_MANY, 'PropsSprav', 'rp_id')
+            'props_sprav'=>array(self::HAS_MANY, 'PropsSprav', 'rp_id'),
+            'seo_keywords_props'=>array(self::HAS_MANY, 'SeoKeywordsProps', 'rp_id')
         );
 	}
 

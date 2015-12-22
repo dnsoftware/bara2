@@ -682,6 +682,178 @@ class Notice extends CActiveRecord
     }
 
 
+    // Формирование строки из кодов свойств для использования в генерации ключевиков
+    public static function MakeKeywordSignature($props_relate)
+    {
+        $rp_id_array = array();
+        $ps_id_array = array();
+        $rp_selector_array = array();
+        foreach($props_relate as $pkey=>$pval)
+        {
+            switch($pval->vibor_type)
+            {
+                case "autoload":
+                case "autoload_with_listitem":
+                case "selector":
+                case "listitem":
+
+                    $rp_id_array[$pval->rp_id] = $pval->rp_id;
+                    $ps_id_array[$pval->notice_props[0]->ps_id] = $pval->notice_props[0]->ps_id;
+                    $rp_selector_array[$pval->selector] = $pval->notice_props[0]->ps_id;
+
+                break;
+
+            }
+        }
+
+        $ret['rp_ids'] = implode(".", $rp_id_array);
+        $ret['ps_ids'] = implode(".", $ps_id_array);
+        $ret['rp_selector'] = $rp_selector_array;
+
+        return $ret;
+
+    }
+
+
+
+    // Генерация ключевиков для объявления
+    public static function KeywordsGenerate($n_id)
+    {
+        $advert = Notice::model()->findByPk($n_id);
+
+        $props_relate = RubriksProps::model()->with('notice_props')->findAll(array(
+            'select'=>'*',
+            'condition'=>'r_id='.$advert->r_id . " AND n_id=".$advert->n_id,
+            'order'=>'t.hierarhy_tag DESC, t.hierarhy_level ASC, t.display_sort, t.rp_id'
+        ));
+//deb::dump($props_relate);
+        $retsign= Notice::MakeKeywordSignature($props_relate);
+//deb::dump($retsign);
+//die();
+        $keyword_signature = $retsign['ps_ids'];
+        $signature_array = explode('.', $keyword_signature);
+        $prop_count = count($signature_array);
+
+
+        $keywords_keys = array();
+        $keywords_pos = array();
+        //$positions_array = array_flip(SeoKeywords::$position);
+
+        //$pkey = array_shift($positions_array);
+
+        foreach(SeoKeywords::$position as $pkey=>$pval)
+        {
+            $i_start = count($signature_array)-1;
+            $signtemp = $signature_array;
+            $break_tag = 0;
+
+
+            for($i=$i_start; $i>=-1; $i--)
+            {
+                $signstr = implode(".", $signtemp);
+
+                if(count($signtemp) > 0)
+                {
+                    $seo_keywords = SeoKeywords::model()->findAll(array(
+                        'select'=>'keyword, r_id, position, signature, signature_ps_id, count',
+                        'condition'=>'r_id = '.$advert->r_id . " AND position = '".$pkey."'
+                           AND prop_count <= $prop_count AND signature_ps_id LIKE '".$signstr."%' ",
+                        'order'=>'prop_count DESC, count ASC, k_id DESC'
+                    ));
+                    //deb::dump($seo_keywords);
+
+                }
+                else
+                {
+                    $seo_keywords = SeoKeywords::model()->findAll(array(
+                        'select'=>'keyword, r_id, position, signature, signature_ps_id, count',
+                        'condition'=>'r_id = '.$advert->r_id . " AND position = '".$pkey."' ",
+                        'order'=>'prop_count ASC, count ASC, k_id DESC'
+                    ));
+                    //deb::dump($seo_keywords);
+                }
+
+                if($seo_keywords)
+                {
+                    foreach($seo_keywords as $skey=>$seo_keyword)
+                    {
+                        if(!isset($keywords_keys[$seo_keyword->keyword]))
+                        {
+                            $keywords_keys[$seo_keyword->keyword] = $seo_keyword->keyword;
+                            $keywords_pos[$pkey] = $seo_keyword;
+
+                            /*
+                            if(count($positions_array) > 0)
+                            {
+                                $pkey = array_shift($positions_array);
+                            }
+                            else
+                            {
+                                $break_tag = 1;
+                                break;
+                            }
+                            */
+                            $break_tag = 1;
+                            break;
+
+                        }
+                    }
+                }
+
+
+                if($break_tag)
+                {
+                    break;
+                }
+
+
+                unset($signtemp[$i]);
+            }
+
+        }
+
+        self::KeywordByShablonGenerate($advert, $retsign['rp_selector'], $keywords_pos);
+
+        return $keywords_pos;
+
+
+    }
+
+
+    // Формирование ключевой фразы по шаблону
+    public static function KeywordByShablonGenerate($advert, $pr_selector_array, $keywords_pos)
+    {
+        foreach($keywords_pos as $kkey=>$keyword)
+        {
+            deb::dump($keyword->keyword);
+            preg_match_all('|(<[^>]+>)|siU', $keyword->keyword, $matches);
+            deb::dump($matches[1]);
+        }
+
+        $props_array = array();
+        if(count($pr_selector_array) > 0)
+        {
+            if($props = PropsSprav::model()->findAll(array(
+                'select'=>'*',
+                'condition'=>'ps_id IN ('.implode(", ", $pr_selector_array).')'
+            )))
+            {
+                foreach($props as $pkey=>$pval)
+                {
+                    $props_array[$pval->ps_id] = $pval;
+                }
+            }
+
+
+        }
+
+        deb::dump($props_array);
+
+        die();
+    }
+
+
+
 	/**
 	 * @return array relational rules.
 	 */

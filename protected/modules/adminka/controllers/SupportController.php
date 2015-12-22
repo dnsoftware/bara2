@@ -767,6 +767,13 @@ class SupportController extends Controller
             $query_type = $_POST['query_type'];
         }
 
+        $position = $_POST['position'];
+        $position_sql = ' ';
+        if($position > 0)
+        {
+            $position_sql = ' AND position = '.$position.' ';
+        }
+
         switch($query_type)
         {
             case "all":
@@ -978,7 +985,7 @@ class SupportController extends Controller
                 $sql_full = "SELECT DISTINCT n.*
                         FROM ". $connection->tablePrefix . "seo_keywords n,
                         ".$from_tables_sql."
-                        WHERE 1 AND $expire_sql
+                        WHERE 1 ".$position_sql." AND $expire_sql
                         $mesto_sql AND $rubrik_prop_sql AND
                         $where_filter_sql
                         ".$where_n."
@@ -1030,7 +1037,7 @@ class SupportController extends Controller
             $adverts_full = SeoKeywords::model()->findAll(
                 array(
                     'select'=>'*',
-                    'condition'=>' 1 AND '.$rubrik_sql,
+                    'condition'=>' 1 '.$position_sql.' AND '.$rubrik_sql,
                     'order'=>'k_id DESC',
                 )
             );
@@ -1047,7 +1054,7 @@ class SupportController extends Controller
             $adverts = SeoKeywords::model()->findAll(
                 array(
                     'select'=>'*',
-                    'condition'=>' 1 AND '.$rubrik_sql,
+                    'condition'=>' 1 '.$position_sql.' AND '.$rubrik_sql,
                     'order'=>'k_id DESC',
                     'limit'=>$col_on_page,
                     'offset'=>$start
@@ -1261,12 +1268,16 @@ class SupportController extends Controller
 
         $keyword->keyword = $_POST['keyword']['seokeyword'];
         $keyword->r_id = $_POST['keyword']['r_id'];
+        $keyword->position = $_POST['position'];
         $keyword->count = 0;
+        $keyword->prop_count = 0;
         $keyword->save();
 
         $errors = $keyword->getErrors();
 
         $ret = array();
+        $rp_names_array = array();
+        $prop_sprav_array = array();
         if(count($errors) == 0)
         {
             $ret['status'] = 'ok';
@@ -1285,9 +1296,30 @@ class SupportController extends Controller
                             $prop->rp_id = $rubrik_props->rp_id;
                             $prop->ps_id = $pval;
                             $prop->save();
+
+                            $prop_sprav = PropsSprav::model()->findByPk($prop->ps_id);
+                            $prop_sprav_array[$prop->rp_id] = $prop_sprav;
                         }
                     }
                 }
+
+                $data = SeoKeywords::MakeSignature($keyword->k_id, $keyword->r_id);
+                $ps_ids_array = array();
+                foreach($prop_sprav_array as $p2key=>$p2val)
+                {
+                    $rp_names_array[$p2key] = $data['rp_names'][$p2key].":".$p2val->value;
+                    $ps_ids_array[$p2val->ps_id] = $p2val->ps_id;
+                }
+
+
+                $rubrik = Rubriks::model()->findByPk($keyword->r_id);
+                $keyword->signature = implode(".", $data['rp_ids']);
+                $keyword->signature_ps_id = implode(".", $ps_ids_array);
+                $rp_names_array = array_merge(array($rubrik->name), $rp_names_array);
+                $keyword->propnames = implode("; ", $rp_names_array);
+                $keyword->prop_count = count($data['rp_ids']);
+
+                $keyword->save();
             }
         }
         else
@@ -1305,7 +1337,65 @@ class SupportController extends Controller
             $ret['errors'] = implode("<br>", $errall);
         }
 
+        $ret['data'] = $data;
         echo json_encode($ret);
+    }
+
+
+    // Отладочная, удалить
+    public function actionSignkeyword()
+    {
+
+        die();
+        $keywords = SeoKeywords::model()->findAll();
+
+        foreach($keywords as $key=>$keyword)
+        {
+
+
+
+            $props_relate = RubriksProps::model()->with('seo_keywords_props')->findAll(array(
+                'select'=>'*',
+                'condition'=>'r_id='.$keyword->r_id . " AND k_id=".$keyword->k_id,
+                'order'=>'t.hierarhy_tag DESC, t.hierarhy_level ASC, t.display_sort, t.rp_id'
+            ));
+    //deb::dump($props_relate);
+
+            $rp_id_array = array();
+            $ps_id_array = array();
+            foreach($props_relate as $pkey=>$pval)
+            {
+                switch($pval->vibor_type)
+                {
+                    case "autoload":
+                    case "autoload_with_listitem":
+                    case "selector":
+                    case "listitem":
+
+                        $rp_id_array[$pval->rp_id] = $pval->rp_id;
+                        $ps_id_array[$pval->seo_keywords_props[0]->ps_id] = $pval->seo_keywords_props[0]->ps_id;
+
+                        break;
+
+                }
+            }
+
+            $ret['rp_ids'] = implode(".", $rp_id_array);
+            $ret['ps_ids'] = implode(".", $ps_id_array);
+
+            $keyword_signature = $ret['ps_ids'];
+            $signature_array = explode('.', $keyword_signature);
+
+            deb::dump($keyword->k_id." - ".$keyword_signature);
+            echo "<br>";
+            $keyword->signature_ps_id = $keyword_signature;
+            $keyword->save();
+
+        }
+
+
+        deb::dump($signature_array);
+
     }
 
 

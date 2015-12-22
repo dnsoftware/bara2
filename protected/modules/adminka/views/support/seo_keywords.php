@@ -11,6 +11,19 @@ foreach($search_keywords as $key=>$val)
     <td class="td_keyword" id="td_keyword_<?= $key;?>">
         <?= $val['keyword'];?>
     </td>
+    <td class="td_keyword" id="td_keypos_<?= $key;?>" style="width: 50px;">
+        <?= SeoKeywords::$position[$val['position']];?>
+    </td>
+    <td class="td_keyword" id="td_keysign_<?= $key;?>" style="width: 300px;">
+        <?= str_replace(";", "<br>", $val['propnames']);?>
+    </td>
+    <td class="td_keyword" >
+        <?= $val['signature'];?><br>
+        <?= $val['signature_ps_id'];?>
+    </td>
+    <td class="td_keyword" id="td_keycount_<?= $key;?>" style="width: 20px;">
+        <?= $val['count'];?>
+    </td>
     <td class="td_keyword" style="width: 100px;">
         <!--<span class="keyword_edit" k_id="<?= $key;?>">Редактировать</span>-->
         <span class="keyword_del" k_id="<?= $key;?>">Удалить</span>

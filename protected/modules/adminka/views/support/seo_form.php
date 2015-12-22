@@ -4,9 +4,9 @@
         <table style="">
         <tr>
             <td style="width: 800px;">
-        <div>Рубрика</div>
 
         <div style="margin-bottom: 10px;">
+            <div>Рубрика</div>
             <form name="panel_form" id="panel_form" onsubmit="return false;">
 
             <select class="panel_rubriks" id="panel_r_id" name="keyword[r_id]" style="margin: 0px; width: 250px;">
@@ -38,9 +38,20 @@
 
             </select>
 
-            <span style="margin-left: 20px;">
-            Ключевая фраза:
-            <input type="text" name="keyword[seokeyword]" style="width: 300px;">
+            <select name="position">
+                <option value="">Расположение</option>
+            <?
+            foreach(SeoKeywords::$position as $pkey=>$pval)
+            {
+            ?>
+                <option value="<?= $pkey;?>"><?= $pval;?></option>
+            <?
+            }
+            ?>
+            </select>
+
+            <span style="margin-left: 20px; background-color: #f8c4cb; padding: 10px;">
+            <input placeholder="Ключевая фраза" type="text" name="keyword[seokeyword]" style="width: 300px;">
             </span>
 
         <div id="props_data" style="overflow: auto">
@@ -57,7 +68,7 @@
 
 
 
-                <input style="width: 150px;" id="add_new_keyword" type="button" value="Сохранить новое"><br>
+                <span style="background-color: #f8c4cb; padding: 10px;"><input style="width: 150px;" id="add_new_keyword" type="button" value="Сохранить новое"></span><br>
                 <br>
                 <input style="width: 150px;" id="filter_keyword" type="button" value="Фильтровать">
 

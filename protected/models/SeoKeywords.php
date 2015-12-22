@@ -11,6 +11,75 @@
  */
 class SeoKeywords extends CActiveRecord
 {
+    public static $position = array(
+        '1'=>'Похожие',
+        '2'=>'baraholka.ru'
+    );
+
+
+    /**
+     * @return array validation rules for model attributes.
+     */
+    public function rules()
+    {
+        // NOTE: you should only define rules for those attributes that
+        // will receive user inputs.
+        return array(
+            array('keyword, r_id, position, prop_count, count', 'required'),
+            array('r_id, count', 'numerical', 'integerOnly'=>true),
+            array('keyword', 'length', 'max'=>255),
+            // The following rule is used by search().
+            // @todo Please remove those attributes that should not be searched.
+            array('k_id, keyword, r_id, count', 'safe', 'on'=>'search'),
+        );
+    }
+
+
+    // Данные для формирование сигнатуры из кодов и имен
+    public static function MakeSignature($k_id, $r_id)
+    {
+        //$keywordrow = SeoKeywords::model()->findByPk($k_id);
+
+        $keyprops = SeoKeywordsProps::model()->findAllByAttributes(array('k_id'=>$k_id));
+        $keyprops_array = array();
+        foreach($keyprops as $key=>$val)
+        {
+            $keyprops_array[$val['rp_id']] = $val;
+        }
+//deb::dump($keyprops);
+
+        $props_relate = RubriksProps::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'r_id='.$r_id,
+            'order'=>'t.hierarhy_tag DESC, t.hierarhy_level ASC, t.display_sort, t.rp_id'
+        ));
+
+        $props_array = array();
+        $props_names_array = array();
+        foreach($props_relate as $pkey=>$pval)
+        {
+            if($pval->vibor_type == 'selector' ||
+                $pval->vibor_type == 'listitem' ||
+                $pval->vibor_type == 'autoload' ||
+                $pval->vibor_type == 'autoload_with_listitem' )
+            {
+                //$props_array[$pval->rp_id] = $pval->rp_id;
+                if(isset($keyprops_array[$pval->rp_id]))
+                {
+                    $props_array[$pval->rp_id] = $pval->rp_id;
+                    $props_names_array[$pval->rp_id] = $pval->name;
+                }
+            }
+        }
+
+
+        $ret = array();
+        $ret['rp_ids'] = $props_array;
+        $ret['rp_names'] = $props_names_array;
+
+        return $ret;
+    }
+
 	/**
 	 * @return string the associated database table name
 	 */
@@ -19,22 +88,6 @@ class SeoKeywords extends CActiveRecord
 		return '{{seo_keywords}}';
 	}
 
-	/**
-	 * @return array validation rules for model attributes.
-	 */
-	public function rules()
-	{
-		// NOTE: you should only define rules for those attributes that
-		// will receive user inputs.
-		return array(
-			array('keyword, r_id, count', 'required'),
-			array('r_id, count', 'numerical', 'integerOnly'=>true),
-			array('keyword', 'length', 'max'=>255),
-			// The following rule is used by search().
-			// @todo Please remove those attributes that should not be searched.
-			array('k_id, keyword, r_id, count', 'safe', 'on'=>'search'),
-		);
-	}
 
 	/**
 	 * @return array relational rules.
