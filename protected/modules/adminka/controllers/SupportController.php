@@ -88,14 +88,32 @@ class SupportController extends Controller
     // Старт импорта старой базы юзеров
     public function actionStartImportUserbase()
     {
+        /*
+        $users = User::model()->findAll(array(
+            'select'=>'id',
+            'condition'=>'id > 2'
+        ));
+
+        foreach($users as $ukey=>$uval)
+        {
+            $profile = new Profile();
+            $profile->user_id = $uval->id;
+            $profile->first_name = null;
+            $profile->last_name = null;
+            $profile->save();
+        }
+        */
+
+
+
         die('Уже импортировано, если нужно снова - уберите die() в SupportController');
-        // Плюс выставить регулярку d User.php чтобы пропускаля все Email
+        // Плюс выставить регулярку d User.php чтобы пропускаля все username
 
         $connection = Yii::app()->db_old;
 
         $sql = "SELECT * FROM
                 ". $connection->tablePrefix . "users u
-                WHERE id > 200000 AND id <=250000 AND login <> 'admin'
+                WHERE id > 220789 AND login <> 'admin'
                 ORDER BY id
 
                 ";
@@ -147,6 +165,15 @@ class SupportController extends Controller
                 }
                 //die();
             }
+            else
+            {
+                $profile = new Profile();
+                $profile->user_id = $new->id;
+                $profile->first_name = null;
+                $profile->last_name = null;
+                $profile->save();
+
+            }
 
         }
     }
@@ -194,6 +221,34 @@ class SupportController extends Controller
     // Процесс импорта в базу
     public function actionImportOldAdverts()
     {
+        /*
+        В старую таблицу notice добавлено поле import_wave_number
+        сюда выставляется номер "волны" импорта, например вначале было импортировано около 80000 объяв
+        ставим для всех этих объяв номер = 1
+        во время следующего импорта отличные от нуля игнорируем, работаем только с нулевыми
+        */
+
+        /*
+        // выставляем import_wave_number
+        $base_rows = Notice::model()->findAll(array(
+            'select'=>'n_id, import_wave_number',
+            'condition'=>'import_wave_number = 1'
+        ));
+
+        $connection_old = Yii::app()->db_old;
+
+        foreach($base_rows as $okey=>$oval)
+        {
+            $sql = "UPDATE
+                ". $connection_old->tablePrefix . "notice
+                SET import_wave_number = ".$oval->import_wave_number."
+                WHERE n_id = ".$oval->n_id;
+            $res = $connection_old->createCommand($sql)->query();
+        }
+        die('Пометка волны завершена');
+        /**/
+
+
         $oldbase = $_POST['oldbase'];
         $mainblock = $_POST['mainblock'];
         $addfield = $_POST['addfield'];
@@ -214,13 +269,14 @@ class SupportController extends Controller
 //die();
         // Получаем по выбранным критериям данные из старой базы
         $connection = Yii::app()->db_old;
+        // вставить потом: //AND import_wave_number = 0
         $sql = "SELECT n.*, t.name townname, r.name regionname, c.name countryname
                 FROM
                 ". $connection->tablePrefix . "notice n,
                 ". $connection->tablePrefix . "towns t,
                 ". $connection->tablePrefix . "regions r,
                 ". $connection->tablePrefix . "countries c
-                WHERE n.r_id = ".$oldbase['rubold']."
+                WHERE n.r_id = ".$oldbase['rubold']." AND import_wave_number = 0
                     AND n.t_id = t.t_id AND n.region_id = r.r_id AND n.c_id = c.c_id
                 ";
 
@@ -281,8 +337,18 @@ class SupportController extends Controller
                 }
                 else
                 {
+                    // Формируем свойства
                     NoticeProps::model()->deleteAll('n_id = :n_id', array(':n_id'=>$inbaserow->n_id));
-                    AdvertController::PropsXmlGenerate($inbaserow->n_id);
+
+                    // Делаем пометку
+                    $sql = "UPDATE
+                            ". $connection->tablePrefix . "notice
+                            SET import_wave_number = 2
+                            WHERE n_id = ".$aval['n_id'];
+                    $res_upd = $connection->createCommand($sql)->query();
+
+                    $inbaserow->import_wave_number = 2;
+                    $inbaserow->save();
 
                     foreach($props_array as $pkey=>$pval)
                     {
@@ -300,6 +366,9 @@ class SupportController extends Controller
                             die();
                         }
                     }
+
+                    AdvertController::PropsXmlGenerate($inbaserow->n_id);
+
 
                     deb::dump("Запись ".$inbaserow->n_id." обновлена");
                 }
@@ -366,8 +435,9 @@ class SupportController extends Controller
                 $newadv->old_r_id = $oldbase['rubold'];
 
                 $newadv->checksum = Notice::GetChecksum($newadv);
-
                 $newadv->save();
+
+deb::dump("NEW - ". $newadv->n_id);
 
                 $errors = $newadv->getErrors();
                 if(count($errors) > 0)
@@ -383,7 +453,15 @@ class SupportController extends Controller
                 }
                 else
                 {
-                    AdvertController::PropsXmlGenerate($newadv->n_id);
+                    // Делаем пометку
+                    $sql = "UPDATE
+                            ". $connection->tablePrefix . "notice
+                            SET import_wave_number = 2
+                            WHERE n_id = ".$newadv->n_id;
+                    $res_upd = $connection->createCommand($sql)->query();
+
+                    $newadv->import_wave_number = 2;
+                    $newadv->save();
 
                     foreach($props_array as $pkey=>$pval)
                     {
@@ -401,6 +479,9 @@ class SupportController extends Controller
                             die();
                         }
                     }
+
+                    AdvertController::PropsXmlGenerate($newadv->n_id);
+
                 }
             }
 
@@ -1071,6 +1152,7 @@ class SupportController extends Controller
 
 
         $rub_array = Rubriks::get_rublist();
+        $randomwords = SeoRandomword::model()->findall();
 
         switch($query_type)
         {
@@ -1081,7 +1163,8 @@ class SupportController extends Controller
                     'rub_array'=>$rub_array,
                     'keyword'=>$keyword,
                     'search_keywords'=>$search_keywords,
-                    'query_type'=>$query_type
+                    'query_type'=>$query_type,
+                    'randomwords'=>$randomwords,
 
                 ));
             break;
@@ -1398,6 +1481,141 @@ class SupportController extends Controller
 
     }
 
+
+    public function actionRandomword()
+    {
+
+        $wordrows = array();
+        $wordrows = SeoRandomword::model()->findAll(array(
+            'select'=>'*',
+            'order'=>'sr_id'
+        ));
+
+        $this->render('randomword', array(
+            'wordrows'=>$wordrows,
+            'errors'=>array()
+        ));
+    }
+
+
+    public function actionAddrandomword()
+    {
+
+        $newrow = new SeoRandomword();
+        $newrow->key = $_POST['key'];
+        $newrow->words = $_POST['words'];
+        $newrow->save();
+
+        $wordrows = array();
+        $wordrows = SeoRandomword::model()->findAll(array(
+            'select'=>'*',
+            'order'=>'sr_id'
+        ));
+
+
+        $this->renderPartial('addrandomword', array(
+            'wordrows'=>$wordrows,
+            'errors'=>$newrow->getErrors()
+        ));
+    }
+
+    public function actionRandomword_edit()
+    {
+        $sr_id = intval($_POST['sr_id']);
+
+        $row = SeoRandomword::model()->findByPk($sr_id);
+        ?>
+        <form id="form_save_<?= $sr_id;?>">
+        <input type="text" name="sr_id" value="<?= $row->sr_id;?>">
+        <input type="text" name="key" value="<?= $row->key;?>">
+        <input type="text" name="words" value="<?= $row->words;?>">
+        <input type="button" class="save_edit_button" sr_id="<?= $sr_id;?>" value="Сохранить">
+        </form>
+
+        <script>
+            $('.save_edit_button').click(function(){
+                sr_id = $(this).attr('sr_id');
+
+                $.ajax({
+                    async: false,
+                    //dataType: 'json',
+                    type: 'POST',
+                    url: '<?= Yii::app()->createUrl('adminka/support/saverandomword');?>',
+                    data: $('#form_save_'+sr_id).serialize(),
+                    success: function(msg){
+                        $('#tdrand_'+sr_id).html(msg);
+                    }
+                });
+
+            });
+        </script>
+        <?
+    }
+
+
+    public function actionSaverandomword()
+    {
+        $sr_id = intval($_POST['sr_id']);
+
+        $row = SeoRandomword::model()->findByPk($sr_id);
+        $row->key = $_POST['key'];
+        $row->words = $_POST['words'];
+        if($row->save())
+        {
+        ?>
+        <span class="col_key"><?= $row->key;?></span>
+        <span class="col_words"><?= $row->words;?></span>
+        <?
+        }
+        else
+        {
+            echo "Ошибка";
+        }
+    }
+
+    public function actionRandomword_del()
+    {
+        $sr_id = intval($_POST['sr_id']);
+
+        $row = SeoRandomword::model()->findByPk($sr_id);
+
+        if($row->delete())
+        {
+            echo "ok";
+        }
+        else
+        {
+            echo "Ошибка";
+        }
+    }
+
+
+    // Вспомогательная. Приведение в соответствие parent_r_id согласно r_id
+    public function actionRecalcParentRid()
+    {
+        die('Убрать заглушку, если понадобится!');
+
+        $notices = Notice::model()->findAll(array(
+            'select'=>'*',
+            'limit'=>1000000,
+            'offset'=>0
+        ));
+
+        $rubriks = Rubriks::get_simple_rublist();
+//        deb::dump($rubriks[91]->parent_id);
+        $i=0;
+        foreach($notices as $nkey=>$nval)
+        {
+            if($nval->parent_r_id != $rubriks[$nval->r_id]->parent_id)
+            {
+                $i++;
+                $nval->parent_r_id = $rubriks[$nval->r_id]->parent_id;
+                $nval->save();
+                deb::dump($nval->getErrors());
+            }
+        }
+        deb::dump($i);
+    }
 
     // Uncomment the following methods and override them if needed
 	/*

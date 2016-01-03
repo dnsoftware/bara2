@@ -2059,8 +2059,11 @@ class AdvertController extends Controller
 
         }
 
-        //echo htmlspecialchars($xml->asXML());
+//    echo htmlspecialchars($xml->asXML());
+
         $notice->props_xml = $xml->asXML();
+//    deb::dump($notice);
+//    die();
         $notice->save();
 
         //deb::dump($notice_props);
@@ -2300,7 +2303,7 @@ class AdvertController extends Controller
 
         if($advert = Notice::model()->find(array(
             'select'=>'*',
-            'condition'=>'active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND daynumber_id = '.$daynumber_id
+            'condition'=>'daynumber_id = "'.$daynumber_id.'" AND active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 '
         )))
         {
             $props_relate = RubriksProps::model()->with('notice_props')->findAll(array(
@@ -2319,6 +2322,10 @@ class AdvertController extends Controller
 
             $mainblock['user_date_reg'] = $user->create_at;
 //deb::dump(Yii::app()->session['addfield']);
+
+
+// Генерация ключевиков (вспомогательная строчка, удалить потом)
+//Notice::KeywordsGenerate($advert->n_id);
 
 //        deb::dump($this->addfield_data['props_data']);
 
@@ -2379,14 +2386,20 @@ class AdvertController extends Controller
                 $expire_sql = " ";
             }
 
-            $limit = 15;
+            $limit = 5;
+
+
+            // В отладочных целях (для показа просроченных) блок условий вынесен в переменную
+            $where_adv = ' ';
+            //$where_adv = " $expire_sql n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND  ";
+
             if(trim($where_sql) != '')
             {
                 $sql = "SELECT DISTINCT n.*
                         FROM ". $connection->tablePrefix . "notice n,
                         ".$tables_sql."
-                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0
-                        AND $expire_sql n.n_id <> ".$advert->n_id."
+                        WHERE $where_adv
+                         n.n_id <> ".$advert->n_id."
                         AND n.r_id = ".$advert->r_id . " AND n.t_id = ".$advert->t_id.
                     $where_sql . " AND n1.n_id = n.n_id
                         ORDER BY date_add DESC
@@ -2396,22 +2409,28 @@ class AdvertController extends Controller
             {
                 $sql = "SELECT DISTINCT n.*
                         FROM ". $connection->tablePrefix . "notice n
-                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0
-                        AND $expire_sql n.n_id <> ".$advert->n_id."
+                        WHERE $where_adv
+                        $expire_sql n.n_id <> ".$advert->n_id."
                         AND n.r_id = ".$advert->r_id . " AND n.t_id = ".$advert->t_id.
                     $where_sql . "
                         ORDER BY date_add DESC
                         LIMIT 0, ".$limit;
+
             }
-            //deb::dump($sql);
-            $command = $connection->createCommand($sql);
-            $dataReader=$command->query();
+
+//deb::dump($sql);
+
+            $command = $connection->cache(7*86400)->createCommand($sql);
+            $rows = $command->queryAll();
             $similar_adverts = array();
-            while(($row = $dataReader->read())!==false)
+
+            if(count($rows) > 0)
             {
-                $similar_adverts[$row['n_id']] = $row;
+                foreach($rows as $rkey=>$rval)
+                {
+                    $similar_adverts[$rval['n_id']] = $rval;
+                }
             }
-//deb::dump($similar_adverts);
 
             if(count($similar_adverts) > 0)
             {
@@ -2916,11 +2935,23 @@ class AdvertController extends Controller
         $this->renderPartial('_abuseform', array('formabuse'=>$formabuse));
     }
 
+    public function actionGetusermessageform()
+    {
+        $this->renderPartial('_usermessageform', array());
+    }
+
     public function actionShowAbuseCaptcha()
     {
         $captcha = new BaraholkaCaptcha();
         $captcha->renderImage();
         Yii::app()->session['abusecaptcha'] = $captcha->code;
+    }
+
+    public function actionShowUsermessageCaptcha()
+    {
+        $captcha = new BaraholkaCaptcha();
+        $captcha->renderImage();
+        Yii::app()->session['usermessagecaptcha'] = $captcha->code;
     }
 
     // Отправка жалобы на объявление
@@ -3021,6 +3052,66 @@ class AdvertController extends Controller
 
     }
 
+    // Отправка сообщения от пользователя
+    public function actionSendusermessage()
+    {
+
+        //deb::dump(Yii::app()->session['abusecaptcha']);
+
+        $ret = array();
+        if(strtolower(Yii::app()->session['usermessagecaptcha']) == strtolower($_POST['verifycode']) )
+        {
+            if(strlen($_POST['message']) < 10)
+            {
+                $ret['status'] = 'error';
+                $ret['message'] = 'Текст жалобы слишком короткий!';
+            }
+            else
+            {
+                $abusemessage = $_POST['message'];
+
+                $emessage = $this->renderFile(Yii::app()->basePath.'/data/mailtemplates/advertusermessage.php',
+                    array(
+                        'abusemessage'=>$abusemessage,
+                        'sender_ip'=>$_SERVER['REMOTE_ADDR']
+                    ),
+                    true);
+
+                $result = BaraholkaMailer::SendSmtpMail(Yii::app()->params['smtp1_connect_data'], array(
+                    'mailto'=>Yii::app()->params['adminEmail'],
+                    'nameto'=>'Админ',
+                    'html_tag'=>true,
+                    'subject'=>"Поступило сообщение от пользователя",
+                    'message'=>$emessage
+                ));
+
+
+                //if(UserModule::sendMail(Yii::app()->params['adminEmail'], 'Поступила жалоба на объявление', $emessage))
+                if($result == 'ok')
+                {
+                    $ret['status'] = 'ok';
+                    $ret['message'] = 'Ваше сообщение успешно отправлено!';
+                }
+                else
+                {
+                    $ret['status'] = 'error';
+                    $ret['message'] = $result;
+                }
+
+            }
+        }
+        else
+        {
+            $ret['status'] = 'error';
+            $ret['message'] = 'Неверный код проверки!';
+        }
+
+        echo json_encode($ret);
+
+        Yii::app()->end();
+
+
+    }
 
     // Добавление в избранное
     public function actionAddToFavorit()

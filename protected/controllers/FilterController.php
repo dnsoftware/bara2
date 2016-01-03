@@ -101,7 +101,6 @@ class FilterController extends Controller
         }
 
 
-
         // Местоположение
         $mesto_sql = "1 ";
 
@@ -228,6 +227,19 @@ class FilterController extends Controller
         }
 
         // КОНЕЦ Переводим переменные из $_GET['addfield'] в $_GET['prop']
+
+        // Удаление из $_GET['addfield'] пустых диапазонов
+        if(isset($_GET['addfield']) && count($_GET['addfield']) > 0 )
+        {
+            foreach($_GET['addfield'] as $gkey=>$gval)
+            {
+                if(is_array($gval) && isset($gval['from']) && $gval['from'] == '' && $gval['to'] == '')
+                {
+                    unset($_GET['addfield'][$gkey]);
+                }
+            }
+        }
+
 
         $search_adverts = array();  // Найденные объявы
 
@@ -360,6 +372,7 @@ class FilterController extends Controller
                 $props_route_items_by_id[$pval->ps_id] = $pval;
             }
 
+
             foreach($_GET['prop'] as $pkey=>$pval)
             {
                 if(isset($props_route_items[$pkey][$pval]))
@@ -368,6 +381,8 @@ class FilterController extends Controller
                 }
             }
             $current_ps_id = $ps_id;
+
+
 //deb::dump($current_ps_id);
 //deb::dump($_GET['prop']);
 //deb::dump($props_sql_array);
@@ -594,10 +609,39 @@ class FilterController extends Controller
                 unset($where_n_array[count($where_n_array)-1]);
                 $where_n = implode(" ", $where_n_array);
                 $where_filter_sql = implode(" AND ", $where_filter_array);
-                //deb::dump($from_tables_sql);
-                //deb::dump($where_n);
+
 
                 $rubrik_prop_sql = str_replace("r_id", "n.r_id", $rubrik_sql);
+
+                // Для подсчета количества
+
+                $sql = "SELECT COUNT(DISTINCT n.n_id) cnt
+                        FROM ". $connection->tablePrefix . "notice n,
+                        ".$from_tables_sql.",
+                        ". $connection->tablePrefix . "towns t
+                        WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
+                        $mesto_sql AND $rubrik_prop_sql AND
+                        $where_filter_sql
+                        ".$where_n.$q_sql."
+                        AND n1.n_id = n.n_id
+                        AND n.t_id = t.t_id
+                        ORDER BY n.date_add DESC ";
+                //deb::dump($_GET['params']['q']);
+
+                if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
+                {
+                    $substr = "%".$_GET['params']['q']."%";
+                }
+
+                $command = $connection->cache(60)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
+
+
+                $row_count = $command->queryAll();
+
+                $offset = ($page-1)*Yii::app()->params['countonpage'];
+                $kolpages = ceil($row_count[0]['cnt']/Yii::app()->params['countonpage']);
+
+                // Для отображаемой страницы
                 $sql = "SELECT DISTINCT n.*, t.name town_name, t.transname town_transname
                         FROM ". $connection->tablePrefix . "notice n,
                         ".$from_tables_sql.",
@@ -609,28 +653,25 @@ class FilterController extends Controller
                         AND n1.n_id = n.n_id
                         AND n.t_id = t.t_id
                         ORDER BY n.date_add DESC
-                        LIMIT 0, 2000";        // Патч по количеству, так как вылетает изза нехватки памяти
-                //deb::dump($_GET['params']['q']);
-
-                $command=$connection->createCommand($sql);
+                        LIMIT $offset, ".Yii::app()->params['countonpage'];
 
                 if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
                 {
                     $substr = "%".$_GET['params']['q']."%";
-                    $command->bindParam(":q_sql", $substr, PDO::PARAM_STR);
                 }
 
+                $command = $connection->cache(60)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
 
-                $start_time = microtime();
-                $dataReader=$command->query();
-                $stop_time = microtime();
-                $query_delta = $stop_time - $start_time;
+                $row_notices = $command->queryAll();
 
-                while(($row = $dataReader->read())!==false)
+                if(count($row_notices) > 0)
                 {
-                    $search_adverts[$row['n_id']] = $row;
+                    foreach($row_notices as $rnkey=>$rnval)
+                    {
+                        $search_adverts[$rnval['n_id']] = $rnval;
+                    }
                 }
-//deb::dump($sql);
+
 
                 // Формирование данных для ссылок на подгруппы
                 $rubrik_groups = array();
@@ -680,10 +721,11 @@ class FilterController extends Controller
         // Если поиск только по местоположению/рубрике - простой запрос
         else
         {
+
             $mesto_rub_sql = str_replace(" n.", " t.", $mesto_sql);
             $q_sql = str_replace(" n.", " t.", $q_sql);
 
-            $adverts_count = Notice::model()->with('town')->count(
+            $adverts_count = Notice::model()->cache(60)->with('town')->count(
                 array(
                     'select'=>'n_id',
                     'condition'=>' active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND '.$expire_sql.
@@ -695,7 +737,7 @@ class FilterController extends Controller
             $offset = ($page-1)*Yii::app()->params['countonpage'];
             $kolpages = ceil($adverts_count/Yii::app()->params['countonpage']);
 
-            $adverts = Notice::model()->with('town')->findAll(
+            $adverts = Notice::model()->cache(60)->with('town')->findAll(
                 array(
                     'select'=>'*, town.name as town_name, town.transname as town_transname',
                     'condition'=>' active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND '.$expire_sql.
@@ -707,6 +749,7 @@ class FilterController extends Controller
                 )
             );
 
+//deb::dump($adverts);
             foreach ($adverts as $akey=>$aval)
             {
                 //deb::dump($aval->town['name']);

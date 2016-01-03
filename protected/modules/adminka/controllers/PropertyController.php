@@ -88,6 +88,13 @@ class PropertyController extends Controller
         $child_ps_id_array = array();
         if($model->parent_id != $_POST['params']['parent_id'])
         {
+            $propsprav_rows = PropsSprav::model()->findAllByAttributes(array('rp_id'=>$model->rp_id));
+            $ps_array = array();
+            foreach($propsprav_rows as $ppkey=>$ppval)
+            {
+                $ps_array[] = $ppval->ps_id;
+            }
+
             $parent_rows = PropsSprav::model()->findAllByAttributes(array('rp_id'=>$model->parent_id));
 
             foreach($parent_rows as $pkey=>$pval)
@@ -99,7 +106,8 @@ class PropertyController extends Controller
             {
                 $child_rows = PropsRelations::model()->findAll(array(
                     'select'=>'*',
-                    'condition'=>'parent_ps_id IN ('.implode(", ", $parent_ps_id_array).')'
+                    'condition'=>'parent_ps_id IN ('.implode(", ", $parent_ps_id_array).')
+                                    AND child_ps_id IN ('.implode(",", $ps_array).') '
                 ));
             }
 

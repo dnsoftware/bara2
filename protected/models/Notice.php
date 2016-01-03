@@ -858,7 +858,15 @@ class Notice extends CActiveRecord
         $keywords_maked = array();
         $replace_fields = array();
         $replace_props = array();
-//deb::dump($keywords_pos);
+
+        $randwords = SeoRandomword::model()->findAll();
+        $randwords_array = array();
+        foreach($randwords as $rkey=>$rval)
+        {
+            $randwords_array[$rval->key] = explode("/",$rval->words);
+        }
+//deb::dump($randwords_array);
+//die();
         foreach($keywords_pos as $kkey=>$keyword)
         {
             //deb::dump($keyword->keyword);
@@ -875,6 +883,19 @@ class Notice extends CActiveRecord
                 foreach($matches[1] as $mkey=>$mval)
                 {
                     $replace_props[$mval] = $mval;
+                }
+            }
+
+            if(preg_match_all('|\(([^\]]+)\)|siU', $keyword->keyword, $matches))
+            {
+                foreach($matches[1] as $mkey=>$mval)
+                {
+                    if(isset($randwords_array[$mval]))
+                    {
+                        $word = $randwords_array[$mval][rand(0, (count($randwords_array[$mval])-1))];
+                        $keyword->keyword = str_replace("(".$mval.")", $word, $keyword->keyword);
+                    }
+
                 }
             }
 

@@ -50,9 +50,10 @@
             ?>
             </select>
 
-            <span style="margin-left: 20px; background-color: #f8c4cb; padding: 10px;">
-            <input placeholder="Ключевая фраза" type="text" name="keyword[seokeyword]" style="width: 300px;">
-            </span>
+            <div style="display: inline-block; margin-left: 20px; background-color: #f8c4cb; padding: 5px;" id="span_seokeyword">
+            <textarea placeholder="Ключевая фраза" id="textseokeyword" name="keyword[seokeyword]" style="width: 300px; height: 20px;" ></textarea>
+                <span id="viewrand" style="cursor: pointer;"> RND </span>
+            </div>
 
         <div id="props_data" style="overflow: auto">
             <?
@@ -86,10 +87,44 @@
 </div>
 
 
+<div id="randword_list" style="position: absolute; background-color: #F8C4CB; width: 450px; padding: 3px; display: none;">
+<table style="border-collapse: collapse; width: 100%;">
+<?
+foreach($randomwords as $rkey=>$rval)
+{
+?>
+<tr>
+    <td class="td_keyword" style="width: 80px; cursor: pointer;"><b><span class="keycheck"><?= $rval->key;?></span></b></td>
+    <td class="td_keyword"><?= $rval->words;?></td>
+</tr>
+<?
+}
+?>
+</table>
+</div>
+
 
 <script>
+    $('#randword_list').offset({left: $('#span_seokeyword').position().left});
+    $('#randword_list').offset({top: $('#span_seokeyword').position().top+40});
+//    console.log($('#span_seokeyword').position().left);
 
-//    GetPanelProps();
+    $('#viewrand').click(function (){
+        if($('#randword_list').css('display') == 'none')
+        {
+            $('#randword_list').css('display', 'block');
+        }
+        else
+        {
+            $('#randword_list').css('display', 'none');
+        }
+
+    });
+
+    $('.keycheck').click(function(){
+        $('#textseokeyword').focus();
+        $('#textseokeyword').insertAtCaret('('+$(this).html()+')');
+    });
 
     $('#add_new_keyword').click(function(){
         $.ajax({
@@ -149,5 +184,33 @@
         });
 
     }
+
+    jQuery.fn.extend({
+        insertAtCaret: function(myValue){
+            return this.each(function(i) {
+                if (document.selection) {
+                    // Для браузеров типа Internet Explorer
+                    this.focus();
+                    var sel = document.selection.createRange();
+                    sel.text = myValue;
+                    this.focus();
+                }
+                else if (this.selectionStart || this.selectionStart == '0') {
+                    // Для браузеров типа Firefox и других Webkit-ов
+                    var startPos = this.selectionStart;
+                    var endPos = this.selectionEnd;
+                    var scrollTop = this.scrollTop;
+                    this.value = this.value.substring(0, startPos)+myValue+this.value.substring(endPos,this.value.length);
+                    this.focus();
+                    this.selectionStart = startPos + myValue.length;
+                    this.selectionEnd = startPos + myValue.length;
+                    this.scrollTop = scrollTop;
+                } else {
+                    this.value += myValue;
+                    this.focus();
+                }
+            })
+        }
+    });
 
 </script>

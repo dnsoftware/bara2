@@ -4,6 +4,11 @@ Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/sum
 
 Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/filtercontroller.js');
 
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/js/nouislider/nouislider.css');
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/js/nouislider/nouislider.tooltips.css');
+Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/nouislider/nouislider.min.js');
+Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/wNumb.js');
+
 
 $this->renderPartial('/default/_admin_menu');
 

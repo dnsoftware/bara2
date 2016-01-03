@@ -140,11 +140,19 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                     ?>
 
                 </div>
+
             </div>
 
-            <div id="gallery_fullview" style="z-index: 10; position: absolute; top: 10px; left: 570px; cursor: pointer; ">
-                <div style="background-image: url('/images/lupa_s.png'); background-position: 0px 0px; width: 20px; height: 20px;"></div>
-            </div>
+            <?
+            if(count($uploadfiles_array) > 0)
+            {
+            ?>
+                <div id="gallery_fullview" style="z-index: 10; position: absolute; top: 10px; left: 570px; cursor: pointer; ">
+                    <div style="background-image: url('/images/lupa_s.png'); background-position: 0px 0px; width: 20px; height: 20px;"></div>
+                </div>
+            <?
+            }
+            ?>
 
             <?
             if($mainblock['date_expire'] > time() || Yii::app()->controller->action->id == 'addpreview')
@@ -206,7 +214,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                     <div style="background-color: #f00; color: #fff; font-size: 14px;">
                     К сожалению, данное объявление потеряло актуальность за сроком давности. Сейчас Вы будете автоматически перенаправлены на похожие объявления в Вашем городе. Нажмите <a class="baralink" style="font-size: 14px;" href="/<?= $advert_url_category;?>">здесь</a>, если Ваш браузер не поддерживает автоматическую переадресацию.
                     <?
-                    Yii::app()->clientScript->registerMetaTag("5; URL=/".$advert_url_category, "archive", "refresh");
+                    //Yii::app()->clientScript->registerMetaTag("5; URL=/".$advert_url_category, "archive", "refresh");
                     ?>
                     </div>
 

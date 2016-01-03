@@ -18,7 +18,12 @@ $this->renderPartial('/default/_admin_menu');
     }
 </style>
 
-<div style="margin-bottom: 10px; font-weight: bold;">SEO</div>
+<div style="margin-left: 50px; margin-top: 10px;">
+    <a href="/adminka/support/seo">SEO</a>&nbsp;&nbsp;&nbsp;
+    <a href="/adminka/support/randomword">Рандомайзер</a>
+</div>
+
+<div style="margin-bottom: 10px; font-weight: bold; margin-top: 20px;">SEO</div>
 
 <div id="seo_form" style="margin-top: 10px; ">
 
@@ -29,7 +34,8 @@ $this->renderPartial('/default/_admin_menu');
         'rub_array'=>$rub_array,
         'keyword'=>$keyword,
         'search_keywords'=>$search_keywords,
-        'query_type'=>$query_type
+        'query_type'=>$query_type,
+        'randomwords'=>$randomwords
     ));
 ?>
 

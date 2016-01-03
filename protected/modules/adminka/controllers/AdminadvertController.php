@@ -152,6 +152,18 @@ class AdminadvertController extends Controller
 
         // КОНЕЦ Переводим переменные из $_GET['addfield'] в $_GET['prop']
 
+        // Удаление из $_GET['addfield'] пустых диапазонов
+        if(isset($_GET['addfield']) && count($_GET['addfield']) > 0 )
+        {
+            foreach($_GET['addfield'] as $gkey=>$gval)
+            {
+                if(is_array($gval) && isset($gval['from']) && $gval['from'] == '' && $gval['to'] == '')
+                {
+                    unset($_GET['addfield'][$gkey]);
+                }
+            }
+        }
+
         $search_adverts = array();  // Найденные объявы
 
 
@@ -970,6 +982,7 @@ class AdminadvertController extends Controller
         $panel = $_POST['panel'];
 
         $r_id = intval($panel['r_id']);
+        $rubrik_row = Rubriks::model()->findByPk($r_id);
         if($r_id > 0)
         {
             $props_array = array();
@@ -1033,6 +1046,7 @@ class AdminadvertController extends Controller
             NoticeProps::model()->deleteAll('n_id = '.$n_id);
 
             $advert->r_id = $r_id;
+            $advert->parent_r_id = $rubrik_row->parent_id;
             $advert->save();
             if(count($props_array) > 0)
             {
