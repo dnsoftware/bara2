@@ -333,8 +333,9 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                                     if(isset($similar_photos[$sval['n_id']][0]))
                                     {
                                         $photoname = str_replace(".", "_medium.", $similar_photos[$sval['n_id']][0]);
+                                        $curr_dir = Notice::getPhotoDir($photoname);
                                         ?>
-                                        <img style="height: 80px;" src="/<?= Yii::app()->params['photodir'];?>/<?= $photoname;?>">
+                                        <img style="height: 80px;" src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>">
                                     <?
                                     }
 

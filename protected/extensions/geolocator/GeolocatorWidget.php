@@ -26,14 +26,14 @@ class GeolocatorWidget extends CWidget
         $ip = $_SERVER['REMOTE_ADDR'];
         if($ip == '127.0.0.1')
         {
-            $ip = '178.213.108.155';
+            //$ip = '178.213.108.155';
         }
         //$ip = '178.213.108.155';
         //$ip = '176.31.32.106';
         //$ip = '1761.31.32.106';
         $geodata = $SxGeo->getCityFull($ip);
-        //deb::dump($geodata);
-
+        //deb::dump(Yii::app()->request->cookies);
+        //die();
 
         $cookie_mytown_handchange_tag = Yii::app()->request->cookies->contains('geo_mytown_handchange_tag') ?
             Yii::app()->request->cookies['geo_mytown_handchange_tag']->value : 0;
@@ -71,7 +71,7 @@ class GeolocatorWidget extends CWidget
                     else
                     {
                         // Редирект на все регионы
-                        header('Location: /russia');
+                        ///header('Location: /russia');
                     }
                 }
                 else
@@ -84,7 +84,7 @@ class GeolocatorWidget extends CWidget
                     else
                     {
                         // Редирект на все регионы
-                        header('Location: /russia');
+                        ///header('Location: /russia');
                     }
                 }
                 else
@@ -97,7 +97,7 @@ class GeolocatorWidget extends CWidget
                     else
                     {
                         // Редирект на все регионы
-                        header('Location: /russia');
+                        ///header('Location: /russia');
                     }
                 }
             }
@@ -167,7 +167,7 @@ class GeolocatorWidget extends CWidget
                     else
                     {
                         // Редирект на все регионы
-                        header('Location: /russia');
+                        ///header('Location: /russia');
                     }
                 }
 
@@ -194,7 +194,7 @@ class GeolocatorWidget extends CWidget
                     else
                     {
                         // Редирект на все регионы
-                        header('Location: /russia');
+                        ///header('Location: /russia');
                     }
                 }
             }
@@ -220,7 +220,7 @@ class GeolocatorWidget extends CWidget
                     else
                     {
                         // Редирект на все регионы
-                        header('Location: /russia');
+                        ///header('Location: /russia');
                     }
                 }
             }
@@ -228,7 +228,7 @@ class GeolocatorWidget extends CWidget
             {
                 if ($cur_url == '/' || $cur_url == '/site/index')
                 {
-                    header('Location: /russia');
+                    ///header('Location: /russia');
                 }
             }
 
@@ -238,6 +238,7 @@ class GeolocatorWidget extends CWidget
 
 
 
+        //deb::dump($cookie_mytown_handchange_tag);
 
 
         $this->render('index');

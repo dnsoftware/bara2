@@ -15,8 +15,11 @@ public $verifyCode;
 <div style="">
 <form id="usermessage_form" onsubmit="return false;">
 
+    <br>
+    <input type="text" name="username" placeholder="Ваше имя" style="width: 350px;"><br>
+    <input type="text" name="useremail" placeholder="Ваш E-mail" style="width: 350px;"><br>
     <div>Сообщение:</div>
-    <textarea name="message" style="width: 350px; height: 200px;"></textarea>
+    <textarea name="message" style="width: 350px; height: 190px;"></textarea>
 
     <table style="margin: 0;">
     <tr>

@@ -658,6 +658,8 @@ deb::dump("NEW - ". $newadv->n_id);
     public function actionImageimport()
     {
         // Получение всех кодов rp_id со свойством "photoblock" для рубрик
+        // Ремарка: для временных рубрик должно быть определено свойство "photoblock"
+        // иначе данные о сымпортированных фотографиях не заносятся в базу свойств.
         $temp = RubriksProps::model()->with('props_sprav')->findAll(array(
             'select'=>'*',
             'condition'=>'vibor_type = "photoblock"'
@@ -672,7 +674,8 @@ deb::dump("NEW - ". $newadv->n_id);
 
         $notices = Notice::model()->findAll(array(
             'select'=>'*',
-            'condition'=>'old_base_tag = 1 AND img_import_tag = 0 ',    //AND n_id=1198638
+            //'condition'=>'old_base_tag = 1 AND img_import_tag = 0 ',    //AND n_id=1198638
+            'condition'=>'old_base_tag = 1 AND img_import_tag = 0 AND n_id = 1317532',
             'order'=>'n_id ',
             'limit'=>70
         ));
@@ -692,11 +695,13 @@ deb::dump("NEW - ". $newadv->n_id);
                 $files_array = array();
                 foreach($noticeimages as $ikey=>$ival)
                 {
-                    //deb::dump($ival);
                     $tofile = md5($ival->filename).".".$ival->file_ext;
                     $tofile_small = md5($ival->filename)."_thumb.".$ival->file_ext;
                     $curr_dir = Notice::getPhotoDirMake($folder, $tofile);
                     $output_dir = Yii::app()->basePath."/../".$folder."/".$curr_dir."/";
+                //deb::dump($ival);
+                //deb::dump($output_dir.$tofile);
+                //die();
                     if(copy('http://baraholka.ru/imgnot/'.$ival->filename.".".$ival->file_ext, $output_dir.$tofile))
                     {
                         $files_array[] = $tofile;
@@ -782,9 +787,9 @@ deb::dump("NEW - ". $newadv->n_id);
                     }
                 }
 
-
                 $notice_photo_rp_id = $rubriks_props_photoblock[$nval->r_id]->rp_id;
                 $notice_photo_ps_id = $rubriks_props_photoblock[$nval->r_id]->props_sprav[0]->ps_id;
+
                 $hand_input_value = '';
                 if(count($files_array) > 0)
                 {
@@ -810,6 +815,7 @@ deb::dump("NEW - ". $newadv->n_id);
                     $notice_prop->hand_input_value = $hand_input_value;
                     $notice_prop->old_base_tag = 1;
                     $notice_prop->save();
+                deb::dump($notice_prop->getErrors());
 
                 }
 
@@ -831,6 +837,116 @@ deb::dump("NEW - ". $newadv->n_id);
         ?>
         <script>
             document.location = '/adminka/support/imageimport/?rnd=<?= rand(0,9999);?>';
+        </script>
+        <?
+        //$this->render('imageimport');
+    }
+
+
+    // Восстановление данных об импортированных картинках в в базе
+    // данные берутся из таблицы ohtbsfvre_notice_images старой базы
+    public function actionImportedImageRecovery()
+    {
+        // Получение всех кодов rp_id со свойством "photoblock" для рубрик
+        $temp = RubriksProps::model()->with('props_sprav')->findAll(array(
+            'select'=>'*',
+            'condition'=>'vibor_type = "photoblock"'
+        ));
+//deb::dump($temp);
+        $rubriks_props_photoblock = array();
+        foreach($temp as $tkey=>$tval)
+        {
+            $rubriks_props_photoblock[$tval->r_id] = $tval;
+        }
+
+        $notices = Notice::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'old_base_tag = 1 AND img_import_tag = 0 ',    //AND n_id=1198638
+            'order'=>'n_id ',
+            'limit'=>1000
+        ));
+
+        foreach($notices as $nkey=>$nval)
+        {
+            //deb::dump($nval->n_id);
+            //die();
+            if($noticeimages = NoticeImagesOld::model()->findAll(array(
+                'select'=>'*',
+                'condition'=>'n_id = '.$nval->n_id,
+                'order'=>'n_id ASC, titul_tag DESC, fotonumber ASC',
+            )))
+            {
+                //$folder = 'tempphotos';
+                $folder = Yii::app()->params['photodir'];
+                $files_array = array();
+                foreach($noticeimages as $ikey=>$ival)
+                {
+                    $tofile = md5($ival->filename).".".$ival->file_ext;
+                    $tofile_small = md5($ival->filename)."_thumb.".$ival->file_ext;
+                    $curr_dir = Notice::getPhotoDirMake($folder, $tofile);
+                    $output_dir = Yii::app()->basePath."/../".$folder."/".$curr_dir."/";
+                    //deb::dump($ival);
+                    //deb::dump($output_dir.$tofile);
+                    //die();
+                    if(1)
+                    {
+                        $files_array[] = $tofile;
+                    }
+                }
+
+
+                $notice_photo_rp_id = $rubriks_props_photoblock[$nval->r_id]->rp_id;
+                $notice_photo_ps_id = $rubriks_props_photoblock[$nval->r_id]->props_sprav[0]->ps_id;
+
+                $hand_input_value = '';
+                if(count($files_array) > 0)
+                {
+                    $hand_input_value = implode(";", $files_array).";";
+                }
+
+                if($notice_prop = NoticeProps::model()->findByAttributes(array(
+                    'n_id'=>$nval->n_id,
+                    'rp_id'=>$notice_photo_rp_id
+                )))
+                {
+                    $notice_prop->ps_id = $notice_photo_ps_id;
+                    $notice_prop->hand_input_value = $hand_input_value;
+                    $notice_prop->old_base_tag = 1;
+                    $notice_prop->save();
+
+//deb::dump($nval->n_id);
+//deb::dump($notice_prop->getErrors());
+//die();
+                }
+                else
+                {
+                    $notice_prop = new NoticeProps();
+                    $notice_prop->n_id = $nval->n_id;
+                    $notice_prop->rp_id = $notice_photo_rp_id;
+                    $notice_prop->ps_id = $notice_photo_ps_id;
+                    $notice_prop->hand_input_value = $hand_input_value;
+                    $notice_prop->old_base_tag = 1;
+                    $notice_prop->save();
+                }
+
+                //deb::dump($nval->n_id);
+            }
+
+            $nval->img_import_tag = 1;
+            $nval->save();
+
+            // Перегенерируем xml свойства
+            AdvertController::PropsXmlGenerate($nval->n_id);
+
+            //deb::dump($noticeimages);
+        }
+
+
+        //$this->redirect('/adminka/support/imageimport/?rnd='.rand(0,9999));
+
+        ?>
+        <script>
+            document.location = '/adminka/support/importedimagerecovery/?rnd=<?= rand(0,9999);?>';
         </script>
         <?
         //$this->render('imageimport');

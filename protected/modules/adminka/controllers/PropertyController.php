@@ -6,7 +6,7 @@ class PropertyController extends Controller
 	{
         //deb::dump(Rubriks::get_rublist());
 
-        $rub_array = Rubriks::get_rublist();
+        $rub_array = Rubriks::get_rublist(true);
 
 
         //deb::dump($rub_array);

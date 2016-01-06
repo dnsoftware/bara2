@@ -43,11 +43,17 @@ class Rubriks extends CActiveRecord
 		);
 	}
 
-    public static function get_rublist()
+    public static function get_rublist($display_hide = false)
     {
+        $display_hide_sql = " AND hide_tag = 0 ";
+        if($display_hide)
+        {
+            $display_hide_sql = " ";
+        }
+
         $rubs = self::model()->findAll(array(
             'select'=>'*',
-            'condition'=>'1',
+            'condition'=>'1 '.$display_hide_sql,
             'order' => 'parent_id, name'
         ));
 

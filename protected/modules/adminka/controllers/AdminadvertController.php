@@ -572,7 +572,7 @@ class AdminadvertController extends Controller
         $rubriks_props_array = $ret['rubriks_props_array'];
         /*************** END формирование данных ********************************/
 
-        $rub_array = Rubriks::get_rublist();
+        $rub_array = Rubriks::get_rublist(true);
 
         $props_sprav_sorted_array = $ret['props_sprav_sorted_array'];
         $rubriks_props_array = $ret['rubriks_props_array'];

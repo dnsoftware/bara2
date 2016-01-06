@@ -18,7 +18,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/w
 
 
 
-<div style="margin: 50px;">
+<div style="margin: 5px;">
 
     <!--
     <div id="pips-values"></div>
@@ -281,6 +281,23 @@ if(count($rubrik_groups) > 0)
                 <div style="padding: 5px; width:160px;; border: #ff4444 solid 2px;" >
                     <input style="font-size: 26px; width: 150px; border: none;" type="text" class="changeprice" id="pricechange_<?= $val['n_id'];?>" value="<?= $val['cost'];?>">
 
+                    <select name="cost_valuta" id="cost_valuta_<?= $val['n_id'];?>">
+                        <?
+                        foreach (Options::$valutes as $vkey=>$vval)
+                        {
+                            $selected = ' ';
+                            if($val['cost_valuta'] == $vkey)
+                            {
+                                $selected = ' selected ';
+                            }
+                            ?>
+                            <option <?= $selected;?> value="<?= $vkey;?>"><?= $vkey;?></option>
+                        <?
+                        }
+                        ?>
+                    </select>
+
+
                     <input type="button" class="changeprice_button" value="Сохранить" cvalue="<?= $val['n_id'];?>">
                 </div>
                 <br><br>
@@ -409,7 +426,8 @@ if(count($rubrik_groups) > 0)
             dataType: 'json',
             data:{
                 n_id: button.attr('cvalue'),
-                price: $('#pricechange_'+button.attr('cvalue')).val()
+                price: $('#pricechange_'+button.attr('cvalue')).val(),
+                cost_valuta: $('#cost_valuta_'+button.attr('cvalue')).val()
             },
 
             // обработка успешного выполнения запроса

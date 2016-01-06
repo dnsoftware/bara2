@@ -3061,24 +3061,46 @@ class AdvertController extends Controller
         $ret = array();
         if(strtolower(Yii::app()->session['usermessagecaptcha']) == strtolower($_POST['verifycode']) )
         {
+            $ret['status'] = 'ok';
+            $ret['message'] = '';
+
             if(strlen($_POST['message']) < 10)
             {
                 $ret['status'] = 'error';
                 $ret['message'] = 'Текст жалобы слишком короткий!';
             }
-            else
+
+
+            $emailvalidator = new CEmailValidator();
+            if(!$emailvalidator->validateValue($_POST['useremail']) || strlen(trim($_POST['useremail'])) == 0)
             {
+                $ret['status'] = 'error';
+                $ret['message'] = 'E-mail указан неверно!';
+            }
+
+            if(strlen($_POST['username']) < 2)
+            {
+                $ret['status'] = 'error';
+                $ret['message'] = 'Укажите ваше имя!';
+            }
+
+            if($ret['status'] == 'ok')
+            {
+                $username = $_POST['username'];
+                $useremail = $_POST['useremail'];
                 $abusemessage = $_POST['message'];
 
                 $emessage = $this->renderFile(Yii::app()->basePath.'/data/mailtemplates/advertusermessage.php',
                     array(
+                        'username'=>$username,
+                        'useremail'=>$useremail,
                         'abusemessage'=>$abusemessage,
                         'sender_ip'=>$_SERVER['REMOTE_ADDR']
                     ),
                     true);
 
                 $result = BaraholkaMailer::SendSmtpMail(Yii::app()->params['smtp1_connect_data'], array(
-                    'mailto'=>Yii::app()->params['adminEmail'],
+                    'mailto'=>'ddaemon@mail.ru',//Yii::app()->params['adminEmail'],
                     'nameto'=>'Админ',
                     'html_tag'=>true,
                     'subject'=>"Поступило сообщение от пользователя",

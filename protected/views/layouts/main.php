@@ -260,7 +260,7 @@ border-radius: 3px;">
 <style>
     #modal_usermessage {
         width: 300px;
-        height: 310px; /* Рaзмеры дoлжны быть фиксирoвaны */
+        height: 400px; /* Рaзмеры дoлжны быть фиксирoвaны */
         border-radius: 5px;
         border: 3px #000 solid;
         background: #fff;

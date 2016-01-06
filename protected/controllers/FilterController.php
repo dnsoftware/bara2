@@ -1513,6 +1513,14 @@ class FilterController extends Controller
         if(isset($_POST['region_id'])) // $_POST['region_id'] может содержать город, страну или регион
         {
             $parts = explode("_", $_POST['region_id']);
+
+            // Подверждаем выбор региона пользователем
+            if(isset($_POST['reg_confirm_tag']) && $_POST['reg_confirm_tag'] == 1)
+            {
+                $cookie = new CHttpCookie('region_confirm_tag', 1);
+                $cookie->expire = time() + 86400*30*12;
+                Yii::app()->request->cookies['region_confirm_tag'] = $cookie;
+            }
         }
 
         if(isset($_POST['region_id']) && count($parts) == 2 && intval($parts[1]) >= 0)
@@ -1783,10 +1791,12 @@ class FilterController extends Controller
     {
         $n_id = intval($_POST['n_id']);
         $price = floatval($_POST['price']);
+        $cost_valuta = $_POST['cost_valuta'];
 
         if($notice = Notice::model()->findByPk($n_id))
         {
             $notice->cost = $price;
+            $notice->cost_valuta = $cost_valuta;
             $notice->save();
 
             $ret['status'] = 'ok';

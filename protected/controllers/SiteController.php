@@ -75,6 +75,14 @@ class SiteController extends Controller
 
 
 
+    // Установка куки подтверждения выбора региона
+    public function actionSetregconfirmyes()
+    {
+        $cookie = new CHttpCookie('region_confirm_tag', 1);
+        $cookie->expire = time() + 86400*30*12;
+        Yii::app()->request->cookies['region_confirm_tag'] = $cookie;
+    }
+
 	/**
 	 * This is the action to handle external exceptions.
 	 */
