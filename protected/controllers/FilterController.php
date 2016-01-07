@@ -626,7 +626,7 @@ class FilterController extends Controller
                         AND n1.n_id = n.n_id
                         AND n.t_id = t.t_id
                         ORDER BY n.date_add DESC ";
-                //deb::dump($_GET['params']['q']);
+                //deb::dump($sql);
 
                 if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
                 {
@@ -641,7 +641,7 @@ class FilterController extends Controller
                 $kolpages = ceil($row_count[0]['cnt']/Yii::app()->params['countonpage']);
 
                 // Для отображаемой страницы
-                $sql = "SELECT DISTINCT n.*, t.name town_name, t.transname town_transname
+                $sql = "SELECT SQL_CALC_FOUND_ROWS DISTINCT n.*, t.name town_name, t.transname town_transname
                         FROM ". $connection->tablePrefix . "notice n,
                         ".$from_tables_sql.",
                         ". $connection->tablePrefix . "towns t
@@ -662,6 +662,9 @@ class FilterController extends Controller
                 $command = $connection->cache(600)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
 
                 $row_notices = $command->queryAll();
+
+//$rows3 = $connection->createCommand('SELECT FOUND_ROWS()')->queryAll();
+//deb::dump($rows3);
 
                 if(count($row_notices) > 0)
                 {
