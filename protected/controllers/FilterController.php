@@ -633,8 +633,7 @@ class FilterController extends Controller
                     $substr = "%".$_GET['params']['q']."%";
                 }
 
-                $command = $connection->cache(60)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
-
+                $command = $connection->cache(600)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
 
                 $row_count = $command->queryAll();
 
@@ -660,7 +659,7 @@ class FilterController extends Controller
                     $substr = "%".$_GET['params']['q']."%";
                 }
 
-                $command = $connection->cache(60)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
+                $command = $connection->cache(600)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
 
                 $row_notices = $command->queryAll();
 
@@ -725,7 +724,7 @@ class FilterController extends Controller
             $mesto_rub_sql = str_replace(" n.", " t.", $mesto_sql);
             $q_sql = str_replace(" n.", " t.", $q_sql);
 
-            $adverts_count = Notice::model()->cache(60)->with('town')->count(
+            $adverts_count = Notice::model()->cache(600)->with('town')->count(
                 array(
                     'select'=>'n_id',
                     'condition'=>' active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND '.$expire_sql.
@@ -737,7 +736,7 @@ class FilterController extends Controller
             $offset = ($page-1)*Yii::app()->params['countonpage'];
             $kolpages = ceil($adverts_count/Yii::app()->params['countonpage']);
 
-            $adverts = Notice::model()->cache(60)->with('town')->findAll(
+            $adverts = Notice::model()->cache(600)->with('town')->findAll(
                 array(
                     'select'=>'*, town.name as town_name, town.transname as town_transname',
                     'condition'=>' active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND '.$expire_sql.

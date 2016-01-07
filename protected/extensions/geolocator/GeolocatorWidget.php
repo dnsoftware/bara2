@@ -32,7 +32,7 @@ class GeolocatorWidget extends CWidget
         //$ip = '176.31.32.106';
         //$ip = '1761.31.32.106';
         $geodata = $SxGeo->getCityFull($ip);
-        //deb::dump(Yii::app()->request->cookies);
+        //deb::dump($ip);
         //die();
 
         $cookie_mytown_handchange_tag = Yii::app()->request->cookies->contains('geo_mytown_handchange_tag') ?
