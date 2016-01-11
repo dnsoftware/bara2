@@ -164,6 +164,10 @@
 
             </td>
             <td>
+                <input type="text" name="mainblock[daynumber_id]" placeholder="Код объявления (daynumber_id)" style="width: 200px;" value="<?= htmlspecialchars($_GET['mainblock']['daynumber_id']);?>">
+
+                <input type="text" name="mainblock[user_email]" placeholder="Email пользователя" style="width: 150px;"  value="<?= htmlspecialchars($_GET['mainblock']['user_email']);?>">
+
                 Кол-во на странице: <input placeholder="Кол-ва объяв на странице" type="text" name="mainblock[col_on_page]" value="<?= $col_on_page;?>" style="width: 50px;">
             </td>
             <td>

@@ -103,18 +103,21 @@ class FilterController extends Controller
 
         // Местоположение
         $mesto_sql = "1 ";
-
+        $mesto_use_index_prefix = '';
         if($mesto_isset_tag && $mselector == 'c')
         {
             $mesto_sql = " n.c_id = ".intval($m_id);
+            $mesto_use_index_prefix = 'c_id';
         }
         if($mesto_isset_tag && $mselector == 'reg')
         {
             $mesto_sql = " n.reg_id = ".intval($m_id);
+            $mesto_use_index_prefix = 'reg_id';
         }
         if($mesto_isset_tag && $mselector == 't')
         {
             $mesto_sql = " n.t_id = ".intval($m_id);
+            $mesto_use_index_prefix = 't_id';
         }
 //deb::dump($mesto_sql);
 
@@ -613,10 +616,20 @@ class FilterController extends Controller
 
                 $rubrik_prop_sql = str_replace("r_id", "n.r_id", $rubrik_sql);
 
-                // Для подсчета количества
+                // Выбираем какой индекс будем использовать
+                // используем $expire_sql, $mesto_sql, $rubrik_sql
+                /*
+                deb::dump($expire_sql);
+                echo "<br>";
+                deb::dump($mesto_sql);
+                echo "<br>";
+                deb::dump($rubrik_sql);
+                /**/
+                $use_index_sql = Notice::GetUseIndexSql($expire_sql, $mesto_sql, $rubrik_sql, $mesto_use_index_prefix);
 
+                // Для подсчета количества
                 $sql = "SELECT COUNT(DISTINCT n.n_id) cnt
-                        FROM ". $connection->tablePrefix . "notice n,
+                        FROM ". $connection->tablePrefix . "notice n ".$use_index_sql.",
                         ".$from_tables_sql.",
                         ". $connection->tablePrefix . "towns t
                         WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
@@ -624,8 +637,7 @@ class FilterController extends Controller
                         $where_filter_sql
                         ".$where_n.$q_sql."
                         AND n1.n_id = n.n_id
-                        AND n.t_id = t.t_id
-                        ORDER BY n.date_add DESC ";
+                        AND n.t_id = t.t_id ";
                 //deb::dump($sql);
 
                 if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
@@ -638,11 +650,10 @@ class FilterController extends Controller
                 $row_count = $command->queryAll();
 
                 $offset = ($page-1)*Yii::app()->params['countonpage'];
-                $kolpages = ceil($row_count[0]['cnt']/Yii::app()->params['countonpage']);
 
                 // Для отображаемой страницы
-                $sql = "SELECT SQL_CALC_FOUND_ROWS DISTINCT n.*, t.name town_name, t.transname town_transname
-                        FROM ". $connection->tablePrefix . "notice n,
+                $sql = "SELECT DISTINCT n.*, t.name town_name, t.transname town_transname
+                        FROM ". $connection->tablePrefix . "notice n ".$use_index_sql.",
                         ".$from_tables_sql.",
                         ". $connection->tablePrefix . "towns t
                         WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
@@ -663,8 +674,12 @@ class FilterController extends Controller
 
                 $row_notices = $command->queryAll();
 
-//$rows3 = $connection->createCommand('SELECT FOUND_ROWS()')->queryAll();
-//deb::dump($rows3);
+//$row_count = $connection->createCommand('SELECT FOUND_ROWS() cnt')->queryAll();
+
+                $kolpages = ceil($row_count[0]['cnt']/Yii::app()->params['countonpage']);
+
+//deb::dump($rows_cnt);
+//deb::dump($kolpages);
 
                 if(count($row_notices) > 0)
                 {
@@ -685,7 +700,7 @@ class FilterController extends Controller
                 {
                     $subprops = PropsRelations::model()->findAll(array('condition'=>'parent_ps_id = '.$current_ps_id));
                     $sql = "SELECT nsub.ps_id, ps.value, ps.transname, count(nsub.ps_id) cnt
-                            FROM ". $connection->tablePrefix . "notice n,
+                            FROM ". $connection->tablePrefix . "notice n ".$use_index_sql.",
                             ".$from_tables_sql.",
                             ". $connection->tablePrefix . "notice_props nsub,
                             ". $connection->tablePrefix . "props_sprav ps
@@ -727,6 +742,7 @@ class FilterController extends Controller
             $mesto_rub_sql = str_replace(" n.", " t.", $mesto_sql);
             $q_sql = str_replace(" n.", " t.", $q_sql);
 
+/*
             $adverts_count = Notice::model()->cache(600)->with('town')->count(
                 array(
                     'select'=>'n_id',
@@ -735,10 +751,39 @@ class FilterController extends Controller
                     'params'=>array(':q_sql'=>'%'.$_GET['params']['q'].'%')
                 )
             );
+*/
+//deb::dump($expire_sql);
+
+            // Выбираем какой индекс будем использовать
+            // используем $expire_sql, $mesto_sql, $rubrik_sql
+            /*
+            deb::dump($expire_sql);
+            echo "<br>";
+            deb::dump($mesto_sql);
+            echo "<br>";
+            deb::dump($rubrik_sql);
+            /**/
+            $use_index_sql = Notice::GetUseIndexSql($expire_sql, $mesto_sql, $rubrik_sql, $mesto_use_index_prefix);
+
+            $sql = "SELECT COUNT(*) cnt
+                    FROM ". $connection->tablePrefix . "notice n ".$use_index_sql.",
+                    ". $connection->tablePrefix . "towns t
+                    WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
+                    $mesto_sql AND ".$rubrik_sql.$q_sql." AND n.t_id = t.t_id ";
+
+            if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
+            {
+                $substr = "%".$_GET['params']['q']."%";
+            }
+
+            $command = $connection->cache(600)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
+
+            $row_count = $command->queryAll();
 
             $offset = ($page-1)*Yii::app()->params['countonpage'];
-            $kolpages = ceil($adverts_count/Yii::app()->params['countonpage']);
+            $kolpages = ceil($row_count[0]['cnt']/Yii::app()->params['countonpage']);
 
+/*
             $adverts = Notice::model()->cache(600)->with('town')->findAll(
                 array(
                     'select'=>'*, town.name as town_name, town.transname as town_transname',
@@ -750,14 +795,29 @@ class FilterController extends Controller
                     'params'=>array(':q_sql'=>'%'.$_GET['params']['q'].'%')
                 )
             );
+*/
+
+            $sql = "SELECT n.*, t.name as town_name, t.transname as town_transname
+                    FROM ". $connection->tablePrefix . "notice n ".$use_index_sql.",
+                    ". $connection->tablePrefix . "towns t
+                    WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
+                    $mesto_sql AND ".$rubrik_sql.$q_sql." AND n.t_id = t.t_id
+                    ORDER BY n.date_add DESC
+                    LIMIT ".$offset.", ".Yii::app()->params['countonpage'];
+
+            $command = $connection->cache(600)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
+
+            $adverts = $command->queryAll();
+
 
 //deb::dump($adverts);
             foreach ($adverts as $akey=>$aval)
             {
                 //deb::dump($aval->town['name']);
-                $search_adverts[$aval->n_id] = $aval->attributes;
-                $search_adverts[$aval->n_id]['town_name'] = $aval->town['name'];
-                $search_adverts[$aval->n_id]['town_transname'] = $aval->town['transname'];
+                //$search_adverts[$aval->n_id] = $aval->attributes;
+                $search_adverts[$aval['n_id']] = $aval;
+                $search_adverts[$aval['n_id']]['town_name'] = $aval['town_name'];
+                $search_adverts[$aval['n_id']]['town_transname'] = $aval['town_transname'];
             }
 //deb::dump(count($search_adverts));
 
@@ -769,7 +829,7 @@ class FilterController extends Controller
 
                 $sql = "SELECT r.name, r.transname, COUNT(n.n_id) cnt
                         FROM
-                        ". $connection->tablePrefix . "notice n,
+                        ". $connection->tablePrefix . "notice n ".$use_index_sql.",
                         ". $connection->tablePrefix . "rubriks r
                         WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
                         ".$mesto_sql." AND ".$rubrik_simple_sql."
@@ -808,7 +868,7 @@ class FilterController extends Controller
                     $mesto_simple_sql = str_replace(" n.", " ", $mesto_sql);
                     $sql = "SELECT p.ps_id, count(p.ps_id) cnt
                         FROM
-                        ". $connection->tablePrefix . "notice n,
+                        ". $connection->tablePrefix . "notice n ".$use_index_sql.",
                         ". $connection->tablePrefix . "rubriks r,
                         ". $connection->tablePrefix . "notice_props p
                         WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
@@ -842,7 +902,7 @@ class FilterController extends Controller
             {
                 $sql = "SELECT r.name, r.transname, COUNT(n.n_id) cnt
                         FROM
-                        ". $connection->tablePrefix . "notice n,
+                        ". $connection->tablePrefix . "notice n ".$use_index_sql.",
                         ". $connection->tablePrefix . "rubriks r,
                         ". $connection->tablePrefix . "rubriks r2
                         WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql

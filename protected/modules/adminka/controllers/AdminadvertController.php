@@ -93,6 +93,27 @@ class AdminadvertController extends Controller
             $q_sql = " AND ( n.title LIKE :q_sql OR n.notice_text LIKE  :q_sql ) ";
         }
 
+        // Код объявления daynumber_id
+        $daynumber_sql = " ";
+        if(isset($_GET['mainblock']['daynumber_id']) && trim($_GET['mainblock']['daynumber_id']) != '')
+        {
+            $daynumber_sql = " AND daynumber_id = '".trim($_GET['mainblock']['daynumber_id'])."' ";
+        }
+
+        // Email пользователя
+        $user_email_sql = " ";
+        if(isset($_GET['mainblock']['user_email']) && trim($_GET['mainblock']['user_email']) != '')
+        {
+            if($search_u_id_row = User::model()->findByAttributes(array('email'=>trim($_GET['mainblock']['user_email']))))
+            {
+                $user_email_sql = " AND u_id = ".$search_u_id_row->id;
+            }
+            else
+            {
+                $_GET['mainblock']['user_email'] = '';
+            }
+        }
+
         $rp_ids = array();
         $rubriks_props_poryadok_array = array();
         $rubriks_props_poryadok_by_selector_array = array();
@@ -344,7 +365,7 @@ class AdminadvertController extends Controller
                         WHERE 1 AND $expire_sql
                         $mesto_sql $old_rubrik_sql AND $rubrik_prop_sql AND
                         $where_filter_sql
-                        ".$where_n.$q_sql."
+                        ".$where_n.$q_sql.$daynumber_sql.$user_email_sql."
                         AND n1.n_id = n.n_id
                         AND n.t_id = t.t_id
                         ORDER BY n.date_add DESC
@@ -410,7 +431,7 @@ class AdminadvertController extends Controller
                 array(
                     'select'=>'n_id, town.name as town_name, town.transname as town_transname',
                     'condition'=>' 1 AND '.$expire_sql.
-                        $mesto_rub_sql." $old_rubrik_sql AND ".$rubrik_sql.$q_sql,
+                        $mesto_rub_sql." $old_rubrik_sql AND ".$rubrik_sql.$q_sql.$daynumber_sql.$user_email_sql,
                     'order'=>'t.date_add DESC',
                     'limit'=>2000,
                     'params'=>array(':q_sql'=>'%'.$_GET['params']['q'].'%')
@@ -430,7 +451,7 @@ class AdminadvertController extends Controller
                 array(
                     'select'=>'*, town.name as town_name, town.transname as town_transname',
                     'condition'=>' 1 AND '.$expire_sql.
-                        $mesto_rub_sql." $old_rubrik_sql AND   ".$rubrik_sql.$q_sql,
+                        $mesto_rub_sql." $old_rubrik_sql AND   ".$rubrik_sql.$q_sql.$daynumber_sql.$user_email_sql,
                     'order'=>'t.date_add DESC',
                     'limit'=>$col_on_page,
                     'offset'=>$start,

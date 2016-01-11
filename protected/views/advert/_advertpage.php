@@ -128,11 +128,19 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                             {
                                 $valuta_symbol = 'Р';
                             }
+
+                            $page_title = htmlspecialchars($mainblock['title'])." в г. ".$mainblock_data['town']->name;
+                            $this->pageTitle = $page_title;
+                            $alt_img = "";
+                            if($i == 1)
+                            {
+                                $alt_img = $page_title;
+                            }
                         ?>
                             <a href="<?= Notice::getPhotoName($part_path.$uval, "_big");?>"><img data-big="<?= Notice::getPhotoName($part_path.$uval, "_huge");?>" src="<?= Notice::getPhotoName($part_path.$uval, "_thumb");?>" data-title="<?= htmlspecialchars($mainblock['title']). " за ".Notice::costCalcAndView(
                                     $mainblock['cost_valuta'],
                                     $mainblock['cost'],
-                                    Yii::app()->request->cookies['user_valuta_view']->value)." ".$valuta_symbol;?>" data-description="<?= htmlspecialchars($mainblock['title']);?>"></a>
+                                    Yii::app()->request->cookies['user_valuta_view']->value)." ".$valuta_symbol;?>" data-description="<?= htmlspecialchars($mainblock['title']);?>" alt="<?= $alt_img;?>"></a>
                         <?
                         }
 
@@ -211,7 +219,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                 <?= $region_str.", ".$mainblock_data['country']->name;?>
                 </span>
 
-                    <div style="background-color: #f00; color: #fff; font-size: 14px;">
+                    <div style="background-color: #f00; color: #fff; font-size: 14px; padding: 5px;">
                     К сожалению, данное объявление потеряло актуальность за сроком давности. Сейчас Вы будете автоматически перенаправлены на похожие объявления в Вашем городе. Нажмите <a class="baralink" style="font-size: 14px;" href="/<?= $advert_url_category;?>">здесь</a>, если Ваш браузер не поддерживает автоматическую переадресацию.
                     <?
                     //Yii::app()->clientScript->registerMetaTag("5; URL=/".$advert_url_category, "archive", "refresh");
@@ -222,6 +230,29 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
             <?
             }
 
+            ?>
+
+            <?
+            if($mainblock['u_id'] == Yii::app()->user->id || Yii::app()->user->isAdmin())
+            {
+                if($mainblock['active_tag'] == 0)
+                {
+                ?>
+                <div style="background-color: #f00; padding: 5px; width: 682px; margin-top: 10px; color: #fff;">
+                    Объявление неактивно и поэтому не доступно к просмотру другими пользователями!
+                </div>
+                <?
+                }
+
+                if($mainblock['verify_tag'] == 0)
+                {
+                ?>
+                    <div style="background-color: #f00; padding: 5px;  width: 682px; margin-top: 10px; color: #fff;">
+                        Объявление еще не верифицировано и поэтому не доступно к просмотру другими пользователями!
+                    </div>
+                <?
+                }
+            }
             ?>
 
 

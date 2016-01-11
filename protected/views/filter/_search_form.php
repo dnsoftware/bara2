@@ -3,7 +3,8 @@
         <span myhint="Тестовая кнопка" style="display: none; background-color: #aaaaaa;" onclick="changeFilterReload('<?= Yii::app()->createUrl('filter/getdatafilter');?>')">
             Фильтр
         </span>
-
+<?
+?>
     <table  style="display: inline; width: 100%;">
         <tr style="background-color: #eee;">
             <td style="border: #000020 solid 0px; padding: 0px 0px 0px 5px;">

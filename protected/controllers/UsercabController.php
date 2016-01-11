@@ -60,7 +60,7 @@ class UsercabController extends Controller
 
         if($useradverts_temp = Notice::model()->findAll(array(
             'select'=>'*',
-            'condition'=>'u_id = '.Yii::app()->user->id,
+            'condition'=>'u_id = '.Yii::app()->user->id." AND deleted_tag = 0 ",
             'order'=>'date_add DESC'
         )))
         {
@@ -88,7 +88,7 @@ class UsercabController extends Controller
         $props_array = array();
         if($useradverts_temp = Notice::model()->findAll(array(
             'select'=>'*',
-            'condition'=>'u_id = '. Yii::app()->user->id . $sql_rub,
+            'condition'=>'u_id = '. Yii::app()->user->id ." AND deleted_tag = 0 ". $sql_rub,
             'order'=>'date_add DESC',
         )))
         {
@@ -313,6 +313,29 @@ class UsercabController extends Controller
         Yii::app()->end();
 
     }
+
+
+    // Пометка удаленности объявы
+    public function actionUserAdvertDel()
+    {
+        $n_id = intval($_POST['n_id']);
+
+        $advert = Notice::model()->findByPk($n_id);
+        if($advert->u_id == Yii::app()->user->id)
+        {
+            $advert->deleted_tag = 1;
+            if($advert->save())
+            {
+                echo "del";
+            }
+        }
+        else
+        {
+            echo "baduser";
+        }
+
+    }
+
 
     // Uncomment the following methods and override them if needed
 	/*

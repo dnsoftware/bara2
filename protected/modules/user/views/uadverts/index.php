@@ -29,6 +29,10 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
     <?
     foreach($parent_rubriks as $pkey=>$pval)
     {
+        if($pval->hide_tag == 1)
+        {
+            continue;
+        }
     ?>
     <tr>
             <td><a  class="baralink" href="/user/uadverts/<?= $u_id;?>/<?= $pval->transname;?>/"><?= $pval->name;?></a></td> <td><?= $parent_ids_count[$pval->r_id];?></td>

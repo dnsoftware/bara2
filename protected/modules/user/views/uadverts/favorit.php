@@ -76,12 +76,15 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
     </div>
 
     </td>
-
+<?
+?>
     <td style="800px; vertical-align: top">
 
         <table style="">
             <?
             //deb::dump(count($search_adverts));
+          if(count($search_adverts) > 0)
+          {
             foreach($search_adverts as $key=>$val)
             {
                 ?>
@@ -121,6 +124,7 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
                 </tr>
             <?
             }
+          }
             ?>
         </table>
 

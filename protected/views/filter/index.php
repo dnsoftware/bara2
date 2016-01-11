@@ -219,7 +219,10 @@ if(count($rubrik_groups) > 0)
 {
     foreach ($rubrik_groups as $rkey=>$rval)
     {
-
+        if($rval->hide_tag == 1)
+        {
+            continue;
+        }
         ?>
         <a style="margin-right: 0px;" class="baralink_plus" href="<?= Yii::app()->createUrl($rval['path']);?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
     <?
@@ -317,13 +320,24 @@ if(count($rubrik_groups) > 0)
         </table>
 
         <?
-        $page_url = preg_replace('|&page=\d+?|siU', '', Yii::app()->getRequest()->getUrl());
+        $page_url = Yii::app()->getRequest()->getUrl();
+//deb::dump($page_url);
+        $page_substr = '&page';
+        if(strpos($page_url, '?') === false || strpos($page_url, '/?page') !== false)
+        {
+            $page_substr = '/?page';
+        }
+//deb::dump($page_substr);
+
+        $page_url = preg_replace('|&page=\d+?|siU', '', $page_url);
+        $page_url = preg_replace('|/\?page=\d+?|siU', '', $page_url);
+//deb::dump($page_url);
         if($kolpages > 1)
         {
             for($i=1; $i<=$kolpages; $i++)
             {
             ?>
-                <a href="<?= $page_url;?>&page=<?= $i;?>"><?= $i;?></a>
+                <a href="<?= $page_url;?><?= $page_substr;?>=<?= $i;?>"><?= $i;?></a>
             <?
             }
         }

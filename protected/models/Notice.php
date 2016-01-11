@@ -102,7 +102,7 @@ class Notice extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-            array('u_id, r_id, parent_r_id, t_id, reg_id, c_id, date_add, date_lastedit, expire_period, date_expire, client_name, client_email, client_phone_c_id, active_tag, verify_tag, checksum,  views_count, moder_counted_tag, cost, cost_valuta', 'required'),
+            array('u_id, r_id, parent_r_id, t_id, reg_id, c_id, date_add, date_lastedit, expire_period, date_expire, client_name, client_email, client_phone_c_id, active_tag, verify_tag, checksum,  views_count, moder_counted_tag', 'required'), // , cost, cost_valuta
 
             array('u_id, r_id, t_id, reg_id, c_id, expire_period, active_tag, verify_tag, deactive_moder_id, moder_tag, moder_id, views_count, deleted_tag, otkaz_id, moder_counted_tag', 'numerical', 'integerOnly'=>true),
 			array('date_add, date_lastedit, date_expire, date_deactive, date_moder, date_delete, date_sort', 'length', 'max'=>14),
@@ -549,7 +549,11 @@ class Notice extends CActiveRecord
 
             // Генерация ссылки на объяву
             $transliter = new Supporter();
-            $advert_page_url = $val['town_transname']."/".$rubriks_all_array[$val['r_id']]->transname."/".$transliter->TranslitForUrl($val['title'])."_".$val['daynumber_id'];
+
+            preg_match('|<a class="baralink"[^>]+>(.+)</a>|siU', $short_advert_display, $match);
+            $title_ankor = $match[1];
+
+            $advert_page_url = $val['town_transname']."/".$rubriks_all_array[$val['r_id']]->transname."/".$transliter->TranslitForUrl($title_ankor/*$val['title']*/)."_".$val['daynumber_id'];
             //deb::dump($advert_page_url);
             $short_advert_display = str_replace('[[advert_page_url]]', Yii::app()->createUrl($advert_page_url), $short_advert_display);
 
@@ -958,6 +962,66 @@ class Notice extends CActiveRecord
         //die();
     }
 
+
+    // Выбираем какой индекс будем использовать в filter запросах
+    // используем $expire_sql, $mesto_sql, $rubrik_sql
+    public static function GetUseIndexSql($expire_sql, $mesto_sql, $rubrik_sql, $mesto_use_index_prefix)
+    {
+        /*
+        deb::dump($expire_sql);
+        echo "<br>";
+        deb::dump($mesto_sql);
+        echo "<br>";
+        deb::dump($rubrik_sql);
+        /**/
+
+        $expire_use_tag = 0;
+        $mesto_use_tag = 0;
+        $rubrik_use_tag = 0;
+        if(trim($expire_sql) != '')
+        {
+            $expire_use_tag = 1;
+        }
+        if(trim($mesto_sql) != '1')
+        {
+            $mesto_use_tag = 1;
+        }
+        if(trim($rubrik_sql) != '1')
+        {
+            $rubrik_use_tag = 1;
+        }
+
+        $use_index_sql = " ";
+        if(!$rubrik_use_tag)
+        {
+            if($mesto_use_tag && $expire_use_tag)
+            {
+                $use_index_sql = " use index (date_expire_and_".$mesto_use_index_prefix.") ";
+            }
+
+            if($mesto_use_tag && !$expire_use_tag)
+            {
+                $use_index_sql = " use index (avd_index, ".$mesto_use_index_prefix.") ";
+            }
+
+        }
+        else
+        {
+            if($mesto_use_tag && $expire_use_tag)
+            {
+                $use_index_sql = " use index (r_id_and_date_expire_and_".$mesto_use_index_prefix.") ";
+            }
+
+            if($mesto_use_tag && !$expire_use_tag)
+            {
+                $use_index_sql = " use index (r_id_and_".$mesto_use_index_prefix.") ";
+            }
+
+        }
+
+        return $use_index_sql;
+
+    }
 
 
 	/**

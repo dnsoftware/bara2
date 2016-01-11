@@ -15,6 +15,12 @@ class AdvertController extends Controller
 
     public function actionAddadvert()
 	{
+        if(Yii::app()->user->id <= 0)
+        {
+            Yii::app()->session['redirurl'] = '/advert/addadvert';
+            $this->redirect(Yii::app()->createUrl('/user/login'));
+        }
+
         $rub_array = Rubriks::get_rublist();
 //    deb::dump(Yii::app()->session['addfield']);
 
@@ -2303,9 +2309,10 @@ class AdvertController extends Controller
 
         if($advert = Notice::model()->find(array(
             'select'=>'*',
-            'condition'=>'daynumber_id = "'.$daynumber_id.'" AND active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 '
+            'condition'=>'daynumber_id = "'.$daynumber_id.'"  AND deleted_tag = 0 '
         )))
         {
+
             $props_relate = RubriksProps::model()->with('notice_props')->findAll(array(
                 'select'=>'*',
                 'condition'=>'r_id='.$advert->r_id . " AND n_id=".$advert->n_id,
@@ -2390,8 +2397,8 @@ class AdvertController extends Controller
 
 
             // В отладочных целях (для показа просроченных) блок условий вынесен в переменную
-            $where_adv = ' ';
-            //$where_adv = " $expire_sql n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND  ";
+            //$where_adv = ' ';
+            $where_adv = " $expire_sql n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND  ";
 
             if(trim($where_sql) != '')
             {
@@ -2555,31 +2562,50 @@ class AdvertController extends Controller
             $rub_array = Rubriks::get_rublist();
             Yii::app()->params['footer_keyword'] = $mainblock['keyword_2'];
 
-            $this->render('viewadvert', array(
-                'mainblock'=>$mainblock,
-                'addfield'=>$addfield,
-                'uploadfiles_array'=>$this->uploadfiles_array,
-                'mainblock_data'=>$this->mainblock_data,
-                'addfield_data'=>$this->addfield_data,
-                'options'=>$this->options,
-                'rub_array'=>$rub_array,
-                'mselector'=>$mselector,
-                'm_id'=>$m_id,
-                'breadcrumbs'=>$breadcrumbs,
-                'user'=>$user,
+            if( ($advert->active_tag == 1 && $advert->verify_tag == 1)
+                    || $advert->u_id == Yii::app()->user->id || Yii::app()->user->isAdmin()
+            )
+            {
+                $this->render('viewadvert', array(
+                    'mainblock'=>$mainblock,
+                    'addfield'=>$addfield,
+                    'uploadfiles_array'=>$this->uploadfiles_array,
+                    'mainblock_data'=>$this->mainblock_data,
+                    'addfield_data'=>$this->addfield_data,
+                    'options'=>$this->options,
+                    'rub_array'=>$rub_array,
+                    'mselector'=>$mselector,
+                    'm_id'=>$m_id,
+                    'breadcrumbs'=>$breadcrumbs,
+                    'user'=>$user,
 
-                'similar_adverts'=>$similar_adverts,
-                'similar_photos'=>$similar_photos,
-                'subrub_array'=>$subrub_array,
-                'towns_array'=>$towns_array,
-                'path_category'=>$path_category,
-            ));
+                    'similar_adverts'=>$similar_adverts,
+                    'similar_photos'=>$similar_photos,
+                    'subrub_array'=>$subrub_array,
+                    'towns_array'=>$towns_array,
+                    'path_category'=>$path_category,
+                ));
+            }
+            else
+            {
+                $message = "Нет такого объявления";
+                $this->render('error', array(
+                    'message'=>$message,
+                ));
+
+            }
+
+
 
 
         }
         else
         {
-            echo "Нет такого объявления";
+            $message = "Нет такого объявления";
+            $this->render('error', array(
+                'message'=>$message,
+            ));
+
         }
 
 

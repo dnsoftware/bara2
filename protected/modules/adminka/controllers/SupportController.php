@@ -88,6 +88,7 @@ class SupportController extends Controller
     // Старт импорта старой базы юзеров
     public function actionStartImportUserbase()
     {
+
         /*
         $users = User::model()->findAll(array(
             'select'=>'id',
@@ -96,24 +97,27 @@ class SupportController extends Controller
 
         foreach($users as $ukey=>$uval)
         {
-            $profile = new Profile();
-            $profile->user_id = $uval->id;
-            $profile->first_name = null;
-            $profile->last_name = null;
-            $profile->save();
+            if(!$search_profile = Profile::model()->findByPk($uval->id))
+            {
+                $profile = new Profile();
+                $profile->user_id = $uval->id;
+                $profile->first_name = null;
+                $profile->last_name = null;
+                $profile->save();
+            }
         }
         */
 
 
 
         die('Уже импортировано, если нужно снова - уберите die() в SupportController');
-        // Плюс выставить регулярку d User.php чтобы пропускаля все username
+        // Плюс выставить регулярку в User.php чтобы пропускаля все username
 
         $connection = Yii::app()->db_old;
 
         $sql = "SELECT * FROM
                 ". $connection->tablePrefix . "users u
-                WHERE id > 220789 AND login <> 'admin'
+                WHERE id > 222564 AND login <> 'admin'
                 ORDER BY id
 
                 ";

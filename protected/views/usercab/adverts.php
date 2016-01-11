@@ -75,14 +75,16 @@ $this->renderPartial('application.views.filter._search_form', array(
 
         <td style="800px; vertical-align: top">
 
+<?
 
+?>
             <table style="">
                 <?
                 //deb::dump(count($search_adverts));
                 foreach($search_adverts as $key=>$val)
                 {
                     ?>
-                    <tr style="">
+                    <tr style="" id="tradv_<?= $val['n_id'];?>">
                         <td style="padding: 0 10px 0 0; margin: 0; width: 140px; height: 105px; vertical-align: middle; text-align: center; border: #000 solid 0px;">
                             <div style="position: relative;">
                                 <?
@@ -111,13 +113,17 @@ $this->renderPartial('application.views.filter._search_form', array(
                         </td>
                         <td style="vertical-align: top; padding: 0; margin: 0; padding-left: 10px;">
                             <?= $props_array[$key]['props_display'];?>
+                        </td>
+                        <td>
                             <div>
                                 <a href="<?= Yii::app()->createUrl('usercab/advert_edit', array('n_id'=>$val['n_id']));?>">Редактировать</a>
+
+                                <span class="imgnot_del" id="imgdel_<?= $val['n_id'];?>" style="cursor: pointer; border-bottom: #003399 solid 1px;color: #06C;" onclick="advert_del(<?= $val['n_id'];?>);">Удалить</span>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <td style="height: 10px;"></td><td></td>
+                        <td style="height: 10px;" colspan="3"></td>
                     </tr>
                 <?
                 }
@@ -127,6 +133,17 @@ $this->renderPartial('application.views.filter._search_form', array(
         </td>
     </tr>
 </table>
+
+<div id="advert_del" style="background-color: #eee; border: #aaa solid 1px; width: 250px; height: 100px; position: absolute; top: 50px; text-align: center; display: none;">
+    <div>Объявление</div>
+    <div style="font-weight: bold;" id="del_advert_name"></div>
+    <div>будет удалено</div>
+
+    <br>
+    <span id="span_advkill" style="border: #aaa solid 1px; padding: 3px; cursor: pointer;" >&nbsp;Удалить&nbsp;</span>
+    <span style="border: #aaa solid 1px; padding: 3px; cursor: pointer; margin-left: 50px;" onclick="$('#advert_del').css('display', 'none');">&nbsp;Отмена&nbsp;</span>
+
+</div>
 
 
 <script>
@@ -158,6 +175,41 @@ $this->renderPartial('application.views.filter._search_form', array(
         });
 
     });
+
+    function advert_del(n_id)
+    {
+        $('#span_advkill').unbind('click');
+        $('#span_advkill').click(function(){
+
+            $.ajax({
+                type: 'POST',
+                url: '<?= Yii::app()->createUrl('usercab/useradvertdel');?>',
+                data: 'n_id='+n_id,
+                success: function(msg){
+                    if(msg == 'del')
+                    {
+                        $('#advert_del').css('display', 'none');
+                        $('#tradv_'+n_id).fadeOut(800);
+                    }
+
+                    if(msg == 'baduser')
+                    {
+                        alert("Удаление невозможно! Неверный пользователь!");
+                    }
+
+                }
+            });
+        });
+
+        $('#advert_del').css('display', 'block');
+        $('#del_advert_name').html($('#advtitul_'+n_id).html());
+        $('#advert_del').offset({
+            left: $('#imgdel_'+n_id).offset().left-230,
+            top: $('#imgdel_'+n_id).offset().top+16
+        });
+
+    }
+
 </script>
 
 

@@ -73,7 +73,6 @@ class LoginController extends Controller
 
         else
         if (Yii::app()->user->isGuest) {
-
 			$model=new UserLogin;
 			// collect user input data
 			if(isset($_POST['UserLogin']))
@@ -85,7 +84,13 @@ class LoginController extends Controller
 
 					if (Yii::app()->user->returnUrl=='/index.php')
 						$this->redirect(Yii::app()->controller->module->returnUrl);
-					else
+					else if(isset(Yii::app()->session['redirurl']) && Yii::app()->session['redirurl'] != '')
+                    {
+                        $redirurl = Yii::app()->session['redirurl'];
+                        unset(Yii::app()->session['redirurl']);
+                        $this->redirect($redirurl);
+                    }
+                    else
 						$this->redirect(Yii::app()->user->returnUrl);
 				}
 			}

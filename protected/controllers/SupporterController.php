@@ -516,7 +516,7 @@ class SupporterController extends Controller
             {
                 $country = Countries::model()->findByPk($advert->client_phone_c_id);
 
-                $width = 115;
+                $width = 130;
                 $return = '+'.$country->phone_kod.' '.$advert->client_phone;
             }
             else
