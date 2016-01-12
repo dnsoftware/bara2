@@ -416,8 +416,9 @@ class AdvertController extends Controller
             $block_display = 'block';
 
             $block_display = 'none';
+        //deb::dump($mval);
             //if( ($mval->hierarhy_tag == 1 && ($mval->hierarhy_level == 1 || $mval->hierarhy_level == 2)) || $mval->hierarhy_tag == 0 )
-            if( ($mval->hierarhy_tag == 1 && $mval->hierarhy_level == 1) )
+            if( ($mval->hierarhy_tag == 1 && $mval->hierarhy_level == 1) || $mval->vibor_type == 'photoblock')
             {
                 $block_display = 'block';
             }
@@ -1267,7 +1268,8 @@ class AdvertController extends Controller
 
             </div>
 
-
+            <div style="margin-top: 5px;">Фото, выделенное красной рамкой будет в объявлении основным.
+                <br>Значок <img src="/images/rotate.png"> позволяет переворачивать загруженную фотографию</div>
         </div>
 
         <script>
@@ -1573,7 +1575,7 @@ class AdvertController extends Controller
         else
         {
             $return_array['status'] = 'error';
-            $return_array['message'] = 'Есть ошибки';
+            $return_array['message'] = 'Объявление НЕ ОПУБЛИКОВАНО по причине неполного или некорректного заполнения всех обязательных данных (выделено красным)';
         }
 
 

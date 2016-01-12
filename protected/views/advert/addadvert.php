@@ -480,7 +480,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
     <label id="lbl-title" class="add-form-label"><?= Notice::model()->getAttributeLabel('title');?>:</label>
     <div class="add-input-block">
         <div class="input-field-border" id="input-error-title">
-            <input class="form-input-text" style="width: 500px;" type="text" name="mainblock[title]" id="title" value="<?= htmlspecialchars($this->getMainblockValue($model, 'title'));?>">
+            <input class="form-input-text" style="width: 600px;" type="text" name="mainblock[title]" id="title" value="<?= htmlspecialchars($this->getMainblockValue($model, 'title'));?>">
         </div>
         <div class="input-error-msg"></div>
     </div>
@@ -491,7 +491,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
     <label id="lbl-notice_text" class="add-form-label"><?= Notice::model()->getAttributeLabel('notice_text');?>:</label>
     <div class="add-input-block">
         <div class="input-field-border" id="input-error-notice_text">
-            <textarea style="width: 500px; height: 100px;" name="mainblock[notice_text]" id="title"><?= $this->getMainblockValue($model, 'notice_text');?></textarea>
+            <textarea style="width: 600px; height: 100px;" name="mainblock[notice_text]" id="title"><?= $this->getMainblockValue($model, 'notice_text');?></textarea>
         </div>
         <div class="input-error-msg"></div>
     </div>
@@ -685,9 +685,9 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 </script>
 
 
-<div id="status" style="clear: both;"></div>
+<div id="status" style="clear: both; font-size: 16px; text-align: center; margin: 10px; margin-top: 30px; color: #f00;"></div>
 
-<div class="form-row">
+<div class="form-row" style="text-align: center;">
     <?
     if($n_id <= 0)
     {
@@ -698,7 +698,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
         $button_text = "Сохранить";
     }
     ?>
-    <input type="submit" name="" value="<?= $button_text;?>">
+    <input type="submit" name="" value="<?= $button_text;?>" style="font-size: 20px; margin: 10px; background-color: #259c1d; color: #fff; border: #268017 solid 1px; padding-bottom: 2px; border-radius: 3px;">
 </div>
 
 </form>

@@ -4,7 +4,7 @@
 
 function RotateImage(image, photo_filename_md5, fileload_id)
 {
-    image.before('<div id="rotate_'+photo_filename_md5+'" style="width: 16px; height: 16px; background-image: url(/images/icons/reload.gif);position: relative; left: 0px; top: 0px; float: left;"></div>');
+    image.before('<div id="rotate_'+photo_filename_md5+'" style="width: 16px; height: 16px; cursor: pointer; background-image: url(/images/rotate.png);position: relative; left: 0px; top: 0px; float: left;"></div>');
 
     rotate = $('#rotate_'+photo_filename_md5);
     rotate.click(function(){

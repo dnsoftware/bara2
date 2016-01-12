@@ -65,7 +65,7 @@
             dragDropHoverClass: "state-hover",
             errorClass: "ajax-file-upload-error",
             uploadButtonClass: "ajax-file-upload",
-            dragDropStr: "<span><b>Drag &amp; Drop Files</b></span>",
+            dragDropStr: "<span><b>перетащите картинки сюда</b></span>",
             abortStr: "Abort",
             cancelStr: "Cancel",
             deletelStr: "Delete",

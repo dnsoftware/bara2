@@ -30,16 +30,27 @@ header("Content-type: text/html; charset=utf-8");
 
     <!--<link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl; ?>/yii/framework/web/js/source/jui/css/base/jquery-ui.css" />
     -->
+    <!-- BEGIN JIVOSITE CODE {literal} -->
+    <script type='text/javascript'>
+        (function(){ var widget_id = 'qNIlckKhzn';
+            var s = document.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = '//code.jivosite.com/script/widget/'+widget_id; var ss = document.getElementsByTagName('script')[0]; ss.parentNode.insertBefore(s, ss);})();</script>
+    <!-- {/literal} END JIVOSITE CODE -->
 
 	<title><?php echo CHtml::encode($this->pageTitle); ?></title>
 </head>
 
 <body>
 
+<div style="width: 100%; padding: 16px; text-align: center;"></div>
+<?
+/*
+?>
 <div style="width: 100%; background-color: #f00; color: #fff; padding: 5px; text-align: center;">
     Уважаемые посетители! Наш сайт переезжает на новое программное обеспечение. <br>
     В связи с этим в работе сайта могут возникнуть ошибки или неточности. Просьба сообщать нам о них
     <span id="user_message" style="border-bottom: #fff solid 1px; cursor: pointer;">здесь</span></div>
+/**/
+?>
 
 <div class="container" id="page" style="border: #000020 solid 0px;">
 	<div id="header">

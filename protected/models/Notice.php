@@ -991,6 +991,14 @@ class Notice extends CActiveRecord
             $rubrik_use_tag = 1;
         }
 
+        /*
+        deb::dump($expire_use_tag);
+        echo "<br>";
+        deb::dump($mesto_use_tag);
+        echo "<br>";
+        deb::dump($rubrik_use_tag);
+        /**/
+
         $use_index_sql = " ";
         if(!$rubrik_use_tag)
         {
@@ -1004,6 +1012,10 @@ class Notice extends CActiveRecord
                 $use_index_sql = " use index (avd_index, ".$mesto_use_index_prefix.") ";
             }
 
+            if(!$mesto_use_tag && $expire_use_tag)
+            {
+                $use_index_sql = " use index (avd_index, date_expire) ";
+            }
         }
         else
         {

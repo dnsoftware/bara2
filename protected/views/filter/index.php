@@ -142,6 +142,7 @@ $this->renderPartial('/filter/_search_form', array(
             echo "<span class='baralink'> > </span>";
         }
     }
+
     ?>
 </div>
 

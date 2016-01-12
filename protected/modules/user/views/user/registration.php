@@ -65,25 +65,31 @@ $this->breadcrumbs=array(
 ?>
         <div class="row" id="div_company_name" style="display: none;">
             <?php echo $form->textField($model,'company_name', array(
+                'class'=>'regfield',
                 'placeholder'=>'Название компании',
                 'style'=>'font-size:18px; width: 350px;'
             )); ?>
+            <div class="reg_hint">Название компании</div>
             <?php echo $form->error($model,'company_name'); ?>
         </div>
 
         <div class="row" id="div_privat_name">
             <?php echo $form->textField($model,'privat_name', array(
+                'class'=>'regfield',
                 'placeholder'=>'Ваше имя',
                 'style'=>'font-size:18px; width: 350px;'
             )); ?>
+            <div class="reg_hint">Ваше имя</div>
             <?php echo $form->error($model,'privat_name'); ?>
         </div>
 
         <div class="row">
             <?php echo $form->textField($model,'email', array(
+                'class'=>'regfield',
                 'placeholder'=>'Электронная почта',
                 'style'=>'font-size:18px; width: 350px;'
             )); ?>
+            <div class="reg_hint">Ваш адрес электронной почты. Указывайте реальный адрес, т.к. на него придет письмо, необходимое для завершения регистрации</div>
             <?php echo $form->error($model,'email'); ?>
         </div>
 
@@ -101,9 +107,11 @@ $this->breadcrumbs=array(
                 'style'=>'font-size:18px; width: 250px;'
             )); ?>
             <?php echo $form->textField($modelphone,'phone', array(
+                'class'=>'regfield',
                 'placeholder'=>'Номер телефона',
                 'style'=>'font-size:18px; width: 150px;'
             )); ?>
+            <div class="reg_hint">Для пользователей региона Россия возможно указывать только мобильные номера телефонов. Указывайте только реальные номера, так как прежде чем публиковать их в объявлениях необходимо будет подтвердить владение телефонным номером</div>
             <?php echo $form->error($modelphone,'phone'); ?>
         </div>
 
@@ -126,9 +134,11 @@ $this->breadcrumbs=array(
 
         <div class="row">
             <?php echo $form->passwordField($model,'password', array(
+                'class'=>'regfield',
                 'placeholder'=>'Пароль',
                 'style'=>'font-size:18px; width: 350px;'
             )); ?>
+            <div class="reg_hint">Наберите пароль</div>
             <?php echo $form->error($model,'password'); ?>
             <!--
             <p class="hint">
@@ -139,9 +149,11 @@ $this->breadcrumbs=array(
 
         <div class="row">
             <?php echo $form->passwordField($model,'verifyPassword', array(
+                'class'=>'regfield',
                 'placeholder'=>'Пароль еще раз',
                 'style'=>'font-size:18px; width: 350px;'
             )); ?>
+            <div class="reg_hint">Подтвердите пароль</div>
             <?php echo $form->error($model,'verifyPassword'); ?>
         </div>
 
@@ -178,9 +190,11 @@ $this->breadcrumbs=array(
                 <tr>
                 <td style="padding-top: 0px; border: #000020 solid 0px;">
                 <?php echo $form->textField($model,'verifyCode', array(
+                    'class'=>'regfield',
                     'placeholder'=>'Текст с картинки',
                     'style'=>'font-size:18px; width: 150px; margin:0; margin-top: 6px;'
                 )); ?>
+                  <div class="reg_hint">Защита от автоматических регистраций</div>
                 </td>
                 <td style="border: #000020 solid 0px;">
                 <?php $this->widget('CCaptcha', array(
@@ -190,6 +204,7 @@ $this->breadcrumbs=array(
                     'buttonLabel' => CHtml::image(Yii::app()->baseUrl.'/images/icons/reload.gif'),
                 ));
                 ?>
+
                 </td>
                 </tr>
                 </table>
@@ -297,4 +312,31 @@ $this->breadcrumbs=array(
         $('#div_company_name').css('display', 'block');
     });
 
+    $('.regfield').focus(function(){
+        $('.reg_hint').css('display', 'none');
+        field = $(this);
+        field.next('.reg_hint').css('display', 'inline-block');
+        field_coord = field.offset();
+
+        if(field.attr('id') == 'RegistrationForm_verifyCode')
+        {
+            field.next('.reg_hint').offset({left: field.width() + field_coord.left + 200});
+        }
+
+    });
+
+    $('.regfield').focusout(function(){
+        $(this).next('.reg_hint').css('display', 'none');
+
+    });
 </script>
+
+<style>
+    .reg_hint
+    {
+        position: absolute; margin-left: 10px; margin-top: 3px;;
+        display: none;
+        padding: 5px;
+        background-color: #DBF0F9; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+</style>

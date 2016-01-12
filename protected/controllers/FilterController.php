@@ -738,7 +738,6 @@ class FilterController extends Controller
         // Если поиск только по местоположению/рубрике - простой запрос
         else
         {
-
             $mesto_rub_sql = str_replace(" n.", " t.", $mesto_sql);
             $q_sql = str_replace(" n.", " t.", $q_sql);
 

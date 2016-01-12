@@ -233,7 +233,8 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
             ?>
 
             <?
-            if($mainblock['u_id'] == Yii::app()->user->id || Yii::app()->user->isAdmin())
+            if( ($mainblock['u_id'] == Yii::app()->user->id || Yii::app()->user->isAdmin())
+                && Yii::app()->controller->action->id == 'viewadvert')
             {
                 if($mainblock['active_tag'] == 0)
                 {
