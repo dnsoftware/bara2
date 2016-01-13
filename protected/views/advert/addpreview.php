@@ -21,18 +21,11 @@ $this->renderPartial('_advertpage', array(
 
 if(Yii::app()->user->id > 0)
 {
-    echo "Вы залогинены, все ок";
+    /*
     ?>
-    <form id="savenew" method="post" action="<?= Yii::app()->createUrl('advert/savenew');?>">
-    <table style="width: 400px;">
-        <tr>
-            <td>
-                <input type="submit" value="Опубликовать">
-            </td>
-        </tr>
-    </table>
-    </form>
+    <a href="<?= Yii::app()->createUrl('advert/savenew');?>">Опубликовать</a>
     <?
+    */
 }
 else
 {
@@ -117,6 +110,57 @@ else
 
 ?>
 
+<div id="boxes">
+    <div id="dialog" class="window">
+        <div class="content">Ваше объявление почти опубликовано!<br>
+            Проверьте, как оно будет выглядеть на сайте и если все в порядке - нажмите кнопку "Опубликовать", если требуется редактирование, нажмите кнопку "Редактировать"</div>
+        <div ><span class="close"/>OK</span></div>
+    </div>
+</div>
+
+<!-- Маска, затемняющая фон -->
+<div id="mask"></div>
+
+
+<style>
+
+    #mask {
+        position:absolute;
+        left:0;
+        top:0;
+        z-index:9000;
+        background-color:#000;
+        display:none;
+    }
+    #boxes .window {
+        position:absolute;
+        left:0;
+        top:0px;
+        -top: 40px;
+        width:440px;
+        height:200px;
+        display:none;
+        z-index:9999;
+        padding: 20px;
+        overflow: hidden;
+        text-align: center;
+    }
+    #boxes #dialog {
+        width:375px;
+        height:203px;
+        padding:10px;
+        background-color:#ffffff;
+    }
+    .close {
+        text-align: center;
+        border: #ddd solid 1px; background-color: #dedede; cursor: pointer; padding: 5px;;
+    }
+    .content {
+        padding-top: 35px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+</style>
 
 <script>
     function SendUserForm()
@@ -154,6 +198,32 @@ else
         });
     }
 
+    $(document).ready(function() {
+
+        //e.preventDefault();
+        var id = '#dialog';
+        var maskHeight = $(document).height();
+        var maskWidth = $(window).width();
+        $('#mask').css({'width':maskWidth,'height':maskHeight});
+        $('#mask').fadeIn(100);
+        $('#mask').fadeTo("slow",0.2);
+        var winH = $(window).height();
+        var winW = $(window).width();
+        $(id).css('top',  winH/2-$(id).height()/2);
+        $(id).css('left', winW/2-$(id).width()/2);
+        $(id).fadeIn(100);
+
+        $('.window .close').click(function (e) {
+            e.preventDefault();
+            $('#mask, .window').hide();
+        });
+
+        $('#mask').click(function () {
+            $(this).hide();
+            $('.window').hide();
+        });
+
+    });
 
 </script>
 

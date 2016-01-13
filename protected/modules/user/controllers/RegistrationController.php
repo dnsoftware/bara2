@@ -173,72 +173,95 @@ class RegistrationController extends Controller
         //echo $_POST['phone'];
         // Задержка на отправку от одного пользователя
         if( (isset(Yii::app()->session['usercheckphone_time'])
-                && (time() - Yii::app()->session['usercheckphone_time']) > 30)
+                && (time() - Yii::app()->session['usercheckphone_time']) > Yii::app()->params['smstimeout'])
             || !isset(Yii::app()->session['usercheckphone_time']) )
         {
 
 
             // проверяем наличие в базе
             // если в базе - сообщаем что телефон уже в базе, выход
-            if($phonerow = UserPhones::model()->findByAttributes(array(
+            $phonerow = UserPhones::model()->findByAttributes(array(
                 'c_id'=>$_POST['c_id'],
                 'phone'=>$_POST['phone'],
-                'verify_tag'=>1
-            )))
+                //'verify_tag'=>1
+            ));
+
+            if($phonerow && $phonerow->verify_tag == 1)
             {
-                echo 'inbase';
-            }
-            else
-            {
-                // если не в базе - заносим в сессию и отправляем смс с кодом, тег проверенности обнуляемс
-                Yii::app()->session['usercheckphone'] = $_POST['phone'];
-                Yii::app()->session['usercheckphone_code'] = rand(10000, 99999);
-                Yii::app()->session['usercheckphone_tag'] = 0;
-                Yii::app()->session['usercheckphone_time'] = time();
-
-
-                // Отправляем смс
-                $to_phone_number = trim(str_replace(' ', '', Yii::app()->session['usercheckphone']));
-                $to_phone_number = str_replace('-', '', $to_phone_number);
-                $countryrow = Countries::model()->findByPk(intval($_POST['c_id']));
-                $to_phone_number = '+'.$countryrow->phone_kod.$to_phone_number;
-                $bytehand = new ByteHandApi(array(
-                    'id' => Yii::app()->params['bytehand_id'],
-                    'key' => Yii::app()->params['bytehand_key'],
-                    'from'=> 'SMS-INFO'
-                ));
-
-                $res = $bytehand->send($to_phone_number,'Код подтверждения '.Yii::app()->session['usercheckphone_code'], 'utf-8');
-
-                if ($res->status != 0)
+                if($phonerow->u_id == Yii::app()->user->id)
                 {
-                    echo 'bytehand_error';
+                    echo 'youinbase';   // этот ваш телефон уже в базе и подтвержден
                 }
                 else
                 {
-                    Yii::app()->session['usercheckphone_message_id'] = $res->description;
-
-                    $details = $bytehand->get_details($res->description);
-
-                    // Заносим в лог
-                    $smssend_log = new UserPhonesSmsLog();
-                    $smssend_log->message_id = $res->description;
-                    $smssend_log->с_id = intval($_POST['c_id']);
-                    $smssend_log->phone = $_POST['phone'];
-                    $smssend_log->date_add = time();
-                    $smssend_log->verify_kod = Yii::app()->session['usercheckphone_code'];
-                    $smssend_log->status = $details->status;
-                    $smssend_log->error_code = 0;
-                    $smssend_log->description = $details->description;
-                    $smssend_log->posted_at = $details->posted_at;
-                    $smssend_log->updated_at = $details->updated_at;
-                    $smssend_log->parts = $details->parts;
-                    $smssend_log->cost = $details->cost;
-
-                    $smssend_log->save();
-
-                    echo 'send';
+                    echo 'inbase';      // этот телефон уже в базе подтвержден, но не ваш
                 }
+            }
+            else
+            if( ($phonerow && $phonerow->verify_tag == 0) || !$phonerow)
+            {
+                if( ($phonerow && $phonerow->u_id == Yii::app()->user->id)  || !$phonerow)
+                {
+                    // если не в базе - заносим в сессию и отправляем смс с кодом, тег проверенности обнуляемс
+                    Yii::app()->session['usercheckphone_c_id'] = $_POST['c_id'];
+                    Yii::app()->session['usercheckphone'] = $_POST['phone'];
+                    Yii::app()->session['usercheckphone_code'] = rand(10000, 99999);
+                    Yii::app()->session['usercheckphone_tag'] = 0;
+                    Yii::app()->session['usercheckphone_time'] = time();
+
+
+                    // Отправляем смс
+                    $to_phone_number = trim(str_replace(' ', '', Yii::app()->session['usercheckphone']));
+                    $to_phone_number = str_replace('-', '', $to_phone_number);
+                    $countryrow = Countries::model()->findByPk(intval($_POST['c_id']));
+                    $to_phone_number = '+'.$countryrow->phone_kod.$to_phone_number;
+                    $bytehand = new ByteHandApi(array(
+                        'id' => Yii::app()->params['bytehand_id'],
+                        'key' => Yii::app()->params['bytehand_key'],
+                        'from'=> 'SMS-INFO'
+                    ));
+
+                    $res = $bytehand->send($to_phone_number,'Код подтверждения '.Yii::app()->session['usercheckphone_code'], 'utf-8');
+
+                    //echo "send";
+
+
+                    if ($res->status != 0)
+                    {
+                        echo 'bytehand_error';
+                    }
+                    else
+                    {
+                        Yii::app()->session['usercheckphone_message_id'] = $res->description;
+
+                        $details = $bytehand->get_details($res->description);
+
+                        // Заносим в лог
+                        $smssend_log = new UserPhonesSmsLog();
+                        $smssend_log->message_id = $res->description;
+                        $smssend_log->с_id = intval($_POST['c_id']);
+                        $smssend_log->phone = $_POST['phone'];
+                        $smssend_log->date_add = time();
+                        $smssend_log->verify_kod = Yii::app()->session['usercheckphone_code'];
+                        $smssend_log->status = $details->status;
+                        $smssend_log->error_code = 0;
+                        $smssend_log->description = $details->description;
+                        $smssend_log->posted_at = $details->posted_at;
+                        $smssend_log->updated_at = $details->updated_at;
+                        $smssend_log->parts = $details->parts;
+                        $smssend_log->cost = $details->cost;
+
+                        $smssend_log->save();
+
+                        echo 'send';
+                    }
+                }
+                else
+                {
+                    echo 'inbase';
+                }
+
+
 
 
 
@@ -252,7 +275,7 @@ class RegistrationController extends Controller
         }
         else
         {
-            echo 'timeout'.(time() - Yii::app()->session['usercheckphone_time'] - 30);
+            echo 'timeout'.(time() - Yii::app()->session['usercheckphone_time'] - Yii::app()->params['smstimeout']);
         }
 
 
@@ -266,6 +289,33 @@ class RegistrationController extends Controller
                 && Yii::app()->session['usercheckphone'] == $_POST['phone'])
         {
                 Yii::app()->session['usercheckphone_tag'] = 1;
+
+                $u_id = Yii::app()->user->id;
+                $c_id = Yii::app()->session['usercheckphone_c_id'];
+                $phone = Yii::app()->session['usercheckphone'];
+                if(!$userphones = UserPhones::GetPhoneRow($u_id, $c_id, $phone))
+                {
+                    $userphones = new UserPhones();
+                    $userphones->u_id = $u_id;
+                    $userphones->c_id = $c_id;
+                    $userphones->phone = $phone;
+                    $userphones->date_add = time();
+                    $userphones->verify_kod = Yii::app()->session['usercheckphone_code'];
+                    $userphones->verify_tag = Yii::app()->session['usercheckphone_tag'];
+                    $userphones->message_id = Yii::app()->session['usercheckphone_message_id'];
+
+                    $userphones->save();
+                }
+                else
+                {
+                    $userphones->verify_kod = Yii::app()->session['usercheckphone_code'];
+                    $userphones->verify_tag = Yii::app()->session['usercheckphone_tag'];
+                    $userphones->message_id = Yii::app()->session['usercheckphone_message_id'];
+
+                    $userphones->save();
+                }
+
+
                 echo 'ok';
         }
         else

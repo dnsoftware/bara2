@@ -2,9 +2,28 @@
 Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/galleria/galleria-1.4.2.js');
 ?>
 
+<?
+if(Yii::app()->controller->action->id == 'addpreview')
+{
+?>
+<div style="width: 100%; text-align: center; margin-bottom: 20px;">
+    <?
+    if(Yii::app()->user->id > 0)
+    {
+//echo "Вы залогинены, все ок";
+        ?>
+        <a style="margin-left: 20px; padding: 8px; background-color: #f00; text-decoration: none; color: #fff; border-radius: 3px; font-size: 16px;" href="<?= Yii::app()->createUrl('advert/addadvert');?>">Редактировать</a>
+
+        <a style="margin-left: 20px; padding: 8px; background-color: #0D9D0D; text-decoration: none; color: #fff; border-radius: 3px; font-size: 16px;" href="<?= Yii::app()->createUrl('advert/savenew');?>">Опубликовать</a>
+    <?
+    }
+    ?>
+</div>
+<?
+}
+?>
 
 <h1 style="display: inline; font-size: 28px; padding: 3px 3px 3px 0; "><?= $mainblock['title'];?></h1>
-
 
 <span style=" margin-left: 10px; padding: 5px; padding-left: 6px; padding-right: 6px; display: inline; font-size: 22px; font-weight: normal;  background-color: #0D9D0D; color: #fff; text-align: center; ">
 
@@ -75,20 +94,40 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
 
 <div style="margin-top: 10px; margin-bottom: 5px; color: #000; border: #000020 solid 0px; ">
 <?
+    if(Yii::app()->controller->action->id == 'addpreview')
+    {
+        $mainblock['date_add'] = time();
+    }
+
     $date_add_str = date('d-m-Y H:i', $mainblock['date_add']);
     $day_string = Notice::TodayStrGenerate($mainblock['date_add'], 1);
 ?>
     <div style=" float: left; width: 682px; border: #000000 solid 0px;">
         <span style="padding-left: 15px; margin-right: 3px; background-image: url('/images/dateadd.png'); background-position: left center; background-repeat: no-repeat;" title="Время размещения объявления"></span> <?= $day_string;?>
 
+        <?
+        if(Yii::app()->controller->action->id != 'addpreview')
+        {
+        ?>
         <span style="float: right; color: #999;">№ объявления: <?= $mainblock['daynumber_id'];?></span>
+        <?
+        }
+        ?>
 
     </div>
 
+    <?
+    if(Yii::app()->controller->action->id != 'addpreview')
+    {
+    ?>
     <div style="float: right; clear: right;">
         Просмотров: всего <?= $mainblock['counter_total']+1;?>, сегодня <?= $mainblock['counter_daily']+1;?>
         <img src="<?= Yii::app()->createUrl('supporter/advertcounter', array('n_id'=>$mainblock['n_id']));?>" width="0">
     </div>
+    <?
+    }
+    ?>
+
     <br>
 </div>
 
@@ -98,6 +137,7 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
         <td style="vertical-align: top; padding: 0px;">
 <?
 //deb::dump(Yii::app()->controller->action->id);
+//deb::dump(Yii::app()->user->create_at);
 ?>
             <div id="notice" style="" >
                 <div class="galleria" id="galleria" style="width: 600px;">
@@ -165,6 +205,10 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
             <?
             if($mainblock['date_expire'] > time() || Yii::app()->controller->action->id == 'addpreview')
             {
+                if(Yii::app()->controller->action->id == 'addpreview')
+                {
+                    $mainblock['user_date_reg'] = Yii::app()->user->create_at;
+                }
             ?>
             <div style="margin-top: 10px; font-weight: normal; width: 682px; border: #000000 solid 0px;">
 
@@ -172,6 +216,10 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                 <span style="font-weight: normal;">на baraholka.ru с <?= Yii::app()->params['month_padezh'][intval(date("m", strtotime($mainblock['user_date_reg'])))];?> <?= date("Y", strtotime($mainblock['user_date_reg']));?> года
                 </span>
 
+                <?
+                if(Yii::app()->controller->action->id != 'addpreview')
+                {
+                ?>
                 <div style="float: right; ">
                 <a class="span_lnk" style="background: url('/images/phone-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px; width: 135px;"><span id="display_phone"  style="border-bottom: #008CC3 dotted; border-width: 1px; ">Показать телефон</span><img id="img_display_phone" src="/images/actions/loader.gif" style="display: none; margin-bottom: -8px; height: 20px;"></a>
 
@@ -179,6 +227,9 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                     <span id="writeauthor_btn" style="border-bottom: #008CC3 dotted; border-width: 1px;">Написать автору</span>
                 </a>
                 </div>
+                <?
+                }
+                ?>
 
             </div>
 
@@ -195,11 +246,18 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                 <?= $region_str.", ".$mainblock_data['country']->name;?>
                 </span>
 
+                <?
+                if(Yii::app()->controller->action->id != 'addpreview')
+                {
+                ?>
                 <div style="float: right;">
                 <a href="/user/uadverts/<?= $mainblock['u_id'];?>" class="span_lnk" style="background: url('/images/alladvert-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;">
                     <span style="border-bottom: #008CC3 dotted; border-width: 1px;">Все объявления автора</span>
                 </a>
                 </div>
+                <?
+                }
+                ?>
 
             </div>
             <?
@@ -304,6 +362,11 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                 <?= $mainblock['notice_text'];?>
             </div>
 
+            <?
+            if(Yii::app()->controller->action->id != 'addpreview')
+            {
+            ?>
+
             <div style="margin-top: 20px;">
 
                 <div style="margin-top: 10px;">
@@ -400,14 +463,20 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/g
                     </tr>
                 </table>
             </div>
+            <?
+            }
+            ?>
 
 
         </td>
         <td style="vertical-align: top;">
 
         <?
-        $banner_operator = Yii::app()->params['banners_raspred'][1];
-        include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/right_300.php");
+        if(Yii::app()->controller->action->id != 'addpreview')
+        {
+            $banner_operator = Yii::app()->params['banners_raspred'][1];
+            include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/right_300.php");
+        }
         ?>
 
 

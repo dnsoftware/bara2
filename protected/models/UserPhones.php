@@ -52,7 +52,16 @@ class UserPhones extends CActiveRecord
     }
 
 
+    // Получение записи телефона по коду юзера, коду страны и телефону
+    public static  function GetPhoneRow($u_id, $c_id, $phone)
+    {
+        if($phonerow = self::model()->findByAttributes(array('u_id'=>$u_id, 'c_id'=>$c_id, 'phone'=>$phone)))
+        {
+            return $phonerow;
+        }
 
+        return false;
+    }
 
 
 

@@ -111,6 +111,20 @@ if(Yii::app()->controller->action->id == 'advert_edit')
 }
 
 ?>
+
+<?
+$mytown_id = Yii::app()->request->cookies->contains('geo_mytown') ?
+    Yii::app()->request->cookies['geo_mytown']->value : 0;
+$myregion_id = Yii::app()->request->cookies->contains('geo_myregion') ?
+    Yii::app()->request->cookies['geo_myregion']->value : 0;
+$mycountry_id = Yii::app()->request->cookies->contains('geo_mycountry') ?
+    Yii::app()->request->cookies['geo_mycountry']->value : 0;
+
+//deb::dump($_SESSION);
+
+?>
+
+
 <h1 style="font-size: 16px; margin-bottom: 30px;"><?= $title;?></h1>
 
 <form id="addform" onsubmit="addformsubmit(<?= $n_id;?>); return false;">
@@ -171,12 +185,15 @@ if(Yii::app()->controller->action->id == 'advert_edit')
             ?>
             <?
             $client_phone_c_id = $this->getMainblockValue($model, 'client_phone_c_id');
-            if(intval($client_phone_c_id) == 0)
+            $client_phone = trim($this->getMainblockValue($model, 'client_phone'));
+            if(intval($client_phone_c_id) == 0 && trim($client_phone) == '')
             {
-                $client_phone_c_id = $c_id;
+                $client_phone_c_id = $mycountry_id;
             }
-
-            //deb::dump($countries_array[$client_phone_c_id]);
+            if($client_phone == '' && count($user_phones) > 0)
+            {
+                $client_phone = current($user_phones)->phone;
+            }
             ?>
 
 
@@ -249,8 +266,7 @@ if(Yii::app()->controller->action->id == 'advert_edit')
 
                                     <?
                                     ?>
-                                    <input class="form-input-text" style="width: 100px;" type="text" name="mainblock[client_phone]" id="client_phone" value="<?= htmlspecialchars($this->getMainblockValue($model, 'client_phone'), ENT_COMPAT);?>">
-
+                                    <input class="form-input-text" style="width: 100px;" type="text" name="mainblock[client_phone]" id="client_phone" value="<?= $client_phone;?>">
 
                                     <?
                                     $send_check_phone_button_display = 'none';
@@ -284,6 +300,7 @@ if(Yii::app()->controller->action->id == 'advert_edit')
 
                         <div id="send_check_code" style="border: #999 solid 1px; display: none; padding: 5px;">
                             На указанный номер отправлено СМС  с кодом подтверждения<br>
+                            Введите его в окно подтверждения и нажмите ОК<br>
                             <input type="text" id="check_code_field">
                             <input type="button" value="OK" onclick="SendCheckPhoneKod();">
                         </div>
@@ -303,14 +320,6 @@ if(Yii::app()->controller->action->id == 'advert_edit')
 
 
 
-<?
-$mytown_id = Yii::app()->request->cookies->contains('geo_mytown') ?
-    Yii::app()->request->cookies['geo_mytown']->value : 0;
-$myregion_id = Yii::app()->request->cookies->contains('geo_myregion') ?
-    Yii::app()->request->cookies['geo_myregion']->value : 0;
-$mycountry_id = Yii::app()->request->cookies->contains('geo_mycountry') ?
-    Yii::app()->request->cookies['geo_mycountry']->value : 0;
-?>
 <div class="form-row">
 
     <label id="lbl-client_coord" class="add-form-label">Местоположение:</label>
@@ -476,7 +485,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
     </div>
 </div>
 
-<div class="form-row">
+<div class="form-row" id="div_title">
     <label id="lbl-title" class="add-form-label"><?= Notice::model()->getAttributeLabel('title');?>:</label>
     <div class="add-input-block">
         <div class="input-field-border" id="input-error-title">
@@ -601,6 +610,12 @@ $r_id = $this->getMainblockValue($model, 'r_id')
                     $('#send_check_code').css('display', 'none');
 
                 }
+                else if(msg == 'youinbase')
+                {
+                    $('#send_check_phone_error').html('Данный телефон уже был подтвержден ранее!');
+                    $('#send_check_code').css('display', 'none');
+
+                }
                 else if(msg == 'send')
                 {
                     $('#send_check_phone_ok').html('');
@@ -661,6 +676,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 
     function SendCheckPhoneChange()
     {
+        //$('#span_country').css('display', 'inline');
         $('#hand_input_phone').css('display', 'block');
         $('#select_country_code').css('display', 'none');
         $('#list_input_phone').css('display', 'none');
@@ -681,6 +697,30 @@ $r_id = $this->getMainblockValue($model, 'r_id')
         $('#hand_input_phone').css('display', 'none');
         $('#select_user_phones').change();
     });
+
+    <?
+    // Если телефон из списка еще не подтвержден - показываем поле ручного ввода телефона и кнопку подтверждения
+    if($phonerow = UserPhones::GetPhoneRow(Yii::app()->user->id, $client_phone_c_id, $client_phone))
+    {
+        if($client_phone_c_id == Yii::app()->params['russia_id'])
+        {
+            if(!$phonerow->verify_tag )
+            {
+            ?>
+        SendCheckPhoneChange();
+        <?
+        }
+        else
+        {
+        ?>
+        $('#select_phone_from_list').click();
+        <?
+        }
+    }
+
+
+    }
+    ?>
 
 </script>
 

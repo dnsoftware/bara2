@@ -443,7 +443,19 @@ class AdvertController extends Controller
                 {
                     $view_block_display = "none";
                     ?>
-                    <div id="" style="border-bottom: #000020 dotted 1px; margin-bottom: 20px; cursor: pointer; " onclick="$('#view_block_<?= $mval->view_block_id;?>').css('display', 'block');">Необязательные параметры. Чем полнее объявление, тем больше шансов, что оно кого-то заинтересует.</div>
+                    <div id="dopparams" style="border-bottom: #000020 dotted 1px; margin-bottom: 20px; cursor: pointer; " >Нажмите здесь, если хотите указать дополнительные параметры</div>
+                    <script>
+                    $('#dopparams').click(function(){
+                        if($('#view_block_<?= $mval->view_block_id;?>').css('display') == 'none')
+                        {
+                            $('#view_block_<?= $mval->view_block_id;?>').css('display', 'block');
+                        }
+                        else
+                        {
+                            $('#view_block_<?= $mval->view_block_id;?>').css('display', 'none');
+                        }
+                    });
+                    </script>
                     <?
                 }
                 ?>
@@ -544,6 +556,22 @@ class AdvertController extends Controller
             props_hierarhy = <?= json_encode($props_hierarhy); ?>;
             //console.log(props_hierarhy);
 
+            <?
+            if(in_array($r_id, Notice::$maybe_empty_title))
+            {
+            ?>
+               $('#div_title').css('display', 'none');
+            <?
+            }
+            else
+            {
+            ?>
+            $('#div_title').css('display', 'block');
+            <?
+            }
+
+            //
+            ?>
 
             // Отображение  необязательных если ...
             <?
@@ -1653,6 +1681,9 @@ class AdvertController extends Controller
             // Генерируем xml данные свойств
             self::PropsXmlGenerate($newmodel->n_id);
 
+            /*
+            // Так как теперь перед подачей объявы надо залогиницо, то занесение проверенного телефона
+            // доступно сразу на этапе после подтверждения через смс. Смотри туда
             // Занесение проверенного телефона в базу
             if(!$userphones = UserPhones::model()->findByAttributes(array(
                 'u_id'=>$newmodel->u_id,
@@ -1671,7 +1702,9 @@ class AdvertController extends Controller
 
                 $userphones->save();
             }
+            */
 
+            unset(Yii::app()->session['usercheckphone_c_id']);
             unset(Yii::app()->session['usercheckphone']);
             unset(Yii::app()->session['usercheckphone_code']);
             unset(Yii::app()->session['usercheckphone_tag']);
@@ -2563,7 +2596,7 @@ class AdvertController extends Controller
 
             $rub_array = Rubriks::get_rublist();
             Yii::app()->params['footer_keyword'] = $mainblock['keyword_2'];
-
+//deb::dump($mainblock);
             if( ($advert->active_tag == 1 && $advert->verify_tag == 1)
                     || $advert->u_id == Yii::app()->user->id || Yii::app()->user->isAdmin()
             )
@@ -2620,12 +2653,65 @@ class AdvertController extends Controller
     }
 
 
-    // Предварительный просмотр и авторизация
+    // Предварительный просмотр
     public function actionAddpreview()
     {
         $mainblock = Yii::app()->session['mainblock'];
         $addfield = Yii::app()->session['addfield'];
-//deb::dump($mainblock);
+
+        $town = Towns::model()->findByPk($mainblock['t_id']);
+        $subrubrik = Rubriks::model()->findByPk($mainblock['r_id']);
+        $rubrik = Rubriks::model()->findByPk($subrubrik->parent_id);
+
+        // Формирование заголовка в зависимости от шаблона в рубрике
+        if($subrubrik->title_advert_shablon != '')
+        {
+            $props_display = array();
+            if(count($addfield) > 0)
+            {
+                foreach($addfield as $akey=>$aval)
+                {
+                    if(!is_array($aval) && intval($aval) > 0)
+                    {
+                        $props_display[$akey] = $aval;
+                    }
+                }
+
+                $props = PropsSprav::model()->findAll(array(
+                    'select'=>'*',
+                    'condition'=>'ps_id IN ('.implode(", ", $props_display).')'
+                ));
+                $props_array = array();
+                foreach($props as $pkey=>$pval)
+                {
+                    $props_array[$pval->ps_id] = $pval['value'];
+                }
+
+                foreach($props_display as $pkey=>$pval)
+                {
+                    $props_display[$pkey] = $props_array[$pval];
+                }
+            }
+
+            $mainblock['title'] = $subrubrik->title_advert_shablon;
+            foreach($props_display as $pkey=>$pval)
+            {
+                $mainblock['title'] = str_replace('['.$pkey.']', $pval, $mainblock['title']);
+            }
+
+            preg_match_all('|\{([a-zA-Z0-9_-]+)\}|siU', $mainblock['title'], $matches);
+
+            foreach($matches[1] as $match)
+            {
+                if(isset($mainblock[$match]))
+                {
+                    $mainblock['title'] = str_replace('{'.$match.'}', $mainblock[$match], $mainblock['title']);
+                }
+            }
+
+        }
+        ///////////END Формирование заголовка в зависимости от шаблона в рубрике/////////////////
+
 
         $this->MakeDataForView($mainblock, $addfield);
 

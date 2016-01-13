@@ -261,7 +261,7 @@ $this->breadcrumbs=array(
         $("#UserPhones_phone").mask(mask_array[$('#UserPhones_c_id').val()]);
         if($('#UserPhones_c_id').val() == <?= Yii::app()->params['russia_id'];?>)
         {
-            $("#UserPhones_phone").mask('(9xx) xxx-xx-xx');
+            $("#UserPhones_phone").mask('9xx xxx-xx-xx');
         }
         strlen = $("#UserPhones_c_id option:selected").text().length;
         $("#UserPhones_c_id").css('width', strlen*11.5);
@@ -294,7 +294,7 @@ $this->breadcrumbs=array(
         $("#UserPhones_phone").mask(mask_array[$('#UserPhones_c_id').val()]);
         if($('#UserPhones_c_id').val() == <?= Yii::app()->params['russia_id'];?>)
         {
-            $("#UserPhones_phone").mask('(9xx) xxx-xx-xx');
+            $("#UserPhones_phone").mask('9xx xxx-xx-xx');
         }
 
         //$("#UserPhones_c_id").css('width', '100%');
