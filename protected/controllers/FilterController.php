@@ -23,7 +23,14 @@ class FilterController extends Controller
         $parts = array();
         if(isset($_GET['mesto_id'])) // $_POST['region_id'] может содержать город, страну или регион
         {
-            $parts = explode("_", $_GET['mesto_id']);
+            if($_GET['mesto_id'] == '0')
+            {
+                $parts = 0;
+            }
+            else
+            {
+                $parts = explode("_", $_GET['mesto_id']);
+            }
         }
 
         $mesto_isset_tag = 0;
@@ -35,6 +42,7 @@ class FilterController extends Controller
             $mselector = $parts[0];
             $m_id = intval($parts[1]);
         }
+
 
         // страница
         $page = 1;
@@ -169,7 +177,7 @@ class FilterController extends Controller
         $q_sql = " ";
         if(isset($_GET['params']['q']) && trim($_GET['params']['q']) != '')
         {
-            $q_sql = " AND ( n.title LIKE :q_sql OR n.notice_text LIKE  :q_sql ) ";
+            $q_sql = " AND ( n.title LIKE :q_sql OR n.notice_text LIKE  :q_sql OR n.props_xml LIKE  :q_sql ) ";
         }
 
         $rp_ids = array();
@@ -738,8 +746,8 @@ class FilterController extends Controller
         // Если поиск только по местоположению/рубрике - простой запрос
         else
         {
-            $mesto_rub_sql = str_replace(" n.", " t.", $mesto_sql);
-            $q_sql = str_replace(" n.", " t.", $q_sql);
+            //$mesto_rub_sql = str_replace(" n.", " t.", $mesto_sql);
+            //$q_sql = str_replace(" n.", " t.", $q_sql);
 
 /*
             $adverts_count = Notice::model()->cache(600)->with('town')->count(
@@ -763,13 +771,13 @@ class FilterController extends Controller
             deb::dump($rubrik_sql);
             /**/
             $use_index_sql = Notice::GetUseIndexSql($expire_sql, $mesto_sql, $rubrik_sql, $mesto_use_index_prefix);
-
+//deb::dump($q_sql);
             $sql = "SELECT COUNT(*) cnt
                     FROM ". $connection->tablePrefix . "notice n ".$use_index_sql.",
                     ". $connection->tablePrefix . "towns t
                     WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
                     $mesto_sql AND ".$rubrik_sql.$q_sql." AND n.t_id = t.t_id ";
-
+//deb::dump($sql);
             if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
             {
                 $substr = "%".$_GET['params']['q']."%";
@@ -831,11 +839,11 @@ class FilterController extends Controller
                         ". $connection->tablePrefix . "notice n ".$use_index_sql.",
                         ". $connection->tablePrefix . "rubriks r
                         WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
-                        ".$mesto_sql." AND ".$rubrik_simple_sql."
+                        ".$mesto_sql." AND ".$rubrik_simple_sql.$q_sql."
                         AND r.parent_id <> 0 AND n.r_id = r.r_id
                         GROUP BY r.name, r.transname ";
 //                deb::dump($sql);
-                $command=$connection->createCommand($sql);
+                $command=$connection->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
                 $dataReader=$command->query();
                 $rubrik_groups = array();
                 while(($rowgroup = $dataReader->read())!==false)
@@ -863,7 +871,7 @@ class FilterController extends Controller
                         $props_groups[] = $pval->ps_id;
                         $props_rows[$pval->ps_id] = $pval;
                     }
-                    //deb::dump($props_sprav);
+                    //deb::dump($q_sql);
                     $mesto_simple_sql = str_replace(" n.", " ", $mesto_sql);
                     $sql = "SELECT p.ps_id, count(p.ps_id) cnt
                         FROM
@@ -872,12 +880,12 @@ class FilterController extends Controller
                         ". $connection->tablePrefix . "notice_props p
                         WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
                         n.r_id = ".intval($_GET['mainblock']['r_id'])."
-                        AND $mesto_simple_sql
+                        AND $mesto_simple_sql $q_sql
                         AND n.r_id = r.r_id AND n.n_id = p.n_id
                         AND p.ps_id IN (".implode(", ", $props_groups).")
                         GROUP BY p.ps_id ";
                     //deb::dump($sql);
-                    $command=$connection->createCommand($sql);
+                    $command=$connection->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
                     $dataReader=$command->query();
                     $rubrik_groups = array();
                     while(($row = $dataReader->read())!==false)
@@ -1050,7 +1058,7 @@ class FilterController extends Controller
         // *************************** КОНЕЦ Формирование хлебных крошек
 
 
-//deb::dump($rubriks_props_array);
+//deb::dump(Yii::app()->getRequest()->getUrl());
 
 
         $this->render('index', array(

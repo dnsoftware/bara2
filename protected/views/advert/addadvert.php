@@ -922,7 +922,8 @@ function addformsubmit(n_id)
         data: form_data,
         dataType: 'json',
         error: function(msg) {
-            $('#status').text('Ошибка JSON').slideDown('slow');
+            //$('#status').text('Ошибка JSON');
+            $('#status').text('Неполностью подгружены данные, перезагрузите страницу и выберите необходимую рубрику! Возможно проблемы с Интернет связью');
         },
         success: function(msg) {
             $('.input-field-border').css('border', '');
@@ -935,23 +936,29 @@ function addformsubmit(n_id)
             //alert(msg['status']);
             if(msg['status'] == 'error')
             {
-                $.each(msg['errors'], function(mkey, mval)
+                if(msg['errors'] != null)
                 {
+                    $.each(msg['errors'], function(mkey, mval)
+                    {
 //                console.log($('#input-error-'+mkey));
-                    $('#input-error-'+mkey).css('border', '#f00 solid 2px');
-                    $('#input-error-'+mkey+' + .input-error-msg').html(mval);
-                    //console.log(mkey);
-                    //console.log(mval[0]);
-                });
+                        $('#input-error-'+mkey).css('border', '#f00 solid 2px');
+                        $('#input-error-'+mkey+' + .input-error-msg').html(mval);
+                        //console.log(mkey);
+                        //console.log(mval[0]);
+                    });
+                }
 
-                $.each(msg['errors_props'], function(mkey, mval)
+                if(msg['errors_props'] != null)
                 {
-                    $('#div_'+mkey).css('display', 'block');
-                    $('#input-error-prop-'+mkey).css('border', '#f00 solid 2px');
-                    $('#input-error-prop-'+mkey+' + .input-error-prop-msg').html(mval);
-                    //console.log(mkey);
-                    //console.log(mval[0]);
-                });
+                    $.each(msg['errors_props'], function(mkey, mval)
+                    {
+                        $('#div_'+mkey).css('display', 'block');
+                        $('#input-error-prop-'+mkey).css('border', '#f00 solid 2px');
+                        $('#input-error-prop-'+mkey+' + .input-error-prop-msg').html(mval);
+                        //console.log(mkey);
+                        //console.log(mval[0]);
+                    });
+                }
 
                 $('#status').html(msg['message']);
             }

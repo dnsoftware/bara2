@@ -114,6 +114,15 @@ $this->renderPartial('/default/_admin_menu');
 
                 </div>
 
+                <?
+                if(trim($aval['props_xml']) == '')
+                {
+                    ?>
+                    <span style="background-color: #f00; color: #fff;">XML empty</span>
+                <?
+                }
+                ?>
+
             </td>
 
             <td class="not_act">

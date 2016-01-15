@@ -21,7 +21,7 @@ class AdvertController extends Controller
             $this->redirect(Yii::app()->createUrl('/user/login'));
         }
 
-        $rub_array = Rubriks::get_rublist();
+        $rub_array = Rubriks::get_rublist(true);
 //    deb::dump(Yii::app()->session['addfield']);
 
         $n_id=0;
@@ -72,7 +72,6 @@ class AdvertController extends Controller
 
         // Сброс проверенности телефона
         Yii::app()->session['usercheckphone_tag'] = 0;
-
 
         $this->render('addadvert', array('rub_array'=>$rub_array, 'model'=>$model,
                     'mainblock'=>$mainblock, 'n_id'=>$n_id, 'country_array'=>$country_array,
@@ -1155,9 +1154,9 @@ class AdvertController extends Controller
                     $value_hand = $value['hand_input_value'];
                 }
                 ?>
-                <?= $pval->value;?> <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $model_rubriks_props->selector;?>][ps_id]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" value="<?= $pval->ps_id;?>">
+                <input class="add_hideinput" style="width: 30px; background-color: #ddd;" readonly type="text" name="addfield[<?= $model_rubriks_props->selector;?>][ps_id]" id="<?= $model_rubriks_props->selector;?>-<?= $pval->ps_id;?>" value="<?= $pval->ps_id;?>">
 
-                <input style="" type="text" name="addfield[<?= $model_rubriks_props->selector;?>][hand_input_value]" id="<?= $model_rubriks_props->selector;?>" prop_id="<?= $model_rubriks_props->selector;?>" value="<?= htmlspecialchars($value_hand, ENT_COMPAT);?>">
+                <input style="" type="text" name="addfield[<?= $model_rubriks_props->selector;?>][hand_input_value]" id="<?= $model_rubriks_props->selector;?>" prop_id="<?= $model_rubriks_props->selector;?>" value="<?= htmlspecialchars($value_hand, ENT_COMPAT);?>"> <?= $pval->value;?>
 
             <?
             }
@@ -1243,7 +1242,7 @@ class AdvertController extends Controller
         <div class="form-row">
 
             <div style="">
-                <div id="fileuploader">Загрузить</div>
+                <div id="fileuploader">Добавить фото</div>
             </div>
 
             <div id="fileuploader_list" style="">
@@ -1296,7 +1295,7 @@ class AdvertController extends Controller
 
             </div>
 
-            <div style="margin-top: 5px;">Фото, выделенное красной рамкой будет в объявлении основным.
+            <div style="margin-top: 25px;">Фото, выделенное красной рамкой будет в объявлении основным.
                 <br>Значок <img src="/images/rotate.png"> позволяет переворачивать загруженную фотографию</div>
         </div>
 
@@ -1541,6 +1540,39 @@ class AdvertController extends Controller
                 }
 
             }
+
+            /******** Вставка предварительного масштабирования
+            /******** (можно удалить этот блок, если такое масштабирование не нужго) */////////////////////////
+            /*
+            $img = new CImageHandler();
+            $full_filename = $output_dir.$fileName;
+            $img->load($full_filename);
+
+            $orient = 'h';
+            if($img->getWidth() < $img->getHeight())
+            {
+                $orient = 'v';
+            }
+
+            // Резайз до самой большой картинки
+            $img_width = $img->getWidth();
+            $img_height = $img->getHeight();
+            if($orient == 'h')
+            {
+                $img->resize(Notice::HUGE_WIDTH, false);
+                $scale_koeff = Notice::HUGE_WIDTH / Notice::BIG_PREVIEW_WIDTH * Notice::BASE_KOEFF_WATER_SCALE;
+            }
+            else
+            {
+                $img->resize(false, Notice::HUGE_HEIGHT);
+                $scale_koeff = Notice::HUGE_HEIGHT / Notice::BIG_PREVIEW_HEIGHT * Notice::BASE_KOEFF_WATER_SCALE;
+            }
+            // Сохраняем без водяного знака (для использования как исходник в будущем)
+            $img->save($full_filename);
+            */
+            /******* КОНЕЦ Вставка предварительного масштабирования  *////////////////////////
+
+
             echo json_encode($ret);
         }
     }
@@ -1587,13 +1619,14 @@ class AdvertController extends Controller
         if (!isset($_POST['mainblock']) || !isset($_POST['addfield']))
         {
             $return_array['status'] = 'error';
-            $return_array['message'] = 'Данные в запросе отсутствуют';
+            $return_array['message'] = 'Неполностью подгружены данные, перезагрузите страницу и выберите необходимую рубрику';
             echo json_encode($return_array);
 
             return false;
         }
 
         $return_array = $this->CheckAndMakeNewData($mainblock_array, $addfield_array);
+
 
         if(count($return_array['errors_props']) == 0 && count($return_array['errors']) == 0)
         {
@@ -1608,7 +1641,7 @@ class AdvertController extends Controller
 
 
         //$return_array['debugdata'] = $_POST['addfield'];
-
+        //$return_array = array();
         echo json_encode($return_array);
 
     }
@@ -1756,7 +1789,7 @@ class AdvertController extends Controller
         if (!isset($_POST['mainblock']) || !isset($_POST['addfield']))
         {
             $return_array['status'] = 'error';
-            $return_array['message'] = 'Данные в запросе отсутствуют';
+            $return_array['message'] = 'Данные в запросе отсутствуют. Возможно не указана рубрика';
             echo json_encode($return_array);
 
             return false;
@@ -2103,6 +2136,7 @@ class AdvertController extends Controller
 //    echo htmlspecialchars($xml->asXML());
 
         $notice->props_xml = $xml->asXML();
+
 //    deb::dump($notice);
 //    die();
         $notice->save();
@@ -2428,7 +2462,7 @@ class AdvertController extends Controller
                 $expire_sql = " ";
             }
 
-            $limit = 5;
+            $limit = 10;
 
 
             // В отладочных целях (для показа просроченных) блок условий вынесен в переменную
@@ -2596,7 +2630,27 @@ class AdvertController extends Controller
 
             $rub_array = Rubriks::get_rublist();
             Yii::app()->params['footer_keyword'] = $mainblock['keyword_2'];
-//deb::dump($mainblock);
+
+            $this->pageTitle = htmlspecialchars($mainblock['title'])." купить в г. ".$this->mainblock_data['town']->name . " - объявление на ".$_SERVER['HTTP_HOST'];
+
+            $category_theme = "о продаже";
+            if(isset($this->addfield_data['props_data']) && count($this->addfield_data['props_data']) > 0)
+            {
+                foreach(PropsSprav::$category_theme as $ckey=>$cval)
+                {
+                    foreach($this->addfield_data['props_data'] as $pkey=>$pval)
+                    {
+                        if(in_array($pkey, $cval))
+                        {
+                            $category_theme = $ckey;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            Yii::app()->clientScript->registerMetaTag('Объявление '.$category_theme.' '.$mainblock['title'].' в г. '.$this->mainblock_data['town']->name.' на '.$_SERVER['HTTP_HOST'], 'description') ;
+
             if( ($advert->active_tag == 1 && $advert->verify_tag == 1)
                     || $advert->u_id == Yii::app()->user->id || Yii::app()->user->isAdmin()
             )
@@ -2714,6 +2768,8 @@ class AdvertController extends Controller
 
 
         $this->MakeDataForView($mainblock, $addfield);
+
+        $this->pageTitle = htmlspecialchars($mainblock['title'])." купить в г. ".$this->mainblock_data['town']->name . " - объявление на ".$_SERVER['HTTP_HOST'];
 
         //deb::dump(Yii::app()->user->id);
         $email_in_database_tag = 0;

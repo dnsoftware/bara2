@@ -104,7 +104,7 @@ class CImageHandler extends CApplicationComponent
 
 
 
-        if ($imageInfo = @getimagesize($file))
+        if ($imageInfo = getimagesize($file))
         {
             $result['width'] = $imageInfo[0];
             $result['height'] = $imageInfo[1];

@@ -42,7 +42,6 @@ class BaraholkaUrlRule extends CBaseUrlRule
             $controller_action_url = 'advert/oldadvertredirect';
             return $controller_action_url;
         }
-
         if($parts[0] == '')
         {
             return "/";
@@ -50,6 +49,11 @@ class BaraholkaUrlRule extends CBaseUrlRule
 
         $params = array();
 
+        if($parts[0] == 'all')
+        {
+            $_GET['mesto_id'] = 0;
+        }
+        else
         if($town = Towns::model()->findByAttributes(array('transname'=>$parts[0])))
         {
             //$_GET['t_id'] = $town->t_id;

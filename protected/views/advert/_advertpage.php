@@ -169,12 +169,11 @@ if(Yii::app()->controller->action->id == 'addpreview')
                                 $valuta_symbol = 'Р';
                             }
 
-                            $page_title = htmlspecialchars($mainblock['title'])." в г. ".$mainblock_data['town']->name;
-                            $this->pageTitle = $page_title;
                             $alt_img = "";
                             if($i == 1)
                             {
-                                $alt_img = $page_title;
+                                $img_title = htmlspecialchars($mainblock['title'])." в г. ".$mainblock_data['town']->name;
+                                $alt_img = $img_title;
                             }
                         ?>
                             <a href="<?= Notice::getPhotoName($part_path.$uval, "_big");?>"><img data-big="<?= Notice::getPhotoName($part_path.$uval, "_huge");?>" src="<?= Notice::getPhotoName($part_path.$uval, "_thumb");?>" data-title="<?= htmlspecialchars($mainblock['title']). " за ".Notice::costCalcAndView(
@@ -358,8 +357,7 @@ if(Yii::app()->controller->action->id == 'addpreview')
             </div>
 
             <div style="margin-top: 20px;">
-
-                <?= $mainblock['notice_text'];?>
+                <?= nl2br($mainblock['notice_text']);?>
             </div>
 
             <?
@@ -415,7 +413,7 @@ if(Yii::app()->controller->action->id == 'addpreview')
                             $i=0;
                             foreach($similar_adverts as $skey=>$sval)
                             {
-                                //deb::dump($sval);
+
                                 if(!preg_match('|<item><rp_id>[\d]+</rp_id><name>[^<]+</name><selector>[^<]+</selector><vibor_type>photoblock</vibor_type><ps_id>[\d]+</ps_id><hand_input_value>([^<]+)</hand_input_value>|siU', $sval['props_xml'], $match))
                                 {
                                     continue;

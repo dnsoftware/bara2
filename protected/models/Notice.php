@@ -571,6 +571,11 @@ class Notice extends CActiveRecord
     // Формирование массива 'ключ свойства'=>'значение свойства' для объявления по XML данным
     public static function MakePropsDisplayData($props_xml)
     {
+        if(trim($props_xml) == '')
+        {
+            $props_xml = Yii::app()->params['xml_empty'];
+        }
+
         $props_display = array();
         $photos = array();
         $xml = new SimpleXMLElement($props_xml);

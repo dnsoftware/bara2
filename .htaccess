@@ -1,6 +1,16 @@
+# Use PHP5 as default
+#AddHandler application/x-httpd-php5 .php
+#DirectoryIndex index.php
+#AddHandler application/x-httpd-php54 .php .shtml .shtm .html .htm
+#AddType text/html .shtml .shtm .htm
+#AddHandler server-parsed .shtml .shtm .html .htm
+
 AddDefaultCharset utf-8
 
+#Options +Includes
+
 RewriteEngine on
+RewriteBase /
 
 # if a directory or a file exists, use it directly
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -9,8 +19,9 @@ RewriteCond %{REQUEST_FILENAME} !-d
 # otherwise forward it to index.php
 RewriteRule . index.php
 
-ErrorDocument 401 http://dup.ru
-ErrorDocument 403 http://dup.ru
-ErrorDocument 404 http://dup.ru
-ErrorDocument 500 http://dup.ru
+
+#ErrorDocument 401 http://www.baraholka.ru
+ErrorDocument 403 http://www.baraholka.ru
+ErrorDocument 404 http://www.baraholka.ru
+ErrorDocument 500 http://www.baraholka.ru
 

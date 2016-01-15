@@ -9,8 +9,12 @@ Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/f
 
 <div style="color: #f00;">Внимание! Только значения простых свойств могут быть занесены в базу! Мультивыбор, диапазоны, ручной ввод и т.п. не поддерживается.</div>
 
-<div style="margin: 50px; font-size: 16px;">
+<div style="margin: 20px; font-size: 16px;">
     <!--<a href="<?= Yii::app()->createUrl('/adminka/support/importoldadverts');?>">Начать импорт</a>-->
+
+    <div style=" margin-bottom: 50px;">
+    <a style="font-size: 12px;" href="<?= Yii::app()->createUrl('/adminka/support/importremake');?>">Восстановление утерянных свойств (использовать один раз!)</a>
+    </div>
 
 <?
 //deb::dump($rubold_array);

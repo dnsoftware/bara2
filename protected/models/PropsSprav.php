@@ -13,6 +13,15 @@ class PropsSprav extends CActiveRecord
 {
     public $maxsort = 0;
 
+    // Куплю/продам/сдам/сниму и т.п.
+    // Соответствие кодов свойств
+    public static $category_theme = array(
+        'о покупке' => array(7063,7212,7298,7327,7340,7352,7363),
+        'о продаже' => array(2971,7061,7210,7296,7325,7338,7350,7361),
+        'об аренде' => array(7062,7211,7297,7326,7339,7351,7362,   7064,7213,7299,7328,7341,7353,7354)
+    );
+
+
 	/**
 	 * @return string the associated database table name
 	 */

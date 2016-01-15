@@ -117,7 +117,7 @@ class SupportController extends Controller
 
         $sql = "SELECT * FROM
                 ". $connection->tablePrefix . "users u
-                WHERE id > 222564 AND login <> 'admin'
+                WHERE id > 222829 AND login <> 'admin'
                 ORDER BY id
 
                 ";
@@ -211,7 +211,7 @@ class SupportController extends Controller
 
         }
 
-        $rub_array = Rubriks::get_rublist();
+        $rub_array = Rubriks::get_rublist(true);
 
         $this->render("importoldadvertsmenu", array(
             'rubold_array'=>$rubold_array,
@@ -221,6 +221,79 @@ class SupportController extends Controller
     }
 
 
+
+    // Восстановление утерянных свойств в процессе неудачного импорта
+    public function actionImportRemake()
+    {
+        $connection = Yii::app()->db_auto;
+
+        $notice = Notice::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'import_wave_number = 2',
+            'limit'=>10000
+        ));
+
+        $i=0;
+        $j=0;
+        $rubs = array();
+        foreach($notice as $nkey=>$nval)
+        {
+            $sql = "SELECT n_id, r_id, title
+                FROM tbl_notice n
+                WHERE n_id = ".$nval->n_id;
+            $command = $connection->createCommand($sql);
+            $dataReader = $command->query();
+            if(($row = $dataReader->read())!==false)
+            {
+                if($row['r_id'] != $nval->r_id)
+                {
+                    $i++;
+                    //$rubs[$row['r_id']] = $nval->r_id;
+
+                    $nval->import_wave_number = -1;
+                    $nval->save();
+                    if(count($nval->getErrors()) > 0)
+                    {
+                        deb::dump($nval->getErrors());
+                    }
+                }
+                else
+                {
+                    $j++;
+                    NoticeProps::model()->deleteAll('n_id = :n_id', array(':n_id'=>$nval->n_id));
+
+                    $nval->import_wave_number = 3;
+                    $nval->save();
+                    if(count($nval->getErrors()) > 0)
+                    {
+                        deb::dump($nval->getErrors());
+                    }
+
+                    $sqlprop = "SELECT *
+                            FROM tbl_notice_props
+                            WHERE n_id = ".$nval->n_id;
+                    $command_prop = $connection->createCommand($sqlprop);
+                    $dataReader_prop = $command_prop->query();
+                    while(($rowprop = $dataReader_prop->read())!==false)
+                    {
+                        $propmodel = new NoticeProps();
+                        $propmodel->n_id = $rowprop['n_id'];
+                        $propmodel->rp_id = $rowprop['rp_id'];
+                        $propmodel->ps_id = $rowprop['ps_id'];
+                        $propmodel->old_base_tag = 1;
+
+                        $propmodel->save();
+                    }
+
+                    AdvertController::PropsXmlGenerate($nval->n_id);
+
+
+                }
+            }
+        }
+        deb::dump($i);
+
+    }
 
     // Процесс импорта в базу
     public function actionImportOldAdverts()
@@ -283,7 +356,7 @@ class SupportController extends Controller
                 WHERE n.r_id = ".$oldbase['rubold']." AND import_wave_number = 0
                     AND n.t_id = t.t_id AND n.region_id = r.r_id AND n.c_id = c.c_id
                 ";
-
+//deb::dump($sql);
         $adv_old_array = array();
         $temp_towns = array();
         $command = $connection->createCommand($sql);
@@ -326,9 +399,9 @@ class SupportController extends Controller
             {
                 $inbaserow->n_id = $aval['n_id'];
                 $inbaserow->u_id = $aval['u_id'];
-                $inbaserow->r_id = $mainblock['r_id'];
-                $rubrow = Rubriks::model()->findByPk($mainblock['r_id']);
-                $inbaserow->parent_r_id = $rubrow->parent_id;
+                //$inbaserow->r_id = $mainblock['r_id'];
+                //$rubrow = Rubriks::model()->findByPk($mainblock['r_id']);
+                //$inbaserow->parent_r_id = $rubrow->parent_id;
                 $inbaserow->old_r_id = $oldbase['rubold'];
                 $inbaserow->save();
 
@@ -651,8 +724,100 @@ deb::dump("NEW - ". $newadv->n_id);
 
     }
 
+    /* генератор активационных ключей для старых юзеров */
+    public function actionActiveKeysGenerate()
+    {
+        die('Скрипт заблокирован! Убрать die()');
 
-    public function actionImageimportmenu()
+        $users = User::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>" activkey = '' ",
+            'limit'=>10000
+        ));
+
+        foreach($users as $ukey=>$uval)
+        {
+            $uval->activkey = md5(microtime().rand(0,999999).$uval->password);
+            $uval->save();
+            $error = $uval->getErrors();
+            if(count($error) > 0)
+            {
+                deb::dump($error);
+            }
+        }
+
+    }
+
+    /* проверка картинок старых объяв на существование */
+    public function actionOldImageChecker()
+    {
+        //die('Заблокировано');
+
+        if($noticeimages = NoticeImagesOld::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'scan_import_tag = 0',
+            'order'=>'ni_id',
+            'limit'=>20000
+        )))
+        {
+            //$folder = 'tempphotos';
+            $folder = Yii::app()->params['photodir'];
+            $files_array = array();
+            foreach($noticeimages as $ikey=>$ival)
+            {
+                $tofile = md5($ival->filename).".".$ival->file_ext;
+                $tofile_small = md5($ival->filename)."_thumb.".$ival->file_ext;
+                $curr_dir = Notice::getPhotoDirMake($folder, $tofile);
+                $output_dir = realpath(Yii::app()->basePath."/../".$folder."/".$curr_dir)."/";
+
+                $filename = $output_dir.$tofile;
+
+                if(is_file($filename))
+                {
+                    deb::dump($filename);
+                    $ival->scan_import_tag = 1;
+                    //$ival->save();
+                    if(count($ival->getErrors()) > 0)
+                    {
+                        deb::dump($ival->getErrors());
+                    }
+                }
+                else
+                {
+                    if($notice = Notice::model()->findByPk($ival->n_id))
+                    {
+                        $notice->img_import_tag = 0;
+                        //$notice->save();
+                        if(count($notice->getErrors()) > 0)
+                        {
+                            deb::dump($notice->getErrors());
+                        }
+
+                        $ival->scan_import_tag = 1;
+                        //$ival->save();
+                        if(count($ival->getErrors()) > 0)
+                        {
+                            deb::dump($ival->getErrors());
+                        }
+                    }
+                    else
+                    {
+                        $ival->scan_import_tag = -1;
+                        //$ival->save();
+                        if(count($ival->getErrors()) > 0)
+                        {
+                            deb::dump($ival->getErrors());
+                        }
+                    }
+                    //deb::dump($notice);
+                }
+
+
+            }
+        }
+    }
+
+        public function actionImageimportmenu()
     {
 
         $this->render('imageimportmenu');
@@ -679,14 +844,14 @@ deb::dump("NEW - ". $newadv->n_id);
         $notices = Notice::model()->findAll(array(
             'select'=>'*',
             //'condition'=>'old_base_tag = 1 AND img_import_tag = 0 ',    //AND n_id=1198638
-            'condition'=>'old_base_tag = 1 AND img_import_tag = 0 AND n_id = 1317532',
+            'condition'=>'old_base_tag = 1 AND img_import_tag = 0',       // AND n_id = 1317532',
             'order'=>'n_id ',
             'limit'=>70
         ));
 
         foreach($notices as $nkey=>$nval)
         {
-            deb::dump($nval->n_id);
+            //deb::dump($nval->n_id);
             //die();
             if($noticeimages = NoticeImagesOld::model()->findAll(array(
                 'select'=>'*',
@@ -703,15 +868,15 @@ deb::dump("NEW - ". $newadv->n_id);
                     $tofile_small = md5($ival->filename)."_thumb.".$ival->file_ext;
                     $curr_dir = Notice::getPhotoDirMake($folder, $tofile);
                     $output_dir = Yii::app()->basePath."/../".$folder."/".$curr_dir."/";
-                //deb::dump($ival);
+                //deb::dump('http://auto.baraholka.ru/imgnot/'.$ival->filename.".".$ival->file_ext);
                 //deb::dump($output_dir.$tofile);
                 //die();
-                    if(copy('http://baraholka.ru/imgnot/'.$ival->filename.".".$ival->file_ext, $output_dir.$tofile))
+                    if(copy('http://auto.baraholka.ru/imgnot/'.$ival->filename.".".$ival->file_ext, $output_dir.$tofile))
                     {
                         $files_array[] = $tofile;
 
                         // Копируем маленькое превью
-                        copy('http://baraholka.ru/imgnot/'.$ival->filename."_s.".$ival->file_ext, $output_dir.$tofile_small);
+                        copy('http://auto.baraholka.ru/imgnot/'.$ival->filename."_s.".$ival->file_ext, $output_dir.$tofile_small);
 
                         // дублируем в качестве исходника
                         $original_photo = $tofile;

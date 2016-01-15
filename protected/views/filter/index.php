@@ -218,6 +218,14 @@ $this->renderPartial('/filter/_search_form', array(
 <?
 if(count($rubrik_groups) > 0)
 {
+    $page_url = Yii::app()->getRequest()->getUrl();
+
+    $allreg_prefix = "";
+    if($m_id == 0 && ($page_url == '/' || preg_match('|index.php|siU', $page_url, $match)))
+    {
+        $allreg_prefix = '/all';
+    }
+
     foreach ($rubrik_groups as $rkey=>$rval)
     {
         if($rval->hide_tag == 1)
@@ -225,7 +233,7 @@ if(count($rubrik_groups) > 0)
             continue;
         }
         ?>
-        <a style="margin-right: 0px;" class="baralink_plus" href="<?= Yii::app()->createUrl($rval['path']);?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
+        <a style="margin-right: 0px;" class="baralink_plus" href="<?= $allreg_prefix.Yii::app()->createUrl($rval['path']);?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
     <?
     }
 }
@@ -322,7 +330,15 @@ if(count($rubrik_groups) > 0)
 
         <?
         $page_url = Yii::app()->getRequest()->getUrl();
-//deb::dump($page_url);
+
+        $allreg_prefix = "";
+        if($m_id == 0 && ($page_url == '/' || preg_match('|index.php|siU', $page_url, $match)))
+        {
+            $page_url = '/all';
+        }
+
+//        deb::dump($page_url);
+
         $page_substr = '&page';
         if(strpos($page_url, '?') === false || strpos($page_url, '/?page') !== false)
         {
