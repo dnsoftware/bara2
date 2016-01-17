@@ -579,3 +579,122 @@ deb::dump($to);
 
 
 </script>
+
+
+
+
+<?
+// Служебная примочка для редиректа (убрать в продакшне)
+//if(Yii::app()->user->id == 1)
+
+/*
+if()
+{
+    if($_GET['sootv'] == '')
+    {
+    ?>
+        <input type="button" style="background-color: #f00; color: #fff;" onclick="checkSootv('check');" value="Проверка">
+    <?
+    }
+    else
+    {
+        $old_r_id = $_GET['mainblock']['old_r_id'];
+        $new_r_id = $_GET['mainblock']['r_id'];
+        $ps_array = array();
+        if(isset($_GET['addfield']) && count($_GET['addfield']) > 0)
+        {
+            foreach($_GET['addfield'] as $akey=>$aval)
+            {
+                if(!is_array($aval) && $aval != '')
+                {
+                    $ps_array[] = $aval;
+                }
+            }
+        }
+
+        $mess_old_r_id = '';
+        if(intval($old_r_id) <= 0)
+        {
+            $mess_old_r_id = " Выберите старую рубрику! ";
+        }
+        $mess_new_r_id = '';
+        if(intval($new_r_id) <= 0)
+        {
+            $mess_new_r_id = " Выберите новую рубрику! ";
+        }
+
+        if(intval($old_r_id) > 0 && intval($new_r_id) > 0)
+        {
+            $old_rub = RubriksOld::model()->findByPk($old_r_id);
+            $old_parent_rub = RubriksOld::model()->findByPk($old_rub->parent_id);
+            $mess_old_r_id = $old_parent_rub->name."/".$old_rub->name;
+
+            $new_rub = Rubriks::model()->findByPk($new_r_id);
+            $new_parent_rub = Rubriks::model()->findByPk($new_rub->parent_id);
+            $mess_new_r_id = $new_parent_rub->name."/".$new_rub->name;
+        }
+
+        $temp = array();
+        $props_ids = array();
+        if(count($ps_array) > 0)
+        {
+            foreach($ps_array as $pkey=>$pval)
+            {
+                $prop = PropsSprav::model()->findByPk($pval);
+                $temp[] = $prop->value;
+                $props_ids[] = $prop->ps_id;
+            }
+        }
+
+        if($_GET['sootv'] == 'set')
+        {
+            $old_rub = RubriksOld::model()->findByPk($old_r_id);
+            $old_rub->new_r_id = $new_r_id;
+            $old_rub->props_list_ids = implode(",", $props_ids);
+            $old_rub->save();
+            if(count($old_rub->getErrors()) == 0)
+            {
+            ?>    <span style="color: #299e12;">Сохранение прошло успешно!</span><?
+            }
+            else
+            {
+                deb::dump($old_rub->getErrors());
+            }
+
+        }
+
+        if($_GET['sootv'] == 'check')
+        {
+        deb::dump($mess_old_r_id." = ".$mess_new_r_id."/".implode("/", $temp));
+        //deb::dump($old_r_id."=".$new_r_id."/".implode(",", $props_ids));
+        //deb::dump($_GET['sootv']);
+            if(intval($old_r_id) > 0 && intval($new_r_id) > 0)
+            {
+
+            ?>
+            <input type="button" style="background-color: #259c1d; color: #fff;" onclick="checkSootv('set');" value="Сохранить">
+        <?
+            }
+
+        }
+
+    }
+?>
+
+    <input type="hidden" name="sootv" id="sootv">
+
+
+    <script>
+
+        function checkSootv(selector)
+        {
+            $('#sootv').val(selector);
+            $('.fchange').change();
+        }
+
+    </script>
+<?
+
+}
+*/
+?>

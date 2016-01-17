@@ -33,6 +33,54 @@ class BaraholkaUrlRule extends CBaseUrlRule
         $parts = explode("/", $pathInfo);
 
         // Проверка на старую ссылку
+        //deb::dump($parts);
+        //die();
+        if(isset($parts[0]) && ($parts[0] == 'board' || $parts[0] == 'boardreg'))
+        {
+            //deb::dump($parts[0]);
+            $_GET = null;
+            if($parts[0] == 'board')
+            {
+                if(isset($parts[1]))
+                {
+                    $town = explode("-", $parts[1]);
+                    if(intval($town[1]) > 0)
+                    {
+                        $_GET['old_t_id'] = intval($town[1]);
+                    }
+                }
+            }
+
+            if($parts[0] == 'boardreg')
+            {
+                if(isset($parts[1]))
+                {
+                    $region = explode("-", $parts[1]);
+                    if(intval($region[1]) > 0)
+                    {
+                        $_GET['old_reg_id'] = intval($region[1]);
+                    }
+                }
+            }
+
+            if(isset($parts[2]))
+            {
+                $rubrik = explode("-", $parts[2]);
+                if(intval($rubrik[1]) > 0)
+                {
+                    $_GET['old_r_id'] = intval($rubrik[1]);
+                }
+            }
+
+
+            if(isset($_GET['old_reg_id']) || isset($_GET['old_t_id']))
+            {
+                $controller_action_url = 'advert/oldreglistredirect';
+                return $controller_action_url;
+            }
+
+        }
+        else
         if(isset($parts[0]) && count($parts) == 1 && strpos($parts[0], '.html'))
         {
             preg_match('|_([0-9]{13})\.html|siU', $parts[0], $match);
@@ -42,6 +90,8 @@ class BaraholkaUrlRule extends CBaseUrlRule
             $controller_action_url = 'advert/oldadvertredirect';
             return $controller_action_url;
         }
+        /////////////////////////
+
         if($parts[0] == '')
         {
             return "/";

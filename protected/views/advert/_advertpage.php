@@ -279,7 +279,7 @@ if(Yii::app()->controller->action->id == 'addpreview')
                     <div style="background-color: #f00; color: #fff; font-size: 14px; padding: 5px;">
                     К сожалению, данное объявление потеряло актуальность за сроком давности. Сейчас Вы будете автоматически перенаправлены на похожие объявления в Вашем городе. Нажмите <a class="baralink" style="font-size: 14px;" href="/<?= $advert_url_category;?>">здесь</a>, если Ваш браузер не поддерживает автоматическую переадресацию.
                     <?
-                    //Yii::app()->clientScript->registerMetaTag("5; URL=/".$advert_url_category, "archive", "refresh");
+                    Yii::app()->clientScript->registerMetaTag("5; URL=/".$advert_url_category, "archive", "refresh");
                     ?>
                     </div>
 

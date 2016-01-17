@@ -871,17 +871,20 @@ deb::dump("NEW - ". $newadv->n_id);
                 //deb::dump('http://auto.baraholka.ru/imgnot/'.$ival->filename.".".$ival->file_ext);
                 //deb::dump($output_dir.$tofile);
                 //die();
-                    if(copy('http://auto.baraholka.ru/imgnot/'.$ival->filename.".".$ival->file_ext, $output_dir.$tofile))
+
+                    ///if(copy('http://auto.baraholka.ru/imgnot/'.$ival->filename.".".$ival->file_ext, $output_dir.$tofile))
+                    if(1)
                     {
                         $files_array[] = $tofile;
 
+                        /***
                         // Копируем маленькое превью
                         copy('http://auto.baraholka.ru/imgnot/'.$ival->filename."_s.".$ival->file_ext, $output_dir.$tofile_small);
 
                         // дублируем в качестве исходника
                         $original_photo = $tofile;
 
-                        /* Наложение водяного знака и генерация картинок разных размеров */
+                        // Наложение водяного знака и генерация картинок разных размеров
                         $fileName = $original_photo;
                         $temp = explode(".", $tofile);
                         $filename_root = $temp[0];
@@ -951,10 +954,13 @@ deb::dump("NEW - ". $newadv->n_id);
 
                         $img->save($output_dir.$tofile_small);
 
-
+                        ***/
 
                     }
                 }
+
+deb::dump($files_array);
+die();
 
                 $notice_photo_rp_id = $rubriks_props_photoblock[$nval->r_id]->rp_id;
                 $notice_photo_ps_id = $rubriks_props_photoblock[$nval->r_id]->props_sprav[0]->ps_id;
@@ -990,7 +996,7 @@ deb::dump("NEW - ". $newadv->n_id);
 
                 //deb::dump($nval->n_id);
             }
-
+die();
             $nval->img_import_tag = 1;
             $nval->save();
 
@@ -1901,6 +1907,69 @@ deb::dump("NEW - ". $newadv->n_id);
         }
         deb::dump($i);
     }
+
+
+
+
+
+    // Служебная функция, визуальна проверка правильности соответствий старых рубрик новым + свойства
+    public function actionCheckSootv()
+    {
+        header('Content-Type: text/html; charset=utf-8');
+
+        $old_rubs = RubriksOld::model()->get_rublist();
+        foreach($old_rubs as $okey=>$oval)
+        {
+        ?>
+        <div>
+            <b><?= $oval['parent']->name;?></b>
+            <div style="margin-left: 20px;">
+            <?
+            foreach($oval['childs'] as $ckey=>$cval)
+            {
+                $parts = array();
+            ?>
+                <div>
+                    <?= $cval->name;?> =>
+                    <?
+                    if($newrub = Rubriks::model()->findByPk($cval->new_r_id))
+                    {
+                        $parentrub = Rubriks::model()->findByPk($newrub->parent_id);
+                        $parts[] = $parentrub->name;
+                        $parts[] = $newrub->name;
+                    }
+
+
+                    ?>
+                    <?
+
+                    if($cval->props_list_ids != '')
+                    {
+                        $props_array = explode(",", $cval->props_list_ids);
+                        foreach($props_array as $p2key=>$p2val)
+                        {
+                            $prop = PropsSprav::model()->findByPk($p2val);
+                            $parts[] = $prop->value;
+                        }
+                    }
+
+                    ?>
+
+                    <span style="color: #259c1d;"><?= implode(" / ", $parts);?></span>
+
+                </div>
+            <?
+            }
+            ?>
+            </div>
+        </div>
+        <?
+        }
+        //deb::dump($old_rubs);
+    }
+
+
+
 
     // Uncomment the following methods and override them if needed
 	/*

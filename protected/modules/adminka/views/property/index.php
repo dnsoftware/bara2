@@ -202,7 +202,7 @@ foreach ($rub_array as $rkey=>$rval)
                 }
                 else
                 {
-                    alert('Доработать! Не удалять, если есть связанные записи!');
+                    alert(ret);
                 }
             }
         });

@@ -2112,8 +2112,14 @@ class AdvertController extends Controller
         $command=$connection->createCommand($sql);
         $dataReader=$command->query();
         $xml = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><body><block></block></body>');
+
+        $test_array = array();// убрать, отладочное
+
         while(($row = $dataReader->read())!==false)
         {
+            $test_array[] = $row;   // убрать, отладочное
+
+
             if(count($xml->block[0]->$row['selector']) == 0)
             {
                 $props = $xml->block[0]->addChild($row['selector']);
@@ -2136,6 +2142,20 @@ class AdvertController extends Controller
 //    echo htmlspecialchars($xml->asXML());
 
         $notice->props_xml = $xml->asXML();
+
+        /* Отладочная отправка **/
+        if($notice->props_xml == '')
+        {
+            $temp['n_id'] = $notice->n_id;
+            $temp['daynumber_id'] = $notice->daynumber_id;
+            $temp['sql'] = $sql;
+            $temp['proprows'] = $test_array;
+
+            $mess = serialize($temp);
+
+            mail('ddaemon@mail.ru', 'XML empty', $mess);
+        }
+        /***** Конец  *****/
 
 //    deb::dump($notice);
 //    die();
@@ -3494,6 +3514,68 @@ class AdvertController extends Controller
         ));
         $transliter = new Supporter();
         $redirect_page_url = "/".$advert->town->transname."/".$advert->rubriks->transname."/".$transliter->TranslitForUrl($advert->title)."_".$daynumber_id;
+
+        $this->redirect($redirect_page_url, true, 301);
+
+    }
+
+
+    // Редирект для перехода по старой ссылке-на список объяв в разрезе региона/города/рубрики
+    public function actionOldRegListRedirect()
+    {
+        //deb::dump($_GET);
+        $url_parts = array();
+        if(isset($_GET['old_t_id']))
+        {
+            $town = Towns::model()->findByAttributes(array('old_t_id'=>intval($_GET['old_t_id'])));
+            $url_parts[] = $town->transname;
+        }
+
+        if(isset($_GET['old_reg_id']))
+        {
+            $region = Regions::model()->findByAttributes(array('old_reg_id'=>intval($_GET['old_reg_id'])));
+            $url_parts[] = $region->transname;
+        }
+
+        if(count($url_parts) == 1 && $url_parts[0] != '')
+        {
+            if(isset($_GET['old_r_id']))
+            {
+                if($old_rubrik = RubriksOld::model()->findByPk(intval($_GET['old_r_id'])))
+                {
+                    if($rubrik = Rubriks::model()->findByPk($old_rubrik->new_r_id))
+                    {
+                        $url_parts[] = $rubrik->transname;
+                    }
+
+                    if(trim($old_rubrik->props_list_ids) != '')
+                    {
+                        $props_array = explode(",", $old_rubrik->props_list_ids);
+                        foreach($props_array as $pkey=>$pval)
+                        {
+                            if(intval($pval) > 0)
+                            {
+                                if($prop = PropsSprav::model()->findByPk($pval))
+                                {
+                                    $url_parts[] = $prop->transname;
+                                }
+                            }
+                        }
+                        //deb::dump($props_array);
+                    }
+
+                }
+            }
+
+            //deb::dump($url_parts);
+        }
+
+        $redirect_page_url = "/".implode("/", $url_parts);
+        /*
+        ?>
+        <a target="_blank" href="http://baraholka2.dn<?= $redirect_page_url;?>"><?= $redirect_page_url;?></a>
+        <?
+        */
 
         $this->redirect($redirect_page_url, true, 301);
 

@@ -995,7 +995,7 @@ class AdminadvertController extends Controller
     // Установка рубрики и свойств для одной объявы
     public function actionSetnewprops()
     {
-        sleep(1);
+        //sleep(1);
 
         $n_id = intval($_POST['n_id']);
         $advert = Notice::model()->findByPk($n_id);

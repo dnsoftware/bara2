@@ -1084,7 +1084,7 @@ class FilterController extends Controller
         //deb::dump($ret);
         $props_sprav_sorted_array = $ret['props_sprav_sorted_array'];
         $rubriks_props_array = $ret['rubriks_props_array'];
-//deb::dump($props_sprav_sorted_array);
+//deb::dump($rubriks_props_array);
         $this->renderPartial('_props_form_search', array(
             //'rubrik_groups'=>$rubrik_groups,
             //'search_adverts'=>$search_adverts,

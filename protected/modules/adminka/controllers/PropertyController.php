@@ -150,9 +150,54 @@ class PropertyController extends Controller
 
     public function actionAjax_del_rubriks_props_row()
     {
-        $model = RubriksProps::model()->findByPk($_POST['rp_id']);
+        $rp_row = RubriksProps::model()->findByPk($_POST['rp_id']);
 
-        echo "Доработать! Не удалять, если есть связанные записи!";
+        $error_array = array();
+
+        if($notice_props = NoticeProps::model()->findByAttributes(array('rp_id'=>$rp_row->rp_id)))
+        {
+            $error_array[] = "Есть связанные записи в таблице notice_props";
+        }
+
+        if($props_sprav = PropsSprav::model()->findByAttributes(array('rp_id'=>$rp_row->rp_id)))
+        {
+            $error_array[] = "Есть связанные записи в таблице props_sprav";
+
+            foreach($props_sprav as $pskey=>$psval)
+            {
+                if($parent_ps_id = PropsRelations::model()->findByAttributes(array('parent_ps_id'=>$psval->ps_id)))
+                {
+                    $error_array[] = "Есть связанные записи в таблице props_relations поле parent_ps_id";
+                }
+
+                if($child_ps_id = PropsRelations::model()->findByAttributes(array('child_ps_id'=>$psval->ps_id)))
+                {
+                    $error_array[] = "Есть связанные записи в таблице props_relations поле child_ps_id";
+                }
+            }
+        }
+
+        if($seo_keywords_props = SeoKeywordsProps::model()->findByAttributes(array('rp_id'=>$rp_row->rp_id)))
+        {
+            $error_array[] = "Есть связанные записи в таблице seo_keywords_props";
+        }
+
+
+        if(count($error_array) > 0)
+        {
+            ?>
+            rp_id = <?= $rp_row->rp_id;?>
+
+            <?
+            foreach($error_array as $ekey=>$eval)
+            {
+                echo $eval."\n";
+            }
+            ?>
+
+        <?
+        }
+        //echo "Доработать! Не удалять, если есть связанные записи!";
     }
 
 
