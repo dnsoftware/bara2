@@ -315,7 +315,10 @@ border-radius: 3px;">
 
 
 
-
+<?
+if($_SERVER['HTTP_HOST'] != 'baraholka2.dn')
+{
+?>
 
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
@@ -346,7 +349,9 @@ border-radius: 3px;">
 </script>
 <noscript><div><img src="https://mc.yandex.ru/watch/10041385" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <!-- /Yandex.Metrika counter -->
-
+<?
+}
+?>
 
 
 </body>

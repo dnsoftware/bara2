@@ -817,7 +817,9 @@ deb::dump("NEW - ". $newadv->n_id);
         }
     }
 
-        public function actionImageimportmenu()
+
+
+    public function actionImageimportmenu()
     {
 
         $this->render('imageimportmenu');
@@ -841,12 +843,19 @@ deb::dump("NEW - ". $newadv->n_id);
         }
 //deb::dump($rubriks_props_photoblock);
 
+        /*
+         * ВНИМАНИЕ, алгоритм перетасован (много закомментировано), добавлены куски для восстановления
+         * утерянных данных в свойствах о фотографиях
+         * для восстановления функционала загрузки надо будет прошерстить код
+         * */
+
         $notices = Notice::model()->findAll(array(
             'select'=>'*',
             //'condition'=>'old_base_tag = 1 AND img_import_tag = 0 ',    //AND n_id=1198638
-            'condition'=>'old_base_tag = 1 AND img_import_tag = 0',       // AND n_id = 1317532',
+            //'condition'=>'old_base_tag = 1 AND img_import_tag = 0',       // AND n_id = 1317532',
+            'condition'=>'old_base_tag = 1 AND img_import_tag = 3',       // 3 пометка фоток художника, тест
             'order'=>'n_id ',
-            'limit'=>70
+            'limit'=>5000
         ));
 
         foreach($notices as $nkey=>$nval)
@@ -959,8 +968,7 @@ deb::dump("NEW - ". $newadv->n_id);
                     }
                 }
 
-deb::dump($files_array);
-die();
+deb::dump($ival->n_id);
 
                 $notice_photo_rp_id = $rubriks_props_photoblock[$nval->r_id]->rp_id;
                 $notice_photo_ps_id = $rubriks_props_photoblock[$nval->r_id]->props_sprav[0]->ps_id;
@@ -976,13 +984,27 @@ die();
                     'rp_id'=>$notice_photo_rp_id
                 )))
                 {
-                    $notice_prop->ps_id = $notice_photo_ps_id;
-                    $notice_prop->hand_input_value = $hand_input_value;
-                    $notice_prop->old_base_tag = 1;
-                    $notice_prop->save();
+                    if($notice_prop->hand_input_value == '')    // проверка для восстановления потерянных данных (закоментить)
+                    {
+echo 'Обновление<br>';
+deb::dump($files_array);
+
+                        $notice_prop->ps_id = $notice_photo_ps_id;
+                        $notice_prop->hand_input_value = $hand_input_value;
+                        $notice_prop->old_base_tag = 1;
+                        $notice_prop->save();
+                        if(count($notice_prop->getErrors()) > 0)
+                        {
+                            deb::dump($notice_prop->getErrors());
+                            die('Ошибка обновления');
+                        }
+                    }
                 }
                 else
                 {
+echo 'Вставка<br>';
+deb::dump($files_array);
+
                     $notice_prop = new NoticeProps();
                     $notice_prop->n_id = $nval->n_id;
                     $notice_prop->rp_id = $notice_photo_rp_id;
@@ -990,14 +1012,19 @@ die();
                     $notice_prop->hand_input_value = $hand_input_value;
                     $notice_prop->old_base_tag = 1;
                     $notice_prop->save();
-                deb::dump($notice_prop->getErrors());
+
+                    if(count($notice_prop->getErrors()) > 0)
+                    {
+                        deb::dump($notice_prop->getErrors());
+                        die('Ошибка вставки');
+                    }
 
                 }
 
                 //deb::dump($nval->n_id);
             }
-die();
-            $nval->img_import_tag = 1;
+//die();
+            $nval->img_import_tag = 4;
             $nval->save();
 
             // Перегенерируем xml свойства
@@ -1970,6 +1997,34 @@ die();
 
 
 
+    // Логин под любым пользователем
+    public function actionUserLoginByAdmin()
+    {
+
+        /************* Вход под любым юзером из под админского аккаунта **************/
+        if(Yii::app()->user->id == 1)
+        {
+            if(isset($_POST['UserLoginByAdmin']))
+            {
+                $user = User::model()->findByAttributes(array('email'=>$_POST['UserLoginByAdmin']));
+                Yii::app()->getSession()->regenerateID(true);
+                Yii::app()->user->setId($user->id);
+                Yii::app()->user->setName($user->username);
+                Yii::app()->user->setState('email', $user->email);
+                Yii::app()->user->setState(WebUser::STATES_VAR,array());
+                header('Location: /usercab/adverts');
+                die();
+            }
+            else
+            {
+                $this->render('userloginbyadmin');
+
+            }
+
+        }
+        /************ КОНЕЦ ***************/
+
+    }
 
     // Uncomment the following methods and override them if needed
 	/*

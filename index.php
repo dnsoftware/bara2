@@ -1,4 +1,5 @@
 <?php
+
 error_reporting(E_ALL & ~E_NOTICE);
 date_default_timezone_set('Europe/Moscow');
 
@@ -17,3 +18,4 @@ require_once($yii);
 
 // Класс BaraholkaWebApplication положил в /yii/BaraholkaWebApplication.php
 Yii::createApplication('BaraholkaWebApplication', $config)->run();
+

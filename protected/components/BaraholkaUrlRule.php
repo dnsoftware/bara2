@@ -83,12 +83,24 @@ class BaraholkaUrlRule extends CBaseUrlRule
         else
         if(isset($parts[0]) && count($parts) == 1 && strpos($parts[0], '.html'))
         {
-            preg_match('|_([0-9]{13})\.html|siU', $parts[0], $match);
 
-            $_GET = null;
-            $_GET['daynumber_id'] = $match[1];
-            $controller_action_url = 'advert/oldadvertredirect';
-            return $controller_action_url;
+            if(preg_match('|_([0-9]{13})\.html|siU', $parts[0], $match))
+            {
+                $_GET = null;
+                $_GET['daynumber_id'] = $match[1];
+                $controller_action_url = 'advert/oldadvertredirect';
+                return $controller_action_url;
+            }
+
+            if(preg_match('|_([0-9]{7})\.html|siU', $parts[0], $match))
+            {
+                $_GET = null;
+                $_GET['n_id'] = $match[1];
+                $controller_action_url = 'advert/oldadvertredirectbyid';
+                return $controller_action_url;
+            }
+
+
         }
         /////////////////////////
 

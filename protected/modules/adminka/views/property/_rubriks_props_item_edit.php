@@ -33,7 +33,7 @@
                 <td style="background-color: #adffc8; width: 300px; text-align: center;" rowspan="2">
                     <input type="submit" value="Сохранить">
 
-                    &nbsp;<span class="pointer" onclick="del_rubriks_props(<?= $model->rp_id;?>);">Удалить</span>
+                    <br><br>&nbsp;<span class="pointer" onclick="del_rubriks_props(<?= $model->rp_id;?>);">Удалить</span>
                 </td>
             </tr>
             <tr>

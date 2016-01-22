@@ -15,7 +15,6 @@ class LoginController extends Controller
 	{
         $serviceName = Yii::app()->request->getQuery('service');
         if (isset($serviceName)) {
-
             /** @var $eauth EAuthServiceBase */
             $eauth = Yii::app()->eauth->getIdentity($serviceName);
             $eauth->redirectUrl = Yii::app()->user->returnUrl;

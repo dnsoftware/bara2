@@ -45,7 +45,7 @@ class UadvertsController extends Controller
 
         if($useradverts = Notice::model()->findAll(array(
             'select'=>'*',
-            'condition'=>'u_id = :u_id AND verify_tag = 1 AND active_tag = 1 ',
+            'condition'=>'u_id = :u_id AND verify_tag = 1 AND active_tag = 1 AND deleted_tag = 0 AND date_expire > "'.time().'" ',
             'order'=>'date_add DESC',
             'params'=>array(':u_id'=>$u_id),
         )))
@@ -74,7 +74,7 @@ class UadvertsController extends Controller
         $props_array = array();
         if($useradverts = Notice::model()->findAll(array(
             'select'=>'*',
-            'condition'=>'u_id = :u_id AND verify_tag = 1 AND active_tag = 1 ' . $sql_rub,
+            'condition'=>'u_id = :u_id AND verify_tag = 1 AND active_tag = 1 AND deleted_tag = 0 AND date_expire > "'.time().'" ' . $sql_rub,
             'order'=>'date_add DESC',
             'params'=>array(':u_id'=>$u_id),
         )))

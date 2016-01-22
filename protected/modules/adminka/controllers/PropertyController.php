@@ -197,6 +197,11 @@ class PropertyController extends Controller
 
         <?
         }
+        else
+        {
+            $rp_row->delete();
+            echo "<!--ok-->";
+        }
         //echo "Доработать! Не удалять, если есть связанные записи!";
     }
 

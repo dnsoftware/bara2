@@ -50,7 +50,8 @@ class UserLogin extends CFormModel
 		if(!$this->hasErrors())  // we only want to authenticate when no input errors
 		{
 			$identity=new UserIdentity($this->username,$this->password);
-			$identity->authenticate();
+
+            $identity->authenticate();
 			switch($identity->errorCode)
 			{
 				case UserIdentity::ERROR_NONE:
@@ -73,6 +74,7 @@ class UserLogin extends CFormModel
 					$this->addError("password",UserModule::t("Password is incorrect."));
 					break;
 			}
-		}
+
+        }
 	}
 }

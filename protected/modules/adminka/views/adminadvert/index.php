@@ -123,6 +123,15 @@ $this->renderPartial('/default/_admin_menu');
                 }
                 ?>
 
+                <?
+                if(intval($aval['cost']) == 0)
+                {
+                    ?>
+                    <span style="background-color: #f00; color: #fff;">Нулевая цена</span>
+                <?
+                }
+                ?>
+
             </td>
 
             <td class="not_act">

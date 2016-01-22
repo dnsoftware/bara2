@@ -21,8 +21,6 @@ $this->renderPartial('application.views.filter._search_form', array(
 </div>
 <?*/?>
 
-<h1 style=" text-align: center; font-size: 18px; margin-top: 15px; margin-left: 10px;">Мои объявления</h1>
-
 <?
 //deb::dump($_GET);
 ?>
@@ -30,6 +28,8 @@ $this->renderPartial('application.views.filter._search_form', array(
 <table>
     <tr>
         <td style="width: 250px; vertical-align: top;">
+            <h1 style=" text-align: center; font-size: 18px; margin-top: 15px; margin-left: 10px;">Мои объявления</h1>
+
             <table>
                 <?
                 if(count($parent_rubriks) > 0)
@@ -38,7 +38,7 @@ $this->renderPartial('application.views.filter._search_form', array(
                     {
                         ?>
                         <tr>
-                            <td><a  class="baralink" href="/usercab/adverts/<?= $pval->transname;?>/"><?= $pval->name;?></a></td> <td><?= $parent_ids_count[$pval->r_id];?></td>
+                            <td><a class="baralink" href="/usercab/adverts/<?= $pval->transname;?>/"><?= $pval->name;?></a></td> <td><?= $parent_ids_count[$pval->r_id];?></td>
                         </tr>
                         <?
                         if(count($subrub_array[$pval->r_id]) > 0)
@@ -73,35 +73,43 @@ $this->renderPartial('application.views.filter._search_form', array(
 
         </td>
 
-        <td style="800px; vertical-align: top">
+        <td style="800px; vertical-align: top; text-align: left; padding-top: 10px; ">
 
-<?
+            <div id="tabs">
+                <ul>
+                    <li><a href="#tabs-actual">Активные (<?= count($search_adverts['actual']);?>)</a></li>
+                    <li><a href="#tabs-expire">Архивные (<?= count($search_adverts['expire']);?>)</a></li>
+                </ul>
 
-?>
+            <?
+            foreach($search_adverts as $index=>$search_adverts_part)
+            {
+            ?>
+            <div id="tabs-<?= $index;?>" style="">
+            <p>
             <table style="">
                 <?
-                //deb::dump(count($search_adverts));
-                foreach($search_adverts as $key=>$val)
+                foreach($search_adverts_part as $key=>$val)
                 {
                     ?>
                     <tr style="" id="tradv_<?= $val['n_id'];?>">
                         <td style="padding: 0 10px 0 0; margin: 0; width: 140px; height: 105px; vertical-align: middle; text-align: center; border: #000 solid 0px;">
                             <div style="position: relative;">
                                 <?
-                                if(count($props_array[$key]['photos']) > 0)
+                                if(count($props_array[$index][$key]['photos']) > 0)
                                 {
                                     $transliter = new Supporter();
                                     $advert_page_url = "/".$val['town_transname']."/".$rubriks_all_array[$val['r_id']]->transname."/".$transliter->TranslitForUrl($val['title'])."_".$val['daynumber_id'];
 
-                                    $photoname = Notice::getPhotoName($props_array[$key]['photos'][0], "_medium");
+                                    $photoname = Notice::getPhotoName($props_array[$index][$key]['photos'][0], "_medium");
                                     $curr_dir = Notice::getPhotoDir($photoname);
                                     ?>
                                     <a href="<?= $advert_page_url;?>"><img src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>"></a>
                                     <?
-                                    if(count($props_array[$key]['photos']) > 1)
+                                    if(count($props_array[$index][$key]['photos']) > 1)
                                     {
                                         ?>
-                                        <div class="colphoto"><div><?= count($props_array[$key]['photos']);?></div></div>
+                                        <div class="colphoto"><div><?= count($props_array[$index][$key]['photos']);?></div></div>
                                     <?
                                     }
                                     ?>
@@ -112,13 +120,41 @@ $this->renderPartial('application.views.filter._search_form', array(
                             </div>
                         </td>
                         <td style="vertical-align: top; padding: 0; margin: 0; padding-left: 10px;">
-                            <?= $props_array[$key]['props_display'];?>
+                            <?= $props_array[$index][$key]['props_display'];?>
                         </td>
                         <td>
                             <div>
-                                <a href="<?= Yii::app()->createUrl('usercab/advert_edit', array('n_id'=>$val['n_id']));?>">Редактировать</a>
+                                <a href="<?= Yii::app()->createUrl('usercab/advert_edit', array('n_id'=>$val['n_id']));?>">Редактировать</a><br>
 
-                                <span class="imgnot_del" id="imgdel_<?= $val['n_id'];?>" style="cursor: pointer; border-bottom: #003399 solid 1px;color: #06C;" onclick="advert_del(<?= $val['n_id'];?>);">Удалить</span>
+                                <?
+                                if($val['date_expire'] > time() && $val['active_tag'] == 1 )
+                                {
+                                ?>
+                                    <a style="color: #4d950e;" href="<?= Yii::app()->createUrl('usercab/advert_deactivate', array('n_id'=>$val['n_id']));?>">В архив</a><br>
+                                <?
+                                }
+                                ?>
+
+
+                                <span class="imgnot_del" id="imgdel_<?= $val['n_id'];?>" style="cursor: pointer; border-bottom: #003399 solid 1px;color: #008CC3;" onclick="advert_del(<?= $val['n_id'];?>);">Удалить</span><br>
+
+                                <?
+                                if($val['date_expire'] < time() || $val['active_tag'] == 0 )
+                                {
+                                ?>
+                                    <a style="color: #f00;" href="<?= Yii::app()->createUrl('usercab/advert_activate', array('n_id'=>$val['n_id']));?>">Активировать</a>
+                                <?
+                                }
+                                else
+                                if($val['date_expire'] < (time()+86400*2) && $val['date_expire'] > time())
+                                {
+                                ?>
+                                    <a style="color: #f00;" href="<?= Yii::app()->createUrl('usercab/advert_activate', array('n_id'=>$val['n_id']));?>">Обновить</a>
+                                <?
+                                }
+                                ?>
+
+
                             </div>
                         </td>
                     </tr>
@@ -129,6 +165,11 @@ $this->renderPartial('application.views.filter._search_form', array(
                 }
                 ?>
             </table>
+            </p>
+            </div>
+            <?
+            }
+            ?>
 
         </td>
     </tr>
@@ -147,6 +188,8 @@ $this->renderPartial('application.views.filter._search_form', array(
 
 
 <script>
+    $( "#tabs" ).tabs();
+
     $('.favorit_button, .favoritstar').click(function(){
         fbut = $(this);
 
@@ -213,3 +256,14 @@ $this->renderPartial('application.views.filter._search_form', array(
 </script>
 
 
+<style>
+    .ui-widget-content a
+    {
+        color: #008CC3;
+    }
+
+    .ui-widget-content a:focus, .ui-widget-content a:hover {
+        color: #09F;
+    }
+
+</style>

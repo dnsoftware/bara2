@@ -104,8 +104,9 @@ class Notice extends CActiveRecord
 		return array(
             array('u_id, r_id, parent_r_id, t_id, reg_id, c_id, date_add, date_lastedit, expire_period, date_expire, client_name, client_email, client_phone_c_id, active_tag, verify_tag, checksum,  views_count, moder_counted_tag', 'required'), // , cost, cost_valuta
 
-            array('cost', 'numerical'),
+            array('cost', 'validatecost'),
             array('cost_valuta', 'length', 'max'=>3),
+            array('cost_nodisplay_tag', 'safe'),
             array('u_id, r_id, t_id, reg_id, c_id, expire_period, active_tag, verify_tag, deactive_moder_id, moder_tag, moder_id, views_count, deleted_tag, otkaz_id, moder_counted_tag', 'numerical', 'integerOnly'=>true),
 			array('date_add, date_lastedit, date_expire, date_deactive, date_moder, date_delete, date_sort', 'length', 'max'=>14),
 			array('client_name, client_email, client_phone, phone_search, reject_reason', 'length', 'max'=>256),
@@ -145,6 +146,22 @@ class Notice extends CActiveRecord
 
     }
 
+    // Проверка корректности указания цены
+    public function validatecost()
+    {
+        //if(floatval($this->cost) < 1 && ($this->cost_nodisplay_tag == 0 || !isset($this->cost_nodisplay_tag)))
+        if(floatval($this->cost) < 1 )
+        {
+            if($this->cost_nodisplay_tag != 'on' && $this->cost_nodisplay_tag != 1)
+            {
+                $this->addError('cost', 'Необходимо указать цену!');
+            }
+
+        }
+
+    }
+
+
     // Проверка корректности ввода описания объявления
     public function validatenotice_text()
     {
@@ -166,7 +183,9 @@ class Notice extends CActiveRecord
     public function validatephone()
     {
         //$this->client_phone
-        if(Yii::app()->controller->action->id == 'addnew')
+        if(Yii::app()->controller->action->id == 'addnew'
+               || Yii::app()->controller->action->id == 'saveedit'
+                || Yii::app()->controller->action->id == 'advert_activate')
         {
             if(intval($this->client_phone_c_id) == Yii::app()->params['russia_id'])
             {
@@ -503,9 +522,30 @@ class Notice extends CActiveRecord
                 " ".Options::$valutes[Yii::app()->request->cookies['user_valuta_view']->value]['symbol2'];
 
             $short_advert_display = $shablons_display[$val['r_id']];
+
+            /*********Патч для старых объявлений**********/
+            //deb::dump($val);
+            if($val['old_base_tag'] == 1)
+            {
+                $short_advert_display = preg_replace('|<!--list_data_body-->.*<!--/list_data_body-->|siU', '', $short_advert_display);
+                $short_advert_display = preg_replace('|<!--list_data_title-->.*<!--/list_data_title-->|siU', $val['title'], $short_advert_display);
+            }
+            /**********КОНЕЦ*********/
+
+            // До этого места все вставки в тегах HTML комментариев должны быть отработана
+            // Удаляем теги HTML комментариев
+            $short_advert_display = preg_replace('|<!--[^>].+-->|siU', '', $short_advert_display);
+            $short_advert_display = preg_replace('|<!--/[^>].+-->|siU', '', $short_advert_display);
+
             foreach($props_display as $pkey=>$pval)
             {
                 $short_advert_display = str_replace('['.$pkey.']', $pval, $short_advert_display);
+            }
+
+            //Выпиливаем неотображаемую цену
+            if($val['cost_nodisplay_tag'] == 1)
+            {
+                $short_advert_display = str_replace('{cost}', '', $short_advert_display);
             }
 
             preg_match_all('|\{([a-zA-Z0-9_-]+)\}|siU', $short_advert_display, $matches);
@@ -628,7 +668,7 @@ class Notice extends CActiveRecord
     {
         $count = Notice::model()->count(array(
             'select'=>'n_id',
-            'condition'=>'u_id = '.$u_id
+            'condition'=>'u_id = '.$u_id . ' AND deleted_tag <> 1 '
         ));
 
         return $count;

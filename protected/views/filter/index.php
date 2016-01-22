@@ -120,6 +120,7 @@ $this->renderPartial('/filter/_search_form', array(
     <?
     $url_parts = array();
     $url = '';
+    $url_part_groups = array();
     $bread_count = count($this->breadcrumbs);
     $i=0;
     foreach ($this->breadcrumbs as $bkey=>$bval)
@@ -128,10 +129,12 @@ $this->renderPartial('/filter/_search_form', array(
         if($bval['type']=='subrubrik')
         {
             $url_parts[$bkey-1] = $bval['transname'];
+            $url_part_groups[$bkey-1] = $bval;
         }
         else
         {
             $url_parts[$bkey] = $bval['transname'];
+            $url_part_groups[$bkey] = $bval;
         }
         $url = implode("/", $url_parts);;
         ?>
@@ -142,6 +145,23 @@ $this->renderPartial('/filter/_search_form', array(
             echo "<span class='baralink'> > </span>";
         }
     }
+
+    $url_group = $url;
+    if($url_part_groups[count($url_part_groups)]['type'] == 'rubrik')
+    {
+        unset($url_part_groups[count($url_part_groups)]);
+    }
+
+    $url_part_groups_array = array();
+    if(isset($url_part_groups) && count($url_part_groups) > 0)
+    {
+        foreach($url_part_groups as $ukey=>$uval)
+        {
+            $url_part_groups_array[] = $uval['transname'];
+        }
+        $url_group = implode("/", $url_part_groups_array);
+    }
+
 
     ?>
 </div>
@@ -155,62 +175,10 @@ $this->renderPartial('/filter/_search_form', array(
 </div>
 
 
-
-
-
     <div id="search_data">
 
     </div>
 
-    <script>
-/*
-        $('#select_country').change(function ()
-        {
-            $.ajax({
-                type: 'POST',
-                url: '<?= Yii::app()->createUrl('advert/get_html_regions');?>',
-                data: 'c_id='+$(this).val(),
-                success: function(msg){
-                    $('#select_region').html(msg);
-
-                    //$('#select_region')[0].sumo.unload();
-                    //$('#select_region').SumoSelect();
-                    $('#select_region').change();
-                }
-            });
-        });
-
-        $('#select_region').change(function ()
-        {
-            $.ajax({
-                type: 'POST',
-                url: '<?= Yii::app()->createUrl('advert/get_html_towns');?>',
-                data: 'reg_id='+$(this).val(),
-                success: function(msg){
-                    $('#select_town').html(msg);
-
-                    //$('#select_town')[0].sumo.unload();
-                    //$('#select_town').SumoSelect();
-                }
-            });
-        });
-
-        function advertFilter(action)
-        {
-            $.ajax({
-                type: 'POST',
-                url: action,
-                data: $('#form_filter').serialize(),
-                success: function(msg){
-
-                    $('#search_data').html(msg);
-
-                }
-            });
-        }
-*/
-
-    </script>
 
 </div>
 
@@ -233,7 +201,7 @@ if(count($rubrik_groups) > 0)
             continue;
         }
         ?>
-        <a style="margin-right: 0px;" class="baralink_plus" href="<?= $allreg_prefix.Yii::app()->createUrl($rval['path']);?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
+        <a style="margin-right: 0px;" class="baralink_plus" href="<?= $allreg_prefix.Yii::app()->createUrl($url_group."/".$rval['transname']/*$rval['path']*/);?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
     <?
     }
 }

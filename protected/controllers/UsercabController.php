@@ -94,9 +94,15 @@ class UsercabController extends Controller
         {
             foreach($useradverts_temp as $ukey=>$uval)
             {
-                $search_adverts[$uval->n_id] = $uval->attributes;
-                $search_adverts[$uval->n_id]['town_name'] = $towns_array[$uval->t_id]->name;
-                $search_adverts[$uval->n_id]['town_transname'] = $towns_array[$uval->t_id]->transname;
+                $index = 'actual';
+                if($uval->date_expire < time() || $uval->active_tag == 0)
+                {
+                    $index = 'expire';
+                }
+
+                $search_adverts[$index][$uval->n_id] = $uval->attributes;
+                $search_adverts[$index][$uval->n_id]['town_name'] = $towns_array[$uval->t_id]->name;
+                $search_adverts[$index][$uval->n_id]['town_transname'] = $towns_array[$uval->t_id]->transname;
             }
 
             // Подготовка данных для отображения
@@ -104,7 +110,16 @@ class UsercabController extends Controller
             $shablons_display = Rubriks::GetShablonsDisplay();
             $rubriks_all_array = Rubriks::get_all_subrubs();
             //deb::dump($rubriks_all_array);
-            $props_array = Notice::DisplayAdvertsList($search_adverts, $shablons_display, $rubriks_all_array);
+
+            if(isset($search_adverts['actual']))
+            {
+                $props_array['actual'] = Notice::DisplayAdvertsList($search_adverts['actual'], $shablons_display, $rubriks_all_array);
+            }
+
+            if(isset($search_adverts['expire']))
+            {
+                $props_array['expire'] = Notice::DisplayAdvertsList($search_adverts['expire'], $shablons_display, $rubriks_all_array);
+            }
 
         }
 //deb::dump($props_array);
@@ -227,6 +242,87 @@ class UsercabController extends Controller
             //$this->render('/advert/addadvert');
         }
 
+    }
+
+
+
+    // Продление объявый
+    public function actionAdvert_activate()
+    {
+        $n_id = intval($_GET['n_id']);
+
+        if($advert = Notice::checkAdvertOwner(Yii::app()->user->id, $n_id))
+        {
+            if($advert->date_expire < (time()+86400*2) || $advert->active_tag == 0)
+            {
+                $props_array = AdvertController::GetPropsFromDatabase($n_id);
+
+                $return_array['errors'] = array();
+                if(!$advert->validate())
+                {
+                    $return_array['errors'] = $advert->getErrors();
+                }
+
+                $advertcontroller = new AdvertController('advertcontroller');
+                $return_array = array_merge($return_array, $advertcontroller->CheckRequireNoticeProps($advert, $props_array));
+
+
+                if(count($return_array['errors_props']) == 0 && count($return_array['errors']) == 0)
+                {
+                    if($advert->date_expire < (time()+86400*2))
+                    {
+                        if($advert->date_add_first == '')
+                        {
+                            $advert->date_add_first = $advert->date_add;
+                        }
+                        $new_date_add = time();
+                        $advert->date_add = $new_date_add;
+                        $advert->date_lastedit = $new_date_add;
+                        $advert->date_expire = $new_date_add + $advert->expire_period*86400;
+                        $advert->active_tag = 1;
+                        $advert->save();
+                    }
+
+                    if($advert->active_tag == 0)
+                    {
+                        $advert->active_tag = 1;
+                        $advert->save();
+                    }
+
+                    header('Location: '.$_SERVER['HTTP_REFERER']);
+                    die();
+
+                }
+                else
+                {
+                    $redirect_url = Yii::app()->createUrl('usercab/advert_edit', array('n_id'=>$n_id, 'republic'=>'1'));
+                    //deb::dump($redirect_url);
+                    header('Location: '.$redirect_url);
+                    die();
+                }
+
+
+
+            }
+
+        }
+
+        header('Location: '.$_SERVER['HTTP_REFERER']);
+//die('stop');
+    }
+
+
+    public function actionAdvert_deactivate()
+    {
+        $n_id = intval($_GET['n_id']);
+
+        if($advert = Notice::checkAdvertOwner(Yii::app()->user->id, $n_id))
+        {
+            $advert->active_tag = 0;
+            $advert->save();
+        }
+
+        header('Location: '.$_SERVER['HTTP_REFERER']);
     }
 
 

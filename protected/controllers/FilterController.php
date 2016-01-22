@@ -129,20 +129,6 @@ class FilterController extends Controller
         }
 //deb::dump($mesto_sql);
 
-        /*
-        if(isset($_GET['mainblock']['c_id']) && intval($_GET['mainblock']['c_id']) != 0)
-        {
-            $mesto_sql = " n.c_id = ".intval($_GET['mainblock']['c_id']);
-        }
-        if(isset($_GET['mainblock']['reg_id']) && intval($_GET['mainblock']['reg_id']) != 0)
-        {
-            $mesto_sql = " n.reg_id = ".intval($_GET['mainblock']['reg_id']);
-        }
-        if(isset($_GET['mainblock']['t_id']) && intval($_GET['mainblock']['t_id']) != 0)
-        {
-            $mesto_sql = " n.t_id = ".intval($_GET['mainblock']['t_id']);
-        }
-        */
 
         //Рубрика
 
@@ -197,28 +183,111 @@ class FilterController extends Controller
             $pubriks_props_by_selector_array[$rval->selector] = $rval;
         }
 
+        //deb::dump($rubriks_poryadok_props_array);
+//deb::dump($pubriks_props_array);
+        //deb::dump($_GET['prop']);
+//        deb::dump($_GET['addfield']);
+        //deb::dump($pubriks_props_array);
+
         // Переводим переменные из $_GET['prop'] в $_GET['addfield']
+        $gpkey_offset = 0;  // $gpkey_offset - изза того что могут быть пропуски $gpkey может неправильно
+                            // позиционироваться, поэтому фиксируется смежение дальше по массиву
+        $first_index_tag = 1;
+        $parent_ps_ids = array();
         if(isset($_GET['prop']) && count($_GET['prop']) > 0)
         {
             foreach($_GET['prop'] as $gpkey=>$gpval)
             {
-                $rp_selector = $pubriks_props_array[$rubriks_poryadok_props_array[$gpkey]]->selector;
-                if($prop_row = PropsSprav::model()->findByAttributes(array('rp_id'=>$rubriks_poryadok_props_array[$gpkey], 'transname'=>$gpval)))
+                while(isset($rubriks_poryadok_props_array[$gpkey + $gpkey_offset]))
                 {
-                    if($pubriks_props_array[$rubriks_poryadok_props_array[$gpkey]]->filter_type == 'range')
+                    $new_gpkey = $gpkey + $gpkey_offset;
+
+                    $prop_row = null;
+                    if($ps_rows = PropsSprav::model()->findAllByAttributes(array(
+                        'rp_id'=>$rubriks_poryadok_props_array[$new_gpkey], 'transname'=>$gpval)
+                    ))
                     {
-                        $_GET['addfield'][$rp_selector]['from'] = $prop_row->ps_id;
-                        $_GET['addfield'][$rp_selector]['to'] = $prop_row->ps_id;
+                        foreach($ps_rows as $prkey=>$prval)
+                        {
+                            if($psparents = PropsRelations::model()->findAllByAttributes(array(
+                                'child_ps_id'=>$prval->ps_id)
+                            ))
+                            {
+                                $break_tag = 0;
+                                foreach($psparents as $pr2key=>$psparent)
+                                {
+                                    if(isset($parent_ps_ids[$psparent->parent_ps_id])
+                                        && in_array($prval->ps_id, $parent_ps_ids[$psparent->parent_ps_id]))
+                                    {
+                                        $prop_row = $prval;
+                                        $break_tag = 1;
+                                        break;
+                                    }
+                                }
+
+                                if($break_tag == 1)
+                                {
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                $prop_row = $prval;
+                                break;
+                            }
+
+                        }
+
+                        if($prop_row)
+                        {
+                            $childs_array = array();
+                            if($childs = PropsRelations::model()->findAllByAttributes(
+                                array('parent_ps_id'=>$prop_row->ps_id)
+                            ))
+                            {
+                                foreach($childs as $ckey=>$cval)
+                                {
+                                    $childs_array[] = $cval->child_ps_id;
+                                }
+                            }
+                            $parent_ps_ids[$prop_row->ps_id] = $childs_array;
+
+                            //deb::dump($prop_row);
+                            $rp_selector = $pubriks_props_array[$rubriks_poryadok_props_array[$new_gpkey]]->selector;
+
+                            if($pubriks_props_array[$rubriks_poryadok_props_array[$new_gpkey]]->filter_type == 'range')
+                            {
+                                $_GET['addfield'][$rp_selector]['from'] = $prop_row->ps_id;
+                                $_GET['addfield'][$rp_selector]['to'] = $prop_row->ps_id;
+                            }
+                            else
+                                if($pubriks_props_array[$rubriks_poryadok_props_array[$new_gpkey]]->filter_type == 'select_multi')
+                                {
+                                    $_GET['addfield'][$rp_selector][] = $prop_row->ps_id;
+                                }
+                                else
+                                {
+                                    $_GET['addfield'][$rp_selector] = $prop_row->ps_id;
+//                            deb::dump($rp_selector);
+                                }
+                            break;
+                        }
+
+                        //deb::dump($prop_row);
+
+                        break;
                     }
                     else
                     {
-                        $_GET['addfield'][$rp_selector] = $prop_row->ps_id;
+                        $gpkey_offset++;
                     }
+
                 }
             }
-    //deb::dump($rubriks_poryadok_props_array);
         }
         // КОНЕЦ Переводим переменные из $_GET['prop'] в $_GET['addfield']
+
+
 
         // Переводим переменные из $_GET['addfield'] в $_GET['prop']
         // Только для тех кто участвует в иерархии
@@ -226,6 +295,11 @@ class FilterController extends Controller
         {
             foreach($_GET['addfield'] as $akey=>$aval)
             {
+                if(is_array($aval) && count($aval) == 1)
+                {
+                    $aval = $aval[0];
+                }
+
                 if(!is_array($aval) && !isset($_GET['prop'][$rubriks_props_poryadok_by_selector_array[$akey]]))
                 {
                     if($pubriks_props_by_selector_array[$akey]->hierarhy_tag)
@@ -238,6 +312,7 @@ class FilterController extends Controller
         }
 
         // КОНЕЦ Переводим переменные из $_GET['addfield'] в $_GET['prop']
+//deb::dump($_GET['prop']);
 
         // Удаление из $_GET['addfield'] пустых диапазонов
         if(isset($_GET['addfield']) && count($_GET['addfield']) > 0 )
@@ -251,126 +326,12 @@ class FilterController extends Controller
             }
         }
 
+//deb::dump($_GET['prop']);
+//deb::dump($_GET['addfield']);
 
         $search_adverts = array();  // Найденные объявы
 
-        // Убрать $_GET['prop'] и заменить на соответствующие $_GET['addfield']
-        /*
-        if(count($_GET['prop']) > 0 || (isset($_GET['addfield']) && count($_GET['addfield']) > 0 ) )
-        {
-            $props_sprav = PropsSprav::model()->findAll(array('condition'=>'rp_id IN ('.implode(", ", $rp_ids).')'));
-            $props_route_items = array();
-            foreach($props_sprav as $pkey=>$pval)
-            {
-                $props_route_items[$rubriks_props_poryadok_array[$pval->rp_id]][$pval->transname] = $pval;
-            }
-
-            $props_sql_array = array();
-            $path_ps_id_array = array();
-            $ps_id = 0;
-            foreach($_GET['prop'] as $pkey=>$pval)
-            {
-                if(isset($props_route_items[$pkey][$pval]))
-                {
-                    $props_sql_array[] = $props_route_items[$pkey][$pval];
-                    $ps_id = $props_route_items[$pkey][$pval]->ps_id;
-                    $path_ps_id_array[] = $ps_id;
-                }
-                else
-                {
-
-                }
-            }
-            $current_ps_id = $ps_id;
-
-            // Ищем объявы с совпадением значений всех указанных свойств
-            if(count($_GET['prop']) == count($props_sql_array))
-            {
-//deb::dump($_GET);
-                $kol_props = count($props_sql_array);
-                $from_tables_array = array();
-                $from_tables_sql = "";
-                $where_n_array = array();
-                $where_n = "";
-                $where_filter_array = array();
-                $where_filter_sql = "";
-                for($i=1; $i<=$kol_props; $i++)
-                {
-                    $from_tables_array[] = $connection->tablePrefix . "notice_props n".$i;
-                    $where_n_array[] = " AND n".$i.".n_id = n".($i+1).".n_id ";
-                    $where_filter_array[] = "n".$i.".ps_id = ".$props_sql_array[$i-1]->ps_id;
-                }
-                $from_tables_sql = implode(", ", $from_tables_array);
-                unset($where_n_array[count($where_n_array)-1]);
-                $where_n = implode(" ", $where_n_array);
-                $where_filter_sql = implode(" AND ", $where_filter_array);
-                //deb::dump($from_tables_sql);
-                //deb::dump($where_n);
-
-                $rubrik_prop_sql = str_replace("r_id", "n.r_id", $rubrik_sql);
-                $sql = "SELECT n.*, t.name town_name, t.transname town_transname
-                        FROM ". $connection->tablePrefix . "notice n,
-                        ".$from_tables_sql.",
-                        ". $connection->tablePrefix . "towns t
-                        WHERE
-                        $mesto_sql AND $rubrik_prop_sql AND
-                        $where_filter_sql
-                        ".$where_n.$q_sql."
-                        AND n1.n_id = n.n_id
-                        AND n.t_id = t.t_id ";
-                //deb::dump($sql);
-                $command=$connection->createCommand($sql);
-                $dataReader=$command->query();
-                while(($row = $dataReader->read())!==false)
-                {
-                    $search_adverts[$row['n_id']] = $row;
-                }
-
-
-                // Формирование данных для ссылок на подгруппы
-                $rubrik_groups = array();
-
-                $subprop_rp_id = $rubriks_poryadok_props_array[count($_GET['prop'])+2];
-                if(isset($subprop_rp_id))
-                {
-                    $subprops = PropsRelations::model()->findAll(array('condition'=>'parent_ps_id = '.$current_ps_id));
-
-                    $sql = "SELECT nsub.ps_id, ps.value, ps.transname, count(nsub.ps_id) cnt
-                            FROM ". $connection->tablePrefix . "notice n,
-                            ".$from_tables_sql.",
-                            ". $connection->tablePrefix . "notice_props nsub,
-                            ". $connection->tablePrefix . "props_sprav ps
-                            WHERE
-                            $mesto_sql AND $rubrik_prop_sql AND
-                            $where_filter_sql
-                            ".$where_n."
-                            AND n1.n_id = n.n_id
-                            AND n.n_id = nsub.n_id AND nsub.rp_id = ".$subprop_rp_id . "
-                            AND nsub.ps_id = ps.ps_id
-                            GROUP BY nsub.ps_id, ps.value, ps.transname ";
-                //deb::dump($sql);
-                    $command=$connection->createCommand($sql);
-                    $dataReader=$command->query();
-                    while(($row = $dataReader->read())!==false)
-                    {
-                        //deb::dump($row);
-                        $row['path'] = Yii::app()->getRequest()->getPathInfo()."/".$row['transname'];
-                        $row['name'] = $row['value'];
-                        $rubrik_groups[] = $row;
-
-                    }
-                }
-
-//deb::dump($rubrik_groups);
-
-            }
-            else    // Нет записей удовлетворяющих критерию
-            {
-
-            }
-
-        }
-        */
+        $ps_ids_array = array();    // Список кодов свойств используемых в фильтре (для построения титула страницы)
 
         if( /*count($_GET['prop']) > 0 || */(isset($_GET['addfield']) && count($_GET['addfield']) > 0 ) )
         {
@@ -382,17 +343,16 @@ class FilterController extends Controller
                 $props_route_items[$rubriks_props_poryadok_array[$pval->rp_id]][$pval->transname] = $pval;
                 $props_route_items_by_id[$pval->ps_id] = $pval;
             }
-
-
+//deb::dump($props_route_items);
             foreach($_GET['prop'] as $pkey=>$pval)
             {
                 if(isset($props_route_items[$pkey][$pval]))
                 {
                     $ps_id = $props_route_items[$pkey][$pval]->ps_id;
+                    $ps_ids_array[$ps_id] = $ps_id;
                 }
             }
             $current_ps_id = $ps_id;
-
 
 //deb::dump($current_ps_id);
 //deb::dump($_GET['prop']);
@@ -434,17 +394,32 @@ class FilterController extends Controller
                         break;
 
                         case "select_multi":
-                            //deb::dump($gval);
-                            if(count($gval > 0))
+                            // В ссылке вида http://baraholka2.dn/krasnodar/kvartiry/prodam/vtorichka
+                            // $gval ("vtorichka") будет не массивом мультивыбора, а обычной переменной, поэтому
+                            // приводим к массиву
+                            $multi_array = array();
+                            if(!is_array($gval))
                             {
-                                foreach($gval as $g2key=>$g2val)
+                                $multi_array[] = $gval;
+                            }
+                            else
+                            {
+                                $multi_array = $gval;
+                            }
+                            //deb::dump($gkey);
+                            //deb::dump($multi_array);
+
+                            if(count($multi_array > 0))
+                            {
+                                foreach($multi_array as $g2key=>$g2val)
                                 {
-                                    $gval[$g2key] = intval($g2val);
+                                    $multi_array[$g2key] = intval($g2val);
                                 }
+
                                 $from_tables_array[] = $connection->tablePrefix . "notice_props n".$i;
                                 $where_n_array[] = " AND n".$i.".rp_id = ".$switch_rp_id;
                                 $where_n_array[] = " AND n".$i.".n_id = n".($i+1).".n_id ";
-                                $where_filter_array[] = "n".$i.".ps_id IN (".implode(", ", $gval).")";
+                                $where_filter_array[] = "n".$i.".ps_id IN (".implode(", ", $multi_array).")";
                             }
                         break;
 
@@ -616,11 +591,11 @@ class FilterController extends Controller
 
                 }
 
+//deb::dump($where_filter_array);
                 $from_tables_sql = implode(", ", $from_tables_array);
                 unset($where_n_array[count($where_n_array)-1]);
                 $where_n = implode(" ", $where_n_array);
                 $where_filter_sql = implode(" AND ", $where_filter_array);
-
 
                 $rubrik_prop_sql = str_replace("r_id", "n.r_id", $rubrik_sql);
 
@@ -726,7 +701,7 @@ class FilterController extends Controller
                     $dataReader=$command->query();
                     while(($row = $dataReader->read())!==false)
                     {
-                        $row['path'] = Yii::app()->getRequest()->getPathInfo()."/".$row['transname'];
+                        //$row['path'] = Yii::app()->getRequest()->getPathInfo()."/".$row['transname'];
                         $row['name'] = $row['value'];
                         $rubrik_groups[] = $row;
 
@@ -849,7 +824,7 @@ class FilterController extends Controller
                 while(($rowgroup = $dataReader->read())!==false)
                 {
                     $curr_path_parts = explode("/", Yii::app()->getRequest()->getPathInfo());
-                    $rowgroup['path'] = $curr_path_parts[0]."/".$rowgroup['transname'];
+                    //$rowgroup['path'] = $curr_path_parts[0]."/".$rowgroup['transname'];
                     $rubrik_groups[] = $rowgroup;
                 }
 
@@ -894,7 +869,7 @@ class FilterController extends Controller
                         $rubrik_groups[$row['ps_id']]['cnt'] = $row['cnt'];
                         $rubrik_groups[$row['ps_id']]['name'] = $props_rows[$row['ps_id']]->value;
                         $rubrik_groups[$row['ps_id']]['transname'] = $props_rows[$row['ps_id']]->transname;
-                        $rubrik_groups[$row['ps_id']]['path'] = Yii::app()->getRequest()->getPathInfo()."/".$props_rows[$row['ps_id']]->transname;
+                        //$rubrik_groups[$row['ps_id']]['path'] = Yii::app()->getRequest()->getPathInfo()."/".$props_rows[$row['ps_id']]->transname;
 
                     }
                 }
@@ -922,7 +897,7 @@ class FilterController extends Controller
                 $rubrik_groups = array();
                 while(($rowgroup = $dataReader->read())!==false)
                 {
-                    $rowgroup['path'] = Yii::app()->getRequest()->getPathInfo()."/".$rowgroup['transname'];
+                    //$rowgroup['path'] = Yii::app()->getRequest()->getPathInfo()."/".$rowgroup['transname'];
                     $rubrik_groups[] = $rowgroup;
                 }
                 //deb::dump($rubrik_groups);
@@ -942,7 +917,6 @@ class FilterController extends Controller
 
         $props_array = Notice::DisplayAdvertsList($search_adverts, $shablons_display, $rubriks_all_array);
 
-
 //deb::dump(count($search_adverts));
 
         /**************************************************************************/
@@ -958,6 +932,7 @@ class FilterController extends Controller
 
         //Местоположение
         $bread_number = 0;  // индекс в массиве $this->breadcrumbs
+        $region_for_titul = '';
         if($mesto_isset_tag && $mselector == 't')
         {
             if(!isset($town))
@@ -969,6 +944,7 @@ class FilterController extends Controller
             $this->breadcrumbs[$bread_number]['transname'] = $town->transname;
             $this->breadcrumbs[$bread_number]['type'] = 'town';
             $this->breadcrumbs[$bread_number]['name'] = $town->name . ": все объявления";
+            $region_for_titul = $town->name;
         }
         else
         if($mesto_isset_tag && $mselector == 'reg')
@@ -982,6 +958,7 @@ class FilterController extends Controller
             $this->breadcrumbs[$bread_number]['transname'] = $region->transname;
             $this->breadcrumbs[$bread_number]['type'] = 'region';
             $this->breadcrumbs[$bread_number]['name'] = $region->name . ": все объявления";
+            $region_for_titul = $region->name;
         }
         else
         if($mesto_isset_tag && $mselector == 'c')
@@ -995,6 +972,7 @@ class FilterController extends Controller
             $this->breadcrumbs[$bread_number]['transname'] = $country->transname;
             $this->breadcrumbs[$bread_number]['type'] = 'country';
             $this->breadcrumbs[$bread_number]['name'] = $country->name . ": все объявления";
+            $region_for_titul = $country->name;
         }
 
         //Рубрикация
@@ -1026,7 +1004,7 @@ class FilterController extends Controller
         }
 
 //deb::dump($this->breadcrumbs);
-//deb::dump($_GET);
+//deb::dump($_GET['addfield']);
 //deb::dump($rubriks_props_array);
 //deb::dump($props_route_items);
 //deb::dump($rubriks_props_poryadok_by_selector_array);
@@ -1039,7 +1017,14 @@ class FilterController extends Controller
             {
                 if(is_array($pval))
                 {
-                    break;
+                    if(count($pval) == 1)
+                    {
+                        $pval = $pval[0];
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
 
                 //$ankor = $pubriks_props_by_selector_array[$pkey]['name'];
@@ -1056,6 +1041,60 @@ class FilterController extends Controller
 //deb::dump($this->breadcrumbs);
 
         // *************************** КОНЕЦ Формирование хлебных крошек
+
+
+        // Формирование титула
+        $titul_array = $this->breadcrumbs;
+        array_shift($titul_array);
+        if($bread_rubrik->parent_id > 0)
+        {
+            array_shift($titul_array);
+        }
+        $titulpart = array();
+        foreach($titul_array as $tkey=>$tval)
+        {
+            $titulpart[] = $tval['name'];
+        }
+        $deystvie = 'купить';
+
+        if(count($ps_ids_array) > 0)
+        {
+            foreach($ps_ids_array as $pikey=>$pival)
+            {
+                foreach(PropsSprav::$anti_category_theme as $akey=>$aval)
+                {
+                    if(in_array($pikey, $aval))
+                    {
+                        $deystvie = $akey;
+                        break;
+                    }
+                }
+            }
+        }
+
+//deb::dump($bread_rubrik);
+        $curr_url = Yii::app()->getRequest()->getUrl();
+        if($curr_url == '/' || stripos('/index.php', $curr_url) !== false)
+        {
+            $this->pageTitle = 'Доска бесплатных частных объявлений - '.$_SERVER['HTTP_HOST'];
+        }
+        if(count($titul_array) == 0 && $mesto_isset_tag > 0)
+        {
+            //deb::dump($town);
+            $regstr = 'регионе';
+            if(isset($town))
+            {
+                $regstr = 'г. ';
+            }
+            $this->pageTitle = 'Доска бесплатных частных объявлений в '.$regstr.' '.$region_for_titul.' - '.$_SERVER['HTTP_HOST'];
+        }
+        else
+        {
+            $this->pageTitle = implode(", ", $titulpart) ." - ". $deystvie. " на ".$_SERVER['HTTP_HOST'];
+        }
+        //Доска бесплатных частных объявлений в регионе Россия - baraholka.ru
+
+        ////////// Конец формирования титула
 
 
 //deb::dump(Yii::app()->getRequest()->getUrl());

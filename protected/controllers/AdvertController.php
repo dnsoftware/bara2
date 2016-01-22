@@ -19,6 +19,7 @@ class AdvertController extends Controller
         {
             Yii::app()->session['redirurl'] = '/advert/addadvert';
             $this->redirect(Yii::app()->createUrl('/user/login'));
+            die();
         }
 
         $rub_array = Rubriks::get_rublist(true);
@@ -45,6 +46,7 @@ class AdvertController extends Controller
             $mainblock = $model->attributes;
             //deb::dump($mainblock);
         }
+//deb::dump($mainblock);
 
 
         $country_array = Countries::getCountryList();
@@ -669,6 +671,16 @@ class AdvertController extends Controller
                 $('#div_ajax_loader_icon').css('display', 'none');
                 $('#div_props').css('display', 'block');
 
+                <?
+                if(isset($_POST['republic']) && $_POST['republic'] == 1)
+                {
+                ?>
+                    //alert('republic');
+                    $('#submitadvert').click();
+                <?
+                }
+                ?>
+
                 props_load_page_addadvert_tag = 1;
             }
         }, 1000);
@@ -1191,16 +1203,29 @@ class AdvertController extends Controller
             $n_id = intval($_POST['n_id']);
         }
 
+        /************ Сохранение блока фотографий при смене рубрики у редактируемых ************/
         if(!$model_notice = Notice::model()->findByPk($n_id))
         {
             $model_notice = new Notice();
+            $model_rubriks_props = RubriksProps::model()->find(array(
+                'select'=>'*',
+                'condition'=>'selector=:rp_id',
+                'params'=>array(':rp_id'=>$field_id)
+            ));
         }
-
-        $model_rubriks_props = RubriksProps::model()->find(array(
-            'select'=>'*',
-            'condition'=>'selector=:rp_id',
-            'params'=>array(':rp_id'=>$field_id)
-        ));
+        else
+        {
+            $notice_photo_prop = RubriksProps::model()->with('notice_props')->find(array(
+                'select'=>'*',
+                'condition'=>"t.vibor_type = 'photoblock' AND notice_props.n_id=".$n_id
+            ));
+            $model_rubriks_props = RubriksProps::model()->find(array(
+                'select'=>'*',
+                'condition'=>'selector=:rp_id',
+                'params'=>array(':rp_id'=>$notice_photo_prop->selector)
+            ));
+        }
+        /************************************************/
 
         $fieldvalue = $this->getAddfieldValue($n_id, $field_id, $model_rubriks_props);
 //deb::dump($fieldvalue);
@@ -1543,33 +1568,36 @@ class AdvertController extends Controller
 
             /******** Вставка предварительного масштабирования
             /******** (можно удалить этот блок, если такое масштабирование не нужго) */////////////////////////
-            /*
-            $img = new CImageHandler();
-            $full_filename = $output_dir.$fileName;
-            $img->load($full_filename);
+            if(1)
+            {
+                $img = new CImageHandler();
+                $full_filename = $output_dir.$fileName;
+                $img->load($full_filename);
 
-            $orient = 'h';
-            if($img->getWidth() < $img->getHeight())
-            {
-                $orient = 'v';
-            }
+                $orient = 'h';
+                if($img->getWidth() < $img->getHeight())
+                {
+                    $orient = 'v';
+                }
 
-            // Резайз до самой большой картинки
-            $img_width = $img->getWidth();
-            $img_height = $img->getHeight();
-            if($orient == 'h')
-            {
-                $img->resize(Notice::HUGE_WIDTH, false);
-                $scale_koeff = Notice::HUGE_WIDTH / Notice::BIG_PREVIEW_WIDTH * Notice::BASE_KOEFF_WATER_SCALE;
+                // Резайз до самой большой картинки
+                $img_width = $img->getWidth();
+                $img_height = $img->getHeight();
+                if($orient == 'h')
+                {
+                    $img->resize(Notice::HUGE_WIDTH, false);
+                    $scale_koeff = Notice::HUGE_WIDTH / Notice::BIG_PREVIEW_WIDTH * Notice::BASE_KOEFF_WATER_SCALE;
+                }
+                else
+                {
+                    $img->resize(false, Notice::HUGE_HEIGHT);
+                    $scale_koeff = Notice::HUGE_HEIGHT / Notice::BIG_PREVIEW_HEIGHT * Notice::BASE_KOEFF_WATER_SCALE;
+                }
+                // Сохраняем без водяного знака (для использования как исходник в будущем)
+                $img->save($full_filename);
+
+
             }
-            else
-            {
-                $img->resize(false, Notice::HUGE_HEIGHT);
-                $scale_koeff = Notice::HUGE_HEIGHT / Notice::BIG_PREVIEW_HEIGHT * Notice::BASE_KOEFF_WATER_SCALE;
-            }
-            // Сохраняем без водяного знака (для использования как исходник в будущем)
-            $img->save($full_filename);
-            */
             /******* КОНЕЦ Вставка предварительного масштабирования  *////////////////////////
 
 
@@ -1606,7 +1634,6 @@ class AdvertController extends Controller
 
             Yii::app()->session['mainblock'] = $_POST['mainblock'];
             $mainblock_array = $_POST['mainblock'];
-
         }
 
         $addfield_array = array();
@@ -1619,7 +1646,7 @@ class AdvertController extends Controller
         if (!isset($_POST['mainblock']) || !isset($_POST['addfield']))
         {
             $return_array['status'] = 'error';
-            $return_array['message'] = 'Неполностью подгружены данные, перезагрузите страницу и выберите необходимую рубрику';
+            $return_array['message'] = 'Неполностью подгружены данные, перезагрузите страницу и выберите необходимую рубрику. Error no addfield';
             echo json_encode($return_array);
 
             return false;
@@ -1708,11 +1735,24 @@ class AdvertController extends Controller
             $optmodel->save();
             $newmodel->save();
 
+//die();
+            $maildata = array();
+            $maildata['newmodel'] = $newmodel;
+            $maildata['mainblock_array'] = $mainblock_array;
+            $maildata['addfield_array'] = $addfield_array;
+            $mess = serialize($maildata);
+
+            //mail('ddaemon@mail.ru', 'XML empty '.$newmodel->n_id.' - '.'before_add_props', $mess);
+
             // Подготавливаем данные из свойств
             $this->AddPropsToDatabase($newmodel, $mainblock_array, $addfield_array);
 
+            //mail('ddaemon@mail.ru', 'XML empty '.$newmodel->n_id.' - '.'after_add_props', 'После addprops');
+
             // Генерируем xml данные свойств
             self::PropsXmlGenerate($newmodel->n_id);
+
+            mail('ddaemon@mail.ru', 'XML empty '.$newmodel->n_id.' - '.'after_PropsXmlGenerate', 'После PropsXmlGenerate');
 
             /*
             // Так как теперь перед подачей объявы надо залогиницо, то занесение проверенного телефона
@@ -1780,6 +1820,8 @@ class AdvertController extends Controller
 
         }
 
+        $oldadvert = Notice::model()->findByPk($mainblock_array['n_id']);
+
         $addfield_array = array();
         if (isset($_POST['addfield']))
         {
@@ -1789,7 +1831,7 @@ class AdvertController extends Controller
         if (!isset($_POST['mainblock']) || !isset($_POST['addfield']))
         {
             $return_array['status'] = 'error';
-            $return_array['message'] = 'Данные в запросе отсутствуют. Возможно не указана рубрика';
+            $return_array['message'] = 'Указаны не все необходимые данные. Возможно не указана рубрика';
             echo json_encode($return_array);
 
             return false;
@@ -1801,12 +1843,31 @@ class AdvertController extends Controller
         {
             $newmodel = $this->MakeNoticeAttributes($mainblock_array);
             $newmodel->u_id = Yii::app()->user->id;
+
+
+            /****************Блок для перевыставления после сохранения*****************/
+            if($newmodel->date_expire < (time()+86400*2) )
+            {
+                    if($newmodel->date_add_first == '')
+                    {
+                        $newmodel->date_add_first = $newmodel->date_add;
+                    }
+                    $new_date_add = time();
+                    $newmodel->date_add = $new_date_add;
+                    $newmodel->date_lastedit = $new_date_add;
+                    $newmodel->date_expire = $new_date_add + $newmodel->expire_period*86400;
+
+            }
+            /**************КОНЕЦ**************/
+
             $newmodel->save();
+
+            //если была смена рубрики?
 
             // Получаем названия старых файлов фото, если есть
             $old_photoblock_prop = RubriksProps::model()->with('notice_props')->find(array(
                 'select'=>'*',
-                'condition'=>"t.r_id = ".$mainblock_array['r_id']." AND notice_props.n_id=".$mainblock_array['n_id']. " AND t.vibor_type = 'photoblock' "
+                'condition'=>"t.r_id = ".$oldadvert->r_id." AND notice_props.n_id=".$mainblock_array['n_id']. " AND t.vibor_type = 'photoblock' "
             ));
             $params['old_photoblock_prop'] = $old_photoblock_prop;
 
@@ -1830,7 +1891,7 @@ class AdvertController extends Controller
         else
         {
             $return_array['status'] = 'error';
-            $return_array['message'] = 'Есть ошибки!';
+            $return_array['message'] = 'Есть ошибки! Проверьте правильность заполнения полей';
             //$return_array['message'] = $_POST['mainblock']['n_id'];
 
             echo json_encode($return_array);
@@ -1848,6 +1909,7 @@ class AdvertController extends Controller
     // $addfield_array - данные свойств
     public function AddPropsToDatabase($newmodel, $mainblock_array, $addfield_array, $params = array())
     {
+
         $rubrik_props = RubriksProps::getAllProps($mainblock_array['r_id']);
 
         foreach($rubrik_props as $rkey=>$rval)
@@ -2029,7 +2091,7 @@ class AdvertController extends Controller
 
 
 
-                                    @unlink ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval);
+                                    //@unlink ( $_SERVER['DOCUMENT_ROOT']."/tmp/".$fval);
                                     //@unlink($full_filename);
                                 }
 
@@ -2056,17 +2118,22 @@ class AdvertController extends Controller
                                 if(!isset($files_assoc_array[$ival]))
                                 {
                                     //var_dump($ival);
-                                    $filename_huge = str_replace(".", ".", $ival);
+                                    $filename_huge = str_replace(".", "_huge.", $ival);
+                                    $filename_medium = str_replace(".", "_medium.", $ival);
                                     $filename_big = str_replace(".", "_big.", $ival);
                                     $filename_thumb = str_replace(".", "_thumb.", $ival);
 
                                     $curr_dir = Notice::getPhotoDirMake(Yii::app()->params['photodir'], $ival);
                                     $output_dir = $_SERVER['DOCUMENT_ROOT']."/".Yii::app()->params['photodir']."/".$curr_dir."/";
+                                    $tmp_dir = $_SERVER['DOCUMENT_ROOT']."/tmp/";
 
                                     @unlink ( $output_dir.$ival);
                                     @unlink ( $output_dir.$filename_huge);
+                                    @unlink ( $output_dir.$filename_medium);
                                     @unlink ( $output_dir.$filename_big);
                                     @unlink ( $output_dir.$filename_thumb);
+
+                                    @unlink ( $tmp_dir.$ival);
                                 }
                             }
                         }
@@ -2076,6 +2143,57 @@ class AdvertController extends Controller
                 }
             }
         } // end foreach
+
+    }
+
+
+    // Обратная процедура - перевод свойств из базы в массив $addfield_array
+    // Используется при перевыставлении, для проверки старых объяв
+    public static function GetPropsFromDatabase($n_id)
+    {
+
+        if(!$advert = Notice::model()->findByPk($n_id))
+        {
+            return array();
+        }
+
+        //$rubrik_props = RubriksProps::getAllProps($advert->r_id);
+        $rubrik_props = RubriksProps::getAllPropsRp_id($advert->r_id);
+
+        $addfield_array = array();
+        $notice_props_array = array();
+        if($notice_props = NoticeProps::model()->findAllByAttributes(array('n_id'=>$n_id)))
+        {
+            foreach($notice_props as $nkey=>$nval)
+            {
+                switch($rubrik_props[$nval->rp_id]->vibor_type)
+                {
+                    case "autoload_with_listitem":
+                    case "selector":
+                    case "listitem":
+                    case "radio":
+                        $addfield_array[$rubrik_props[$nval->rp_id]->selector] = $nval->ps_id;
+                        break;
+
+                    case "checkbox":
+                        $addfield_array[$rubrik_props[$nval->rp_id]->selector][$nval->ps_id] = 'on';
+                        break;
+
+                    case "string":
+                        $addfield_array[$rubrik_props[$nval->rp_id]->selector]['ps_id'] = $nval->ps_id;
+                        $addfield_array[$rubrik_props[$nval->rp_id]->selector]['hand_input_value'] = $nval->hand_input_value;
+                        break;
+
+                    case "photoblock":
+                        $addfield_array[$rubrik_props[$nval->rp_id]->selector]['ps_id'] = $nval->ps_id;
+                        $addfield_array[$rubrik_props[$nval->rp_id]->selector]['hand_input_value'] = $nval->hand_input_value;
+                        break;
+
+                }
+            }
+        }
+
+        return $addfield_array;
 
     }
 
@@ -2143,19 +2261,23 @@ class AdvertController extends Controller
 
         $notice->props_xml = $xml->asXML();
 
-        /* Отладочная отправка **/
-        if($notice->props_xml == '')
+        /*
+        if(Yii::app()->controller->action->id != "setnewprops")
         {
-            $temp['n_id'] = $notice->n_id;
-            $temp['daynumber_id'] = $notice->daynumber_id;
-            $temp['sql'] = $sql;
-            $temp['proprows'] = $test_array;
+        ////////// Отладочная отправка
+        $temp['n_id'] = $notice->n_id;
+        $temp['props_xml'] = $notice->props_xml;
+        $temp['action'] = Yii::app()->controller->action->id;
+        $temp['daynumber_id'] = $notice->daynumber_id;
+        $temp['sql'] = $sql;
+        $temp['proprows'] = $test_array;
 
-            $mess = serialize($temp);
+        $mess = serialize($temp);
 
-            mail('ddaemon@mail.ru', 'XML empty', $mess);
+        mail('ddaemon@mail.ru', 'XML empty', $mess);
+        ////////// Конец
         }
-        /***** Конец  *****/
+        */
 
 //    deb::dump($notice);
 //    die();
@@ -2398,7 +2520,7 @@ class AdvertController extends Controller
 
         if($advert = Notice::model()->find(array(
             'select'=>'*',
-            'condition'=>'daynumber_id = "'.$daynumber_id.'"  AND deleted_tag = 0 '
+            'condition'=>'daynumber_id = "'.$daynumber_id.'"  '
         )))
         {
 
@@ -2580,7 +2702,7 @@ class AdvertController extends Controller
             // Формирование заголовка в зависимости от шаблона в рубрике
 //            deb::dump($addfield);
         //deb::dump($this->addfield_data['props_data']);
-            if($subrubrik->title_advert_shablon != '')
+            if($subrubrik->title_advert_shablon != '' && $mainblock['old_base_tag'] == 0)
             {
 
                 $res = Notice::MakePropsDisplayData($advert->props_xml);
@@ -3509,16 +3631,40 @@ class AdvertController extends Controller
     // Редирект для перехода по старой ссылке
     public function actionOldAdvertRedirect($daynumber_id)
     {
-        $advert = Notice::model()->with('town', 'rubriks')->findByAttributes(array(
+        if($advert = Notice::model()->with('town', 'rubriks')->findByAttributes(array(
             'daynumber_id'=>$daynumber_id
-        ));
-        $transliter = new Supporter();
-        $redirect_page_url = "/".$advert->town->transname."/".$advert->rubriks->transname."/".$transliter->TranslitForUrl($advert->title)."_".$daynumber_id;
+        )))
+        {
+            $transliter = new Supporter();
+            $redirect_page_url = "/".$advert->town->transname."/".$advert->rubriks->transname."/".$transliter->TranslitForUrl($advert->title)."_".$daynumber_id;
 
-        $this->redirect($redirect_page_url, true, 301);
+            $this->redirect($redirect_page_url, true, 301);
+        }
+        else
+        {
+            $this->redirect('/', true, 302);
+        }
 
     }
 
+    // Редирект для перехода по старой ссылке, если указан ID объявы (ошибка 400 в гугле)
+    public function actionOldAdvertRedirectById($n_id)
+    {
+        if($advert = Notice::model()->with('town', 'rubriks')->findByAttributes(array(
+            'n_id'=>$n_id
+        )))
+        {
+            $transliter = new Supporter();
+            $redirect_page_url = "/".$advert->town->transname."/".$advert->rubriks->transname."/".$transliter->TranslitForUrl($advert->title)."_".$advert->daynumber_id;
+
+            $this->redirect($redirect_page_url, true, 301);
+        }
+        else
+        {
+            $this->redirect('/', true, 302);
+        }
+
+    }
 
     // Редирект для перехода по старой ссылке-на список объяв в разрезе региона/города/рубрики
     public function actionOldRegListRedirect()

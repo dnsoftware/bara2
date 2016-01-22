@@ -27,15 +27,27 @@ if(Yii::app()->controller->action->id == 'addpreview')
 
 <span style=" margin-left: 10px; padding: 5px; padding-left: 6px; padding-right: 6px; display: inline; font-size: 22px; font-weight: normal;  background-color: #0D9D0D; color: #fff; text-align: center; ">
 
-        Цена: <?= Notice::costCalcAndView(
+    Цена:
+    <?
+    if($mainblock['cost_nodisplay_tag'] == 0)
+    {
+    ?>
+         <?= Notice::costCalcAndView(
         $mainblock['cost_valuta'],
         $mainblock['cost'],
         Yii::app()->request->cookies['user_valuta_view']->value
-    );?>
+        );?>
 
-    <span id="valute_symbol" style="border-bottom-style: dotted; cursor: pointer; border-width: 1px;" onclick="displayHide('div_valute_change');"><?= Options::$valutes[Yii::app()->request->cookies['user_valuta_view']->value]['symbol'];?></span>
+        <span id="valute_symbol" style="border-bottom-style: dotted; cursor: pointer; border-width: 1px;" onclick="displayHide('div_valute_change');"><?= Options::$valutes[Yii::app()->request->cookies['user_valuta_view']->value]['symbol'];?></span>
+    <?
+    }
+    else
+    {
+    ?> <span id="valute_symbol">не указана</span> <?
+    }
+    ?>
 
-    </span>
+</span>
 
 <div id="div_valute_change" style="display: none; position: absolute; z-index: 90; width: 250px; height: 110px; border: #000000 solid 1px; background-color: #eee; padding: 5px;">
 
@@ -202,7 +214,8 @@ if(Yii::app()->controller->action->id == 'addpreview')
             ?>
 
             <?
-            if($mainblock['date_expire'] > time() || Yii::app()->controller->action->id == 'addpreview')
+            if( ($mainblock['date_expire'] > time() && isset($mainblock['deleted_tag']) && $mainblock['deleted_tag'] == 0 )
+                || Yii::app()->controller->action->id == 'addpreview')
             {
                 if(Yii::app()->controller->action->id == 'addpreview')
                 {

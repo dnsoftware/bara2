@@ -460,7 +460,6 @@ class AdminadvertController extends Controller
             );
 
 
-
             foreach ($adverts as $akey=>$aval)
             {
                 //deb::dump($aval);

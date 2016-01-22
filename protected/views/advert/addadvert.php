@@ -124,8 +124,23 @@ $mycountry_id = Yii::app()->request->cookies->contains('geo_mycountry') ?
 
 ?>
 
+<div style="text-align: center;">
 
-<h1 style="font-size: 16px; margin-bottom: 30px;"><?= $title;?></h1>
+    <h1 style="font-size: 16px; margin-bottom: 30px;"><?= $title;?></h1>
+
+    <?
+    if(Yii::app()->controller->action->id == 'advert_edit'
+        && isset($_GET['republic']) && intval($_GET['republic']) == 1)
+    {
+    ?>
+    <div style="font-size: 14px; color: #f00; margin-bottom: 20px;">
+        Для активации объявления необходимо заполнить все необходимые данные!
+    </div>
+    <?
+    }
+    ?>
+
+</div>
 
 <form id="addform" onsubmit="addformsubmit(<?= $n_id;?>); return false;">
 
@@ -510,14 +525,25 @@ $r_id = $this->getMainblockValue($model, 'r_id')
     <label id="lbl-cost" class="add-form-label"><?= Notice::model()->getAttributeLabel('cost');?>:</label>
     <div class="add-input-block">
         <div class="input-field-border" id="input-error-cost">
-            <input class="form-input-text" type="text" name="mainblock[cost]" id="cost" value="<?= htmlspecialchars($this->getMainblockValue($model, 'cost'), ENT_COMPAT);?>" style="width: 70px;">
+
+            <?
+            $checked = " ";
+            $disabled = " ";
+            if($this->getMainblockValue($model, 'cost_nodisplay_tag'))
+            {
+                $checked = " checked ";
+                $disabled = " disabled ";
+            }
+            ?>
+
+            <input <?= $disabled;?> class="form-input-text" type="text" name="mainblock[cost]" id="cost" value="<?= htmlspecialchars($this->getMainblockValue($model, 'cost'), ENT_COMPAT);?>" style="width: 70px;">
 
 
             <?
             $cost_valuta = $this->getMainblockValue($model, 'cost_valuta');
             //deb::dump($cost_valuta);
             ?>
-            <select name="mainblock[cost_valuta]" id="cost_valuta">
+            <select <?= $disabled;?> name="mainblock[cost_valuta]" id="cost_valuta">
                 <?
                 foreach (Options::$valutes as $vkey=>$vval)
                 {
@@ -527,6 +553,10 @@ $r_id = $this->getMainblockValue($model, 'r_id')
                 }
                 ?>
             </select>
+
+            <input type="hidden" id="cost_nodisplay_tag" name="mainblock[cost_nodisplay_tag]" value="<?= $this->getMainblockValue($model, 'cost_nodisplay_tag');?>">
+
+            <input id="cost_nodisplay_check" type="checkbox" <?= $checked;?> > не указывать
         </div>
         <div class="input-error-msg"></div>
     </div>
@@ -536,6 +566,23 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 
 
 <script type="text/javascript">
+
+    $('#cost_nodisplay_check').click(function(){
+        //console.log($(this).prop('checked'));
+        if($(this).prop('checked'))
+        {
+            $('#cost_nodisplay_tag').val(1);
+            $('#cost').prop('disabled', true);
+            $('#cost_valuta').prop('disabled', true);
+        }
+        else
+        {
+            $('#cost_nodisplay_tag').val(0);
+            $('#cost').prop('disabled', false);
+            $('#cost_valuta').prop('disabled', false);
+        }
+    });
+
     jQuery(function($){
 //        $("#client_phone").mask("999 999-99-99");
 
@@ -725,7 +772,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 </script>
 
 
-<div id="status" style="clear: both; font-size: 16px; text-align: center; margin: 10px; margin-top: 30px; color: #f00;"></div>
+<div id="status" style="clear: both; font-size: 16px; text-align: center; margin: 10px; margin-top: 50px; margin-bottom: 0px; color: #f00; padding-top: 10px;"></div>
 
 <div class="form-row" style="text-align: center;">
     <?
@@ -738,7 +785,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
         $button_text = "Сохранить";
     }
     ?>
-    <input type="submit" name="" value="<?= $button_text;?>" style="font-size: 20px; margin: 10px; background-color: #259c1d; color: #fff; border: #268017 solid 1px; padding-bottom: 2px; border-radius: 3px;">
+    <input type="submit" id="submitadvert" name="" value="<?= $button_text;?>" style="font-size: 20px; margin: 10px; background-color: #259c1d; color: #fff; border: #268017 solid 1px; padding-bottom: 2px; border-radius: 3px;">
 </div>
 
 </form>
@@ -772,12 +819,19 @@ $('#select_region').change(function ()
 
 // fromwhere - Откуда вызов. auto - вызов автоматом при перезагрузке страница
 // hand - при ручном выборе рубрики
-$('.selrub').change(function (fromwhere)
-{
+$('.selrub').change(function (){
+
     $.ajax({
         type: 'POST',
         url: '<?= Yii::app()->createUrl('advert/getrubriksprops');?>',
-        data: 'r_id='+this.value+'&n_id='+$('#notice_id').val(),
+        <?
+        $republic_str = "";
+        if(isset($_GET['republic']) && $_GET['republic'] == 1)
+        {
+            $republic_str = "&republic=1";
+        }
+        ?>
+        data: 'r_id='+this.value+'&n_id='+$('#notice_id').val()+'<?= $republic_str;?>',
         success: function(msg){
             $('#div_errors').html('');
             $('#div_errors').css('display', 'none');
@@ -923,7 +977,7 @@ function addformsubmit(n_id)
         dataType: 'json',
         error: function(msg) {
             //$('#status').text('Ошибка JSON');
-            $('#status').text('Неполностью подгружены данные, перезагрузите страницу и выберите необходимую рубрику! Возможно проблемы с Интернет связью');
+            $('#status').text('Неполностью подгружены данные, перезагрузите страницу или попробуйте другой браузер! Error JSON');
         },
         success: function(msg) {
             $('.input-field-border').css('border', '');
