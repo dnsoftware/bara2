@@ -998,102 +998,120 @@ class AdminadvertController extends Controller
 
         $n_id = intval($_POST['n_id']);
         $advert = Notice::model()->findByPk($n_id);
-
-        $panel = $_POST['panel'];
-
-        $r_id = intval($panel['r_id']);
-        $rubrik_row = Rubriks::model()->findByPk($r_id);
-        if($r_id > 0)
+        if($advert->validate())
         {
-            $props_array = array();
-            foreach($panel as $pkey=>$pval)
+
+            $panel = $_POST['panel'];
+
+            $r_id = intval($panel['r_id']);
+            $rubrik_row = Rubriks::model()->findByPk($r_id);
+
+            if($r_id > 0)
             {
-                if($pkey == 'r_id')
+                $props_array = array();
+                foreach($panel as $pkey=>$pval)
                 {
-                    continue;
+                    if($pkey == 'r_id')
+                    {
+                        continue;
+                    }
+
+                    if($pval > 0)
+                    {
+                        $rubprop = RubriksProps::model()->findByAttributes(array('selector'=>$pkey));
+                        //deb::dump($rubprop);
+                        $temprow = array();
+                        $temprow['n_id'] = $n_id;
+                        $temprow['rp_id'] = $rubprop->rp_id;
+                        $temprow['ps_id'] = $pval;
+                        $temprow['hand_input_value'] = '';
+                        $props_array[] = $temprow;
+                    }
                 }
 
-                if($pval > 0)
+                // Удаляем и меняем
+
+                // Нужно сохранить свойство Фотографии,
+                // Для этого получим значение старого свойства notice_props,
+                // и присвоим ему rp_id = rp_id нового rubriks_props
+                $old_photo_rubriks_prop_photoblock = RubriksProps::model()->find(array(
+                    'select'=>'*',
+                    'condition'=>'r_id = '. $advert->r_id . " AND vibor_type = 'photoblock' "
+                ));
+
+                $old_notice_props_photoblock = NoticeProps::model()->findByAttributes(array(
+                    'n_id'=>$n_id,
+                    'rp_id'=>$old_photo_rubriks_prop_photoblock->rp_id
+                ));
+
+                $new_photo_rubriks_prop_photoblock = RubriksProps::model()->find(array(
+                    'select'=>'*',
+                    'condition'=>'r_id = '. $r_id . " AND vibor_type = 'photoblock' "
+                ));
+
+                // Для свойства "фотоблок" есть только одна запись в таблице props_sprav
+                // Находим ее для получения значения ps_id
+                $new_props_sprav_photoblock = PropsSprav::model()->findByAttributes(array(
+                    'rp_id'=>$new_photo_rubriks_prop_photoblock->rp_id
+                ));
+
+                if($old_photo_rubriks_prop_photoblock && $new_photo_rubriks_prop_photoblock)
                 {
-                    $rubprop = RubriksProps::model()->findByAttributes(array('selector'=>$pkey));
-                    //deb::dump($rubprop);
                     $temprow = array();
                     $temprow['n_id'] = $n_id;
-                    $temprow['rp_id'] = $rubprop->rp_id;
-                    $temprow['ps_id'] = $pval;
-                    $temprow['hand_input_value'] = '';
+                    $temprow['rp_id'] = $new_photo_rubriks_prop_photoblock->rp_id;
+                    $temprow['ps_id'] = $new_props_sprav_photoblock->ps_id;
+                    $temprow['hand_input_value'] = $old_notice_props_photoblock->hand_input_value;
                     $props_array[] = $temprow;
+
                 }
-            }
 
-            // Удаляем и меняем
+                NoticeProps::model()->deleteAll('n_id = '.$n_id);
 
-            // Нужно сохранить свойство Фотографии,
-            // Для этого получим значение старого свойства notice_props,
-            // и присвоим ему rp_id = rp_id нового rubriks_props
-            $old_photo_rubriks_prop_photoblock = RubriksProps::model()->find(array(
-                'select'=>'*',
-                'condition'=>'r_id = '. $advert->r_id . " AND vibor_type = 'photoblock' "
-            ));
+                $advert->r_id = $r_id;
+                $advert->parent_r_id = $rubrik_row->parent_id;
+                $advert->save();
 
-            $old_notice_props_photoblock = NoticeProps::model()->findByAttributes(array(
-                'n_id'=>$n_id,
-                'rp_id'=>$old_photo_rubriks_prop_photoblock->rp_id
-            ));
-
-            $new_photo_rubriks_prop_photoblock = RubriksProps::model()->find(array(
-                'select'=>'*',
-                'condition'=>'r_id = '. $r_id . " AND vibor_type = 'photoblock' "
-            ));
-
-            // Для свойства "фотоблок" есть только одна запись в таблице props_sprav
-            // Находим ее для получения значения ps_id
-            $new_props_sprav_photoblock = PropsSprav::model()->findByAttributes(array(
-                'rp_id'=>$new_photo_rubriks_prop_photoblock->rp_id
-            ));
-
-            if($old_photo_rubriks_prop_photoblock && $new_photo_rubriks_prop_photoblock)
-            {
-                $temprow = array();
-                $temprow['n_id'] = $n_id;
-                $temprow['rp_id'] = $new_photo_rubriks_prop_photoblock->rp_id;
-                $temprow['ps_id'] = $new_props_sprav_photoblock->ps_id;
-                $temprow['hand_input_value'] = $old_notice_props_photoblock->hand_input_value;
-                $props_array[] = $temprow;
-
-            }
-
-            NoticeProps::model()->deleteAll('n_id = '.$n_id);
-
-            $advert->r_id = $r_id;
-            $advert->parent_r_id = $rubrik_row->parent_id;
-            $advert->save();
-            if(count($props_array) > 0)
-            {
-                foreach($props_array as $pkey=>$pval)
+                if(count($props_array) > 0)
                 {
-                    $notice_prop = new NoticeProps();
-                    $notice_prop->n_id = $pval['n_id'];
-                    $notice_prop->rp_id = $pval['rp_id'];
-                    $notice_prop->ps_id = $pval['ps_id'];
-                    $notice_prop->hand_input_value = $pval['hand_input_value'];
-                    $notice_prop->save();
+                    foreach($props_array as $pkey=>$pval)
+                    {
+                        $notice_prop = new NoticeProps();
+                        $notice_prop->n_id = $pval['n_id'];
+                        $notice_prop->rp_id = $pval['rp_id'];
+                        $notice_prop->ps_id = $pval['ps_id'];
+                        $notice_prop->hand_input_value = $pval['hand_input_value'];
+                        $notice_prop->save();
+                    }
                 }
+
+                // Формируем xml
+                AdvertController::PropsXmlGenerate($n_id);
+
+                $ret['status'] = 'ok';
+                $ret['message'] = 'Корректировка прошла успешно!';
+
+
             }
-
-            // Формируем xml
-            AdvertController::PropsXmlGenerate($n_id);
-
-            $ret['status'] = 'ok';
-            $ret['message'] = 'Корректировка прошла успешно!';
+            else
+            {
+                $ret['status'] = 'error';
+                $ret['message'] = 'Не выбрана рубрика!';
+            }
 
         }
         else
         {
-            $ret['status'] = 'error';
-            $ret['message'] = 'Не выбрана рубрика!';
-        }
+            $errors = $advert->getErrors();
+            $errors_array = array();
+            foreach($errors as $ekey=>$eval)
+            {
+                $errors_array[] = $eval[0];
+            }
 
+            $ret['status'] = 'error';
+            $ret['message'] = implode(', ', $errors_array);
+        }
 
         echo json_encode($ret);
     }

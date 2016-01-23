@@ -124,12 +124,14 @@ $this->renderPartial('/default/_admin_menu');
                 ?>
 
                 <?
-                if(intval($aval['cost']) == 0)
+
+                if(intval($aval['cost']) == 0 && $aval['cost_nodisplay_tag'] == 0)
                 {
-                    ?>
+                ?>
                     <span style="background-color: #f00; color: #fff;">Нулевая цена</span>
                 <?
                 }
+
                 ?>
 
             </td>

@@ -105,6 +105,7 @@ class Notice extends CActiveRecord
             array('u_id, r_id, parent_r_id, t_id, reg_id, c_id, date_add, date_lastedit, expire_period, date_expire, client_name, client_email, client_phone_c_id, active_tag, verify_tag, checksum,  views_count, moder_counted_tag', 'required'), // , cost, cost_valuta
 
             array('cost', 'validatecost'),
+            //array('cost', 'numerical'),
             array('cost_valuta', 'length', 'max'=>3),
             array('cost_nodisplay_tag', 'safe'),
             array('u_id, r_id, t_id, reg_id, c_id, expire_period, active_tag, verify_tag, deactive_moder_id, moder_tag, moder_id, views_count, deleted_tag, otkaz_id, moder_counted_tag', 'numerical', 'integerOnly'=>true),
@@ -517,8 +518,11 @@ class Notice extends CActiveRecord
             $props_display = $res['props_display'];
             $photos = $res['photos'];
 
-            $val['cost'] = Notice::costCalcAndView($val['cost_valuta'], $val['cost'],
-                    Yii::app()->request->cookies['user_valuta_view']->value).
+
+            $cost_value = Notice::costCalcAndView($val['cost_valuta'], $val['cost'],
+                Yii::app()->request->cookies['user_valuta_view']->value);
+            //deb::dump($cost_value);
+            $val['cost'] = number_format($cost_value, 0, '.', ' ').
                 " ".Options::$valutes[Yii::app()->request->cookies['user_valuta_view']->value]['symbol2'];
 
             $short_advert_display = $shablons_display[$val['r_id']];
@@ -596,7 +600,15 @@ class Notice extends CActiveRecord
             $title_ankor = $match[1];
 
             $advert_page_url = $val['town_transname']."/".$rubriks_all_array[$val['r_id']]->transname."/".$transliter->TranslitForUrl($title_ankor/*$val['title']*/)."_".$val['daynumber_id'];
-            //deb::dump($advert_page_url);
+
+            // Патч для подмены урла архивной объявы - ссылка на редактирование
+            if(Yii::app()->controller->id == 'usercab' && Yii::app()->controller->action->id == 'adverts'
+                && ($val['active_tag'] == 0 || $val['date_expire'] < time()))
+            {
+                $advert_page_url = Yii::app()->createUrl('usercab/advert_edit', array('n_id'=>$val['n_id']));
+            }
+            /************ Конец ************/
+
             $short_advert_display = str_replace('[[advert_page_url]]', Yii::app()->createUrl($advert_page_url), $short_advert_display);
 
             $props_array[$key]['props_display'] = $short_advert_display;

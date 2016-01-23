@@ -383,7 +383,7 @@ class PropsspravController extends Controller
 
         if($notice = NoticeProps::model()->findByAttributes(array('ps_id'=>$ps_id)))
         {
-            echo "Это свойство есть у объявления ".$notice->n_id.". Удаление невозможно!";
+            echo "Это свойство (ps_id = ".$ps_id.") есть у объявления ".$notice->n_id.". Удаление невозможно!";
         }
         else
         if ($model->delete())

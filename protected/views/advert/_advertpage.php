@@ -32,11 +32,11 @@ if(Yii::app()->controller->action->id == 'addpreview')
     if($mainblock['cost_nodisplay_tag'] == 0)
     {
     ?>
-         <?= Notice::costCalcAndView(
+         <?= number_format(Notice::costCalcAndView(
         $mainblock['cost_valuta'],
         $mainblock['cost'],
         Yii::app()->request->cookies['user_valuta_view']->value
-        );?>
+        ), 0, '.', ' ');?>
 
         <span id="valute_symbol" style="border-bottom-style: dotted; cursor: pointer; border-width: 1px;" onclick="displayHide('div_valute_change');"><?= Options::$valutes[Yii::app()->request->cookies['user_valuta_view']->value]['symbol'];?></span>
     <?
