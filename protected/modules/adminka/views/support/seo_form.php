@@ -6,9 +6,16 @@
             <td style="width: 800px; vertical-align: top;">
 
         <div style="margin-bottom: 10px;">
-            <div>Рубрика</div>
             <form name="panel_form" id="panel_form" onsubmit="return false;">
 
+
+            <div style="display: inline-block; margin-left: 0px; background-color: #f8c4cb; padding: 5px;" id="span_seokeyword">
+                <textarea placeholder="Ключевая фраза" id="textseokeyword" name="keyword[seokeyword]" style="width: 720px; height: 70px;" ></textarea>
+                <span id="viewrand" style="cursor: pointer;"> RND </span>
+            </div>
+
+
+            <div style="margin-top: 10px;">Рубрика</div>
             <select class="panel_rubriks" id="panel_r_id" name="keyword[r_id]" style="margin: 0px; width: 250px;">
                 <option value="">--- выберите категорию  ---</option>
                 <?
@@ -38,7 +45,7 @@
 
             </select>
 
-            <select name="position">
+            <select name="position" id="position">
                 <option value="">Расположение</option>
             <?
             foreach(SeoKeywords::$position as $pkey=>$pval)
@@ -50,10 +57,13 @@
             ?>
             </select>
 
-            <div style="display: inline-block; margin-left: 20px; background-color: #f8c4cb; padding: 5px;" id="span_seokeyword">
-            <textarea placeholder="Ключевая фраза" id="textseokeyword" name="keyword[seokeyword]" style="width: 300px; height: 20px;" ></textarea>
-                <span id="viewrand" style="cursor: pointer;"> RND </span>
-            </div>
+            <span style="margin-left: 150px;">
+                <input type="hidden" name="seoparams[page]" value="1">
+                <input type="hidden" name="seoparams[kol_on_page]" value="1000">
+                <input type="hidden" name="query_type" id="query_type" value="<?= $query_type;?>">
+
+                <input style="width: 150px;" id="filter_keyword" type="button" value="Фильтровать">
+            </span>
 
         <div id="props_data" style="overflow: auto">
             <?
@@ -63,19 +73,10 @@
             </td>
 
             <td style="vertical-align: top; padding-top: 20px;">
-                <input type="hidden" name="seoparams[page]" value="1">
-                <input type="hidden" name="seoparams[kol_on_page]" value="1000">
-                <input type="hidden" name="query_type" id="query_type" value="<?= $query_type;?>">
 
+                <span style="background-color: #f8c4cb; padding: 10px; "><input style="width: 150px;" id="add_new_keyword" type="button" value="Сохранить новое"></span>
 
-
-                <span style="background-color: #f8c4cb; padding: 10px;"><input style="width: 150px;" id="add_new_keyword" type="button" value="Сохранить новое"></span><br>
-                <br>
-                <input style="width: 150px;" id="filter_keyword" type="button" value="Фильтровать">
-
-
-
-                <div style="margin-top: 20px;">
+                <div style="margin-top: 70px;">
                     <div style="margin-bottom: 10px;">Словосочетания:</div>
 
                     <input type="hidden" id="signature" name="signature" value="">
@@ -174,7 +175,47 @@ foreach($randomwords as $rkey=>$rval)
         $('#textseokeyword').insertAtCaret('('+$(this).html()+')');
     });
 
+
     $('#add_new_keyword').click(function(){
+
+        data = $.trim($('#textseokeyword').val()).split('\n');
+        var error_array = [];
+
+        if(data.length > 1)
+        {
+            error_array.push('Будет добавлено сразу '+data.length+' ключевых фраз!');
+        }
+
+        if($('#panel_r_id').val() == '')
+        {
+            error_array.push('Не выбрана подрубрика! Ключевики будут добавлены сразу во все подрубрики!');
+        }
+
+        if($('#position').val() == '')
+        {
+            error_array.push('Не указано Расположение! Ключевики будут добавлены сразу во все позиции!');
+        }
+
+        if(error_array.length > 0)
+        {
+            message = error_array.join('\n') + '\n\nПродолжить?';
+
+            if(confirm(message))
+            {
+                AddNewKeyword();
+            }
+        }
+        else
+        {
+            AddNewKeyword();
+        }
+
+
+
+    });
+
+    function AddNewKeyword()
+    {
         $.ajax({
             async: false,
             dataType: 'json',
@@ -194,9 +235,7 @@ foreach($randomwords as $rkey=>$rval)
 
             }
         });
-
-
-    });
+    }
 
     $('#filter_keyword').click(function(){
 

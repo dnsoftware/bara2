@@ -1548,6 +1548,7 @@ deb::dump($files_array);
 
         $rprops_array = array();
         $rprops_byselector_array = array();
+        $rp_ids = array();
 
         foreach($rubriks_props as $pkey=>$pval)
         {
@@ -1603,8 +1604,40 @@ deb::dump($files_array);
 
             }
 
+            $rp_ids[$pval->rp_id] = $pval->rp_id;
 
         }
+
+        // Для формирования ссылки в футере
+        if(count($rp_ids) > 0)
+        {
+            $props_sprav = PropsSprav::model()->findAll(array('condition'=>'rp_id IN ('.implode(", ", $rp_ids).')'));
+            $props_route_items_by_id = array();
+            foreach($props_sprav as $pkey=>$pval)
+            {
+                $props_route_items_by_id[$pval->ps_id] = $pval;
+            }
+        }
+        $postkeyword = $_POST['keyword'];
+        $r_id = $postkeyword['r_id'];
+        unset($postkeyword['r_id']);
+        unset($postkeyword['seokeyword']);
+
+        $path = array();
+        if(count($postkeyword) > 0)
+        {
+            foreach($postkeyword as $pkey=>$pval)
+            {
+                if($pval > 0)
+                {
+                    $path[$pval]['name'] = $props_route_items_by_id[$pval]->value;
+                    $path[$pval]['transname'] = $props_route_items_by_id[$pval]['transname'];
+                }
+            }
+        }
+
+        //deb::dump($path);
+        ////////////////////////////////
 
 //deb::dump($keyword);
 //deb::dump(Yii::app()->session['keyword']);
@@ -1741,11 +1774,110 @@ deb::dump($files_array);
 
     public function actionAddNewKeyword()
     {
+        $seokeyword = trim($_POST['keyword']['seokeyword']);
+        $r_id = trim($_POST['keyword']['r_id']);
+        $position = trim($_POST['position']);
+        $props = array();
+        if(count($_POST['keyword']) > 2)
+        {
+            foreach($_POST['keyword'] as $pkey=>$pval)
+            {
+                if($pkey != 'seokeyword' && $pkey != 'r_id')
+                {
+                    $props[$pkey] = $pval;
+                }
+            }
+        }
+
+        // Если ключевая фраза не указана
+        if($seokeyword == '')
+        {
+            $ret['status'] = 'error';
+            $ret['errors'] = 'Ключевая фраза не заполнена!';
+            echo json_encode($ret);
+            die();
+        }
+
+
+        // Если подрубрика не указана
+        $r_id_array = array();
+        if(trim($r_id) == '')
+        {
+            $rublist = Rubriks::get_rublist();
+            foreach($rublist as $rkey=>$rval)
+            {
+                foreach($rval['childs'] as $r2key=>$r2val)
+                {
+                    $r_id_array[] = $r2val->r_id;
+                }
+
+            }
+
+        }
+        else
+        {
+            $r_id_array[] = $r_id;
+        }
+
+        // Если позиция не указана
+        $position_array = array();
+        if(trim($position) == '')
+        {
+            foreach(SeoKeywords::$position as $pkey=>$pval)
+            {
+                $position_array[] = $pkey;
+            }
+        }
+        else
+        {
+            $position_array[] = $position;
+        }
+
+        // Если ключевая фраза многострочтная
+        $seokeyword_array = array();
+        $seokeyword_array = explode("\r\n", $seokeyword);
+
+
+        // Добавление
+        $errors_array = array();
+        foreach($r_id_array as $r_id_key=>$r_id_val)
+        {
+            foreach($position_array as $position_key=>$position_val)
+            {
+                foreach($seokeyword_array as $seokeyword_key=>$seokeyword_val)
+                {
+                    $ret = $this->AddNewSingleKeyword($seokeyword_val, $r_id_val, $position_val, $props);
+                    if($ret['status'] == 'error')
+                    {
+                        $errors_array[] = $ret['errors'];
+                    }
+                }
+            }
+
+        }
+
+        if(count($errors_array) > 0)
+        {
+            $ret['status'] = 'error';
+            $ret['errors'] = implode("<br>", $errors_array);
+        }
+        else
+        {
+            $ret['status'] = 'ok';
+        }
+
+        echo json_encode($ret);
+    }
+
+
+    // Добавление единичной ключевой фразы
+    public function AddNewSingleKeyword($seokeyword, $r_id, $position, $props)
+    {
         $keyword = new SeoKeywords();
 
-        $keyword->keyword = $_POST['keyword']['seokeyword'];
-        $keyword->r_id = $_POST['keyword']['r_id'];
-        $keyword->position = $_POST['position'];
+        $keyword->keyword = $seokeyword;
+        $keyword->r_id = $r_id;
+        $keyword->position = $position;
         $keyword->prop_count = 0;
         $keyword->save();
 
@@ -1758,24 +1890,21 @@ deb::dump($files_array);
         {
             $ret['status'] = 'ok';
 
-            if(count($_POST['keyword']) > 2)
+            if(count($props) > 0)
             {
-                foreach($_POST['keyword'] as $pkey=>$pval)
+                foreach($props as $pkey=>$pval)
                 {
-                    if($pkey != 'seokeyword' && $pkey != 'r_id')
+                    if($pval > 0)
                     {
-                        if($pval > 0)
-                        {
-                            $prop = new SeoKeywordsProps();
-                            $prop->k_id = $keyword->k_id;
-                            $rubrik_props = RubriksProps::model()->findByAttributes(array('selector'=>$pkey));
-                            $prop->rp_id = $rubrik_props->rp_id;
-                            $prop->ps_id = $pval;
-                            $prop->save();
+                        $prop = new SeoKeywordsProps();
+                        $prop->k_id = $keyword->k_id;
+                        $rubrik_props = RubriksProps::model()->findByAttributes(array('selector'=>$pkey));
+                        $prop->rp_id = $rubrik_props->rp_id;
+                        $prop->ps_id = $pval;
+                        $prop->save();
 
-                            $prop_sprav = PropsSprav::model()->findByPk($prop->ps_id);
-                            $prop_sprav_array[$prop->rp_id] = $prop_sprav;
-                        }
+                        $prop_sprav = PropsSprav::model()->findByPk($prop->ps_id);
+                        $prop_sprav_array[$prop->rp_id] = $prop_sprav;
                     }
                 }
 
@@ -1815,8 +1944,10 @@ deb::dump($files_array);
         }
 
         $ret['data'] = $data;
-        echo json_encode($ret);
+
+        return $ret;
     }
+
 
 
     // Отладочная, удалить
