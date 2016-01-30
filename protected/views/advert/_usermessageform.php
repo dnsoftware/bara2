@@ -49,14 +49,14 @@ public $verifyCode;
 <script>
     $('#reload_usermessage_captcha').click(function(){
         rnd = Math.random() * (999999 - 11111) + 11111;
-        $('#usermessage_captcha_image').attr('src', '/advert/showusermessagecaptcha/rnd/'+rnd);
+        $('#usermessage_captcha_image').attr('src', '<?= Yii::app()->createUrl('/advert/showusermessagecaptcha/rnd/');?>/'+rnd);
     });
 
     $('#send_usermessage_button').click(function(){
 
         $.ajax({
             type: 'POST',
-            url: '/advert/sendusermessage',
+            url: '<?= Yii::app()->createUrl('/advert/sendusermessage');?>',
             dataType: 'json',
             data: $('#usermessage_form').serialize(),
             success: function(msg){

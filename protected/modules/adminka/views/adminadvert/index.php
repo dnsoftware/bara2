@@ -94,8 +94,14 @@ $this->renderPartial('/default/_admin_menu');
                 <?
                 $advert_page_url = "/".$aval['town_transname']."/".$rubriks_all_array[$aval['r_id']]->transname."/".$transliter->TranslitForUrl($aval['title'])."_".$aval['daynumber_id'];
 
+
+                $advert_title = $aval['title'];
+                if(strlen(trim($advert_title)) == 0)
+                {
+                    $advert_title = '[Просмотр объявления]';
+                }
                 ?>
-                <div class="not_title" id="advtitul_<?= $aval['n_id'];?>"><a target="_blank" class="baralink" href="<?= $advert_page_url;?>"><?= $aval['title'];?></a></div>
+                <div class="not_title" id="advtitul_<?= $aval['n_id'];?>"><a target="_blank" class="baralink" href="<?= $advert_page_url;?>"><?= $advert_title;?></a></div>
 
                 <div class="not_desc"><?= $aval['notice_text'];?></div>
 

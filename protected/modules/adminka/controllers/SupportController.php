@@ -1547,6 +1547,7 @@ deb::dump($files_array);
         ));
 
         $rprops_array = array();
+        $rprops_byselector_array = array();
 
         foreach($rubriks_props as $pkey=>$pval)
         {
@@ -1566,6 +1567,7 @@ deb::dump($files_array);
                 }
 
                 $rprops_array[$pval->rp_id] = $temp;
+                $rprops_byselector_array[$pval->rp_id] = $temp;
             }
             else
             {
@@ -1596,23 +1598,31 @@ deb::dump($files_array);
                     }
 
                     $rprops_array[$pval->rp_id] = $temp;
+                    $rprops_byselector_array[$pval->rp_id] = $temp;
                 }
 
             }
 
 
-
         }
 
+//deb::dump($keyword);
 //deb::dump(Yii::app()->session['keyword']);
+        $signature_array = array();
+        $signature_ps_id_array = array();
+
         ?>
         <div style="margin-top: 5px;">Свойства:</div>
+        <table>
+        <tr>
+        <td>
         <div style="border: #999 solid 1px; padding: 5px;">
             <?
             // Выводим сформированные списки
             foreach($rprops_array as $rkey=>$rval)
             {
                 ?>
+
                 <div style="float: left;">
                     <?= $rval['name'];?>:<br>
                     <select class="prop_item" name="keyword[<?= $rval['selector'];?>]" style="width: 200px;">
@@ -1626,6 +1636,9 @@ deb::dump($files_array);
                                 if($ival['ps_id'] == $keyword[$rval['selector']])
                                 {
                                     $selected = " selected ";
+
+                                    $signature_array[] = $rkey;
+                                    $signature_ps_id_array[] = $ival['ps_id'];
                                 }
                                 ?>
                                 <option <?= $selected;?> value="<?= $ival['ps_id'];?>"><?= $ival['value'];?></option>
@@ -1635,16 +1648,43 @@ deb::dump($files_array);
                         ?>
                     </select>
                 </div>
+
+
             <?
             }
             ?>
             <br clear="all">
         </div>
+        </td>
+        </tr>
+        </table>
+
         <?
-        //deb::dump($rprops_array);
+        $signature = implode('.', $signature_array);
+        $signature_ps_id = implode('.', $signature_ps_id_array);
+        $words = '';
+        $textclass = 'bwred';
+        if($wordsrow = SeoBoardWords::model()->findByAttributes(array(
+            'r_id'=>$r_id,
+            'signature'=>$signature,
+            'signature_ps_id'=>$signature_ps_id
+        )))
+        {
+            $words = $wordsrow->words;
+            $textclass = 'bwgreen';
+        }
+        //deb::dump($signature_array);
+        //deb::dump($signature_ps_id_array);
+        //deb::dump(str_replace("\n", "\r\n", $words));
         ?>
 
         <script>
+
+            $('#signature').val('<?= $signature;?>');
+            $('#signature_ps_id').val('<?= $signature_ps_id;?>');
+            $('#words').val("<?= str_replace("\n", "\\n", $words);?>");
+            $('#words').attr('class', '<?= $textclass;?>');
+
             $('.prop_item').change(function(){
                 GetPanelProps();
             });
@@ -1652,6 +1692,42 @@ deb::dump($files_array);
     <?
 
     }
+
+    // Сохранение словосочетания для набора свойств
+    public function actionSaveboardwords()
+    {
+        $r_id = intval($_POST['r_id']);
+        $signature = trim($_POST['signature']);
+        $signature_ps_id = trim($_POST['signature_ps_id']);
+        $words = trim($_POST['words']);
+
+        if($wordsrow = SeoBoardWords::model()->findByAttributes(array(
+            'r_id'=>$r_id,
+            'signature'=>$signature,
+            'signature_ps_id'=>$signature_ps_id
+        )))
+        {
+            $wordsrow->words = $words;
+            $wordsrow->save();
+        }
+        else
+        {
+            $wordsrow = new SeoBoardWords();
+            $wordsrow->r_id = $r_id;
+            $wordsrow->signature = $signature;
+            $wordsrow->signature_ps_id = $signature_ps_id;
+            $wordsrow->words = $words;
+            $wordsrow->save();
+        }
+
+        $res = array();
+        $res['status'] = 'ok';
+        $res['textclass'] = 'bwgreen';
+        $res['message'] = 'Сохранено';
+
+        echo json_encode($res);
+    }
+
 
     // Удаление ключевика
     public function actionSeokeyworddel()
@@ -1670,7 +1746,6 @@ deb::dump($files_array);
         $keyword->keyword = $_POST['keyword']['seokeyword'];
         $keyword->r_id = $_POST['keyword']['r_id'];
         $keyword->position = $_POST['position'];
-        $keyword->count = 0;
         $keyword->prop_count = 0;
         $keyword->save();
 
@@ -1705,6 +1780,7 @@ deb::dump($files_array);
                 }
 
                 $data = SeoKeywords::MakeSignature($keyword->k_id, $keyword->r_id);
+
                 $ps_ids_array = array();
                 foreach($prop_sprav_array as $p2key=>$p2val)
                 {

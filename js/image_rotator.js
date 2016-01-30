@@ -10,7 +10,7 @@ function RotateImage(image, photo_filename_md5, fileload_id)
     rotate.click(function(){
         $.ajax({
             type: 'POST',
-            url: '/advert/rotateimage',
+            url: '/objavajax/rotateimage',
             data: 'file='+fileload_id,
             success: function(msg){
             image = $('[md5id = '+ photo_filename_md5+']');

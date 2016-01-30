@@ -4,6 +4,8 @@ header("Content-type: text/html; charset=utf-8");
 <?php /* @var $this Controller */ ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="google-site-verification" content="lrX3FvPtZIU5WGZnwy8m4GOWJM_t4Q5liOkR6pYfw1U" />
@@ -27,10 +29,12 @@ header("Content-type: text/html; charset=utf-8");
         Yii::app()->assetManager->publish(
             Yii::getPathOfAlias('system').'/web/js/source/jui/css/base/jquery-ui.css'
         ));
+
+    //Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/advertisement.js');
+
     ?>
 
-    <!--<link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl; ?>/yii/framework/web/js/source/jui/css/base/jquery-ui.css" />
-    -->
+
     <!-- BEGIN JIVOSITE CODE {literal} -->
     <script type='text/javascript'>
         (function(){ var widget_id = 'qNIlckKhzn';
@@ -40,7 +44,20 @@ header("Content-type: text/html; charset=utf-8");
 	<title><?php echo CHtml::encode($this->pageTitle); ?></title>
 </head>
 
+
 <body>
+
+<script>
+    (function($){
+
+        if ($.adblock === undefined){
+            $.adblock = true;
+            //alert('Выключите Adblock');
+        }
+
+    })(jQuery);
+</script>
+
 
 <div style="width: 100%; padding: 16px; text-align: center;"></div>
 <?

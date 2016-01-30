@@ -373,7 +373,8 @@ class UsercabController extends Controller
                     'privat_name'=>$user->privat_name,
                     'subject'=>$_POST['subject'],
                     'message'=>$_POST['message'],
-                    'userid'=>Yii::app()->user->id
+                    'userid'=>Yii::app()->user->id,
+                    'email'=>Yii::app()->user->email
                 ),
                 true);
 

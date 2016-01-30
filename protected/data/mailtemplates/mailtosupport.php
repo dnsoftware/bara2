@@ -19,7 +19,7 @@
                                 <tr> <td height="25">&nbsp;</td> </tr>
                                 <tr> <td valign="top">
                                         <p>
-                                            Поступил вопрос от пользователя <a href="<?= $user_page_url;?>"><?= $privat_name;?></a> (<?= $userid;?>)
+                                            Поступил вопрос от пользователя <a href="<?= $user_page_url;?>"><?= $privat_name;?></a> (<a href="mailto: <?= $email;?>"><?= $email;?></a>)
                                         </p>
 
                                         <p>
@@ -31,9 +31,7 @@
                                         </p>
 
                                         <p>
-                                            __________________________<br>
-                                            С наилучшими пожеланиями,<br>
-                                            коллектив сайта <a href="http://baraholka.ru">baraholka.ru</a>
+                                            <?= $_SERVER['REMOTE_ADDR'];?>
                                         </p>
                                     </td> </tr>
 

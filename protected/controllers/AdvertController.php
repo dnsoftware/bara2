@@ -1204,14 +1204,16 @@ class AdvertController extends Controller
         }
 
         /************ Сохранение блока фотографий при смене рубрики у редактируемых ************/
+        $model_rubriks_props = RubriksProps::model()->find(array(
+            'select'=>'*',
+            'condition'=>'selector=:rp_id',
+            'params'=>array(':rp_id'=>$field_id)
+        ));
+        $fieldvalue = $this->getAddfieldValue($n_id, $field_id, $model_rubriks_props);
+
         if(!$model_notice = Notice::model()->findByPk($n_id))
         {
             $model_notice = new Notice();
-            $model_rubriks_props = RubriksProps::model()->find(array(
-                'select'=>'*',
-                'condition'=>'selector=:rp_id',
-                'params'=>array(':rp_id'=>$field_id)
-            ));
         }
         else
         {
@@ -1219,15 +1221,16 @@ class AdvertController extends Controller
                 'select'=>'*',
                 'condition'=>"t.vibor_type = 'photoblock' AND notice_props.n_id=".$n_id
             ));
-            $model_rubriks_props = RubriksProps::model()->find(array(
+            $model_rubriks_props_old = RubriksProps::model()->find(array(
                 'select'=>'*',
                 'condition'=>'selector=:rp_id',
                 'params'=>array(':rp_id'=>$notice_photo_prop->selector)
             ));
+
+            $fieldvalue = $this->getAddfieldValue($n_id, $field_id, $model_rubriks_props_old);
         }
         /************************************************/
 
-        $fieldvalue = $this->getAddfieldValue($n_id, $field_id, $model_rubriks_props);
 //deb::dump($fieldvalue);
         $uploadfiles_array = Notice::getImageArray(isset($fieldvalue['hand_input_value']) ? $fieldvalue['hand_input_value'] : '');
 //deb::dump($uploadfiles_array);
@@ -1632,6 +1635,12 @@ class AdvertController extends Controller
                 $_POST['mainblock']['parent_r_id'] = $rubrik->parent_id;
             }
 
+            // Удаляем пробелы из цены
+            if (isset($_POST['mainblock']['cost']))
+            {
+                $_POST['mainblock']['cost'] = str_replace(" ", "", $_POST['mainblock']['cost']);
+            }
+
             Yii::app()->session['mainblock'] = $_POST['mainblock'];
             $mainblock_array = $_POST['mainblock'];
         }
@@ -1646,7 +1655,7 @@ class AdvertController extends Controller
         if (!isset($_POST['mainblock']) || !isset($_POST['addfield']))
         {
             $return_array['status'] = 'error';
-            $return_array['message'] = 'Неполностью подгружены данные, перезагрузите страницу и выберите необходимую рубрику. Error no addfield';
+            $return_array['message'] = 'Ошибка. Отключите свой блокиратор рекламы (Adblock, Adguard и т.п.) для нормального функционирования формы подачи объявлений и сайта. Error no addfield';
             echo json_encode($return_array);
 
             return false;
@@ -1752,7 +1761,7 @@ class AdvertController extends Controller
             // Генерируем xml данные свойств
             self::PropsXmlGenerate($newmodel->n_id);
 
-            mail('ddaemon@mail.ru', 'XML empty '.$newmodel->n_id.' - '.'after_PropsXmlGenerate', 'После PropsXmlGenerate');
+            mail('ddaemon@mail.ru', $newmodel->daynumber_id.' XML - after_PropsXmlGenerate', 'After PropsXmlGenerate');
 
             /*
             // Так как теперь перед подачей объявы надо залогиницо, то занесение проверенного телефона
@@ -1814,6 +1823,12 @@ class AdvertController extends Controller
             if($rubrik = Rubriks::model()->findByPk($_POST['mainblock']['r_id']))
             {
                 $_POST['mainblock']['parent_r_id'] = $rubrik->parent_id;
+            }
+
+            // Удаляем пробелы из цены
+            if (isset($_POST['mainblock']['cost']))
+            {
+                $_POST['mainblock']['cost'] = str_replace(" ", "", $_POST['mainblock']['cost']);
             }
 
             $mainblock_array = $_POST['mainblock'];
@@ -2524,6 +2539,8 @@ class AdvertController extends Controller
         )))
         {
 
+Notice::KeywordsGenerate($advert->n_id);
+
             $props_relate = RubriksProps::model()->with('notice_props')->findAll(array(
                 'select'=>'*',
                 'condition'=>'r_id='.$advert->r_id . " AND n_id=".$advert->n_id,
@@ -2793,8 +2810,9 @@ class AdvertController extends Controller
 
             Yii::app()->clientScript->registerMetaTag('Объявление '.$category_theme.' '.$mainblock['title'].' в г. '.$this->mainblock_data['town']->name.' на '.$_SERVER['HTTP_HOST'], 'description') ;
 
-            if( ($advert->active_tag == 1 && $advert->verify_tag == 1)
-                    || $advert->u_id == Yii::app()->user->id || Yii::app()->user->isAdmin()
+            if( $advert->verify_tag == 1
+                    || ($advert->u_id == Yii::app()->user->id && $advert->deleted_tag != 0)
+                    || Yii::app()->user->isAdmin()
             )
             {
                 $this->render('viewadvert', array(

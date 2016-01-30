@@ -214,7 +214,7 @@ if(Yii::app()->controller->action->id == 'addpreview')
             ?>
 
             <?
-            if( ($mainblock['date_expire'] > time() && isset($mainblock['deleted_tag']) && $mainblock['deleted_tag'] == 0 )
+            if( ($mainblock['date_expire'] > time() && isset($mainblock['deleted_tag']) && $mainblock['deleted_tag'] == 0 && $mainblock['active_tag'] == 1)
                 || Yii::app()->controller->action->id == 'addpreview')
             {
                 if(Yii::app()->controller->action->id == 'addpreview')
@@ -222,56 +222,77 @@ if(Yii::app()->controller->action->id == 'addpreview')
                     $mainblock['user_date_reg'] = Yii::app()->user->create_at;
                 }
             ?>
-            <div style="margin-top: 10px; font-weight: normal; width: 682px; border: #000000 solid 0px;">
+            <table style="border: #000 solid 0px; width: 682px; margin: 0px; padding: 0px;">
+            <tr>
 
-                <span style="padding-left: 20px; background-image: url('/images/client.png'); background-position: left center; background-repeat: no-repeat; font-weight: bold;" title="Имя"><a style="color: inherit; text-decoration: none;" href="/user/uadverts/<?= $mainblock['u_id'];?>"><?= $mainblock['client_name'];?></a></span>
+            <td style="padding: 0px; vertical-align: top; padding-top: 13px;"><img src="/images/client.png"></td>
+
+            <td style="border: #000 solid 0px; padding: 0px; padding-left: 3px;">
+            <div style="margin-top: 10px; font-weight: normal; width: 362px; border: #000000 solid 0px;">
+
+                <span style="background-position: left center; background-repeat: no-repeat; font-weight: bold;" title="Имя"><a style="color: inherit; text-decoration: none;" href="/user/uadverts/<?= $mainblock['u_id'];?>"><?= $mainblock['client_name'];?></a></span>
                 <span style="font-weight: normal;">на baraholka.ru с <?= Yii::app()->params['month_padezh'][intval(date("m", strtotime($mainblock['user_date_reg'])))];?> <?= date("Y", strtotime($mainblock['user_date_reg']));?> года
                 </span>
+            </div>
+            </td>
+
+            <td style="padding: 0px; vertical-align: top;" rowspan="2">
+            <?
+            if(Yii::app()->controller->action->id != 'addpreview')
+            {
+                ?>
+                <div style="border: #000 solid 0px; float: right; margin-top: 10px;">
+                    <a class="span_lnk" style="background: url('/images/phone-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px; width: 135px;"><span id="display_phone"  style="border-bottom: #008CC3 dotted; border-width: 1px; ">Показать телефон</span><img id="img_display_phone" src="/images/actions/loader.gif" style="display: none; margin-bottom: -8px; height: 20px;"></a>
+
+                    <a class="span_lnk" style="margin-left: 15px; background: url('/images/write-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px;">
+                        <span id="writeauthor_btn" style="border-bottom: #008CC3 dotted; border-width: 1px;">Написать автору</span>
+                    </a>
+                </div>
+
+                <div style="float: right; margin-top: 3px;">
+                    <a href="/user/uadverts/<?= $mainblock['u_id'];?>" class="span_lnk" style="background: url('/images/alladvert-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;">
+                        <span style="border-bottom: #008CC3 dotted; border-width: 1px;">Все объявления автора</span>
+                    </a>
+                </div>
 
                 <?
                 if(Yii::app()->controller->action->id != 'addpreview')
                 {
-                ?>
-                <div style="float: right; ">
-                <a class="span_lnk" style="background: url('/images/phone-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px; width: 135px;"><span id="display_phone"  style="border-bottom: #008CC3 dotted; border-width: 1px; ">Показать телефон</span><img id="img_display_phone" src="/images/actions/loader.gif" style="display: none; margin-bottom: -8px; height: 20px;"></a>
-
-                <a class="span_lnk" style="margin-left: 15px; background: url('/images/write-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px;">
-                    <span id="writeauthor_btn" style="border-bottom: #008CC3 dotted; border-width: 1px;">Написать автору</span>
-                </a>
-                </div>
+                    ?>
                 <?
                 }
                 ?>
+
+            <?
+            }
+            ?>
+            </td>
+            </tr>
+
+
+            <tr>
+            <td style="padding: 0px; vertical-align: top; padding-top: 2px; padding-left: 3px;"><img src="/images/location.png"></td>
+            <td style="border: #000 solid 0px; padding: 0px; padding-left: 3px;">
+            <div style="margin-top: 0px; ">
+            <span style="font-weight: bold; " title="Город">
+            <?
+            $region_str = $mainblock_data['region']->name;
+            if($mainblock_data['region']->name != $mainblock_data['town']->name)
+            {
+                $region_str = $mainblock_data['town']->name;
+            }
+            ?>
+            <?= $region_str.", ".$mainblock_data['country']->name;?>
+            </span>
 
             </div>
 
+            </td>
+            </tr>
 
-            <div style="margin-top: 5px; width: 682px;">
-                <span style="padding-left: 15px; margin-left: 3px; font-weight: bold; background-image: url('/images/location.png'); background-position: left center; background-repeat: no-repeat;" title="Город">
-                <?
-                $region_str = $mainblock_data['region']->name;
-                if($mainblock_data['region']->name != $mainblock_data['town']->name)
-                {
-                    $region_str = $mainblock_data['town']->name;
-                }
-                ?>
-                <?= $region_str.", ".$mainblock_data['country']->name;?>
-                </span>
+            </table>
 
-                <?
-                if(Yii::app()->controller->action->id != 'addpreview')
-                {
-                ?>
-                <div style="float: right;">
-                <a href="/user/uadverts/<?= $mainblock['u_id'];?>" class="span_lnk" style="background: url('/images/alladvert-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;">
-                    <span style="border-bottom: #008CC3 dotted; border-width: 1px;">Все объявления автора</span>
-                </a>
-                </div>
-                <?
-                }
-                ?>
 
-            </div>
             <?
             }
             else
@@ -436,20 +457,28 @@ if(Yii::app()->controller->action->id == 'addpreview')
                                 ?>
                                 <td style="vertical-align: top; text-align: center; width: 120px;">
                                     <?
+                                    //deb::dump($towns_array);
+                                    $transliter = new Supporter();
+                                    $advert_page_url = "/".$towns_array[$sval['t_id']]->transname."/".$subrub_array[$sval['r_id']]->transname."/".$transliter->TranslitForUrl($sval['title'])."_".$sval['daynumber_id'];
+                                    $colphotos = count($similar_photos[$sval['n_id']]);
+
+                                    $image_title = str_replace("'", '', $sval['title']);
+                                    $image_title_alt = addslashes($image_title);
+                                    $image_title = 'Объявление &laquo;'.addslashes($image_title).'&raquo;'.' ('.$colphotos.' фото)';
+
                                     if(isset($similar_photos[$sval['n_id']][0]))
                                     {
                                         $photoname = str_replace(".", "_medium.", $similar_photos[$sval['n_id']][0]);
                                         $curr_dir = Notice::getPhotoDir($photoname);
                                         ?>
-                                        <img style="height: 80px;" src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>">
+                                    <a class="baralink" title="<?= $image_title;?>" href="<?= $advert_page_url;?>"><img style="height: 80px;" alt="<?= $image_title_alt;?>" src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>"></a>
                                     <?
                                     }
 
-                                    $transliter = new Supporter();
-                                    $advert_page_url = "/".$towns_array[$sval['t_id']]->transname."/".$subrub_array[$sval['r_id']]->transname."/".$transliter->TranslitForUrl($sval['title'])."_".$sval['daynumber_id'];
-
+                                    $ahref_title = str_replace("'", '', $sval['title']);
+                                    $ahref_title = addslashes($ahref_title.' в г. '.$towns_array[$sval['t_id']]->name);
                                     ?>
-                                    <div style="margin-top: 5px;"><a class="baralink" href="<?= $advert_page_url;?>"><?= $sval['title'];?></a></div>
+                                    <div style="margin-top: 5px;"><h3 style="display: inline;"><a title="<?= $ahref_title;?>" class="baralink" href="<?= $advert_page_url;?>"><?= $sval['title'];?></a></h3></div>
 
                                     <div  style="color: #777;">
                                     <?= Notice::costCalcAndView(

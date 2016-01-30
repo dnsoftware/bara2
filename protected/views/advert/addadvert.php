@@ -534,9 +534,15 @@ $r_id = $this->getMainblockValue($model, 'r_id')
                 $checked = " checked ";
                 $disabled = " disabled ";
             }
+
+            $cost = htmlspecialchars($this->getMainblockValue($model, 'cost'), ENT_COMPAT);
+            if(ceil($cost) == floor($cost))
+            {
+                $cost = floor($cost);
+            }
             ?>
 
-            <input <?= $disabled;?> class="form-input-text" type="text" name="mainblock[cost]" id="cost" value="<?= htmlspecialchars($this->getMainblockValue($model, 'cost'), ENT_COMPAT);?>" style="width: 70px;">
+            <input <?= $disabled;?> class="form-input-text" type="text" name="mainblock[cost]" id="cost" value="<?= $cost;?>" style="width: 70px;">
 
 
             <?
@@ -977,7 +983,7 @@ function addformsubmit(n_id)
         dataType: 'json',
         error: function(msg) {
             //$('#status').text('Ошибка JSON');
-            $('#status').text('Неполностью подгружены данные, перезагрузите страницу или попробуйте другой браузер! Error JSON');
+            $('#status').text('Ошибка. Отключите свой блокиратор рекламы (Adblock, Adguard и т.п.) для нормального функционирования формы подачи объявлений и сайта.');
         },
         success: function(msg) {
             $('.input-field-border').css('border', '');

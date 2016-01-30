@@ -765,6 +765,7 @@ class FilterController extends Controller
             $offset = ($page-1)*Yii::app()->params['countonpage'];
             $kolpages = ceil($row_count[0]['cnt']/Yii::app()->params['countonpage']);
 
+
 /*
             $adverts = Notice::model()->cache(600)->with('town')->findAll(
                 array(
@@ -1097,7 +1098,34 @@ class FilterController extends Controller
         ////////// Конец формирования титула
 
 
-//deb::dump(Yii::app()->getRequest()->getUrl());
+        // Формирование данных для пагинатора
+        $page_url = Yii::app()->getRequest()->getUrl();
+
+        $allreg_prefix = "";
+        if($m_id == 0 && ($page_url == '/' || preg_match('|index.php|siU', $page_url, $match)))
+        {
+            $page_url = '/all';
+        }
+
+        // Переменная page с префиксом ? или & в зависимости от урла
+        $page_substr = '&page';
+        if(strpos($page_url, '?') === false || strpos($page_url, '/?page') !== false)
+        {
+            $page_substr = '/?page';
+        }
+//deb::dump($page_substr);
+
+        // Урл без переменной page
+        $page_url = preg_replace('|&page=\d+?|siU', '', $page_url);
+        $page_url = preg_replace('|/\?page=\d+?|siU', '', $page_url);
+
+        // Массив параметров пагинатора
+        $paginator_params = array();
+        $paginator_params['page_url'] = $page_url;
+        $paginator_params['page_substr'] = $page_substr;
+        $paginator_params['kolpages'] = $kolpages;
+        $paginator_params['page'] = $page;
+        $paginator_params['css_class'] = 'bpaginator';
 
 
         $this->render('index', array(
@@ -1111,7 +1139,8 @@ class FilterController extends Controller
             'mselector'=>$mselector,
             'm_id'=>$m_id,
             'rubriks_all_array'=>$rubriks_all_array,
-            'kolpages'=>$kolpages
+            'kolpages'=>$kolpages,
+            'paginator_params'=>$paginator_params
         ));
 
 	}
@@ -1897,6 +1926,8 @@ class FilterController extends Controller
     // Временный экшн, выставление цены для старых объяв
     public function actionChangeprice()
     {
+        die('Блокировано! Для разблокировки удалить!');
+
         $n_id = intval($_POST['n_id']);
         $price = floatval($_POST['price']);
         $cost_valuta = $_POST['cost_valuta'];

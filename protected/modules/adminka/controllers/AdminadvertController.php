@@ -787,6 +787,10 @@ class AdminadvertController extends Controller
         {
             echo $ret;
         }
+        else
+        {
+            echo deb::dump($advert->getErrors());
+        }
 
     }
 

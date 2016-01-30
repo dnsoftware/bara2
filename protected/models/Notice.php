@@ -108,9 +108,12 @@ class Notice extends CActiveRecord
             //array('cost', 'numerical'),
             array('cost_valuta', 'length', 'max'=>3),
             array('cost_nodisplay_tag', 'safe'),
+            //array('r_id', 'numerical', 'min'=>1),
+            //array('r_id', 'length', 'min'=>1),
             array('u_id, r_id, t_id, reg_id, c_id, expire_period, active_tag, verify_tag, deactive_moder_id, moder_tag, moder_id, views_count, deleted_tag, otkaz_id, moder_counted_tag', 'numerical', 'integerOnly'=>true),
 			array('date_add, date_lastedit, date_expire, date_deactive, date_moder, date_delete, date_sort', 'length', 'max'=>14),
-			array('client_name, client_email, client_phone, phone_search, reject_reason', 'length', 'max'=>256),
+            array('client_name', 'length', 'max'=>256),
+			array('client_email, client_phone, phone_search, reject_reason', 'length', 'max'=>256),
             //array('title', 'length', 'max'=>256), //validatetitle()
 			array('notice_type_id, from_ip', 'length', 'max'=>16),
 			array('checksum', 'length', 'max'=>32),
@@ -599,6 +602,7 @@ class Notice extends CActiveRecord
             preg_match('|<a class="baralink"[^>]+>(.+)</a>|siU', $short_advert_display, $match);
             $title_ankor = $match[1];
 
+//deb::dump($val['title']);
             $advert_page_url = $val['town_transname']."/".$rubriks_all_array[$val['r_id']]->transname."/".$transliter->TranslitForUrl($title_ankor/*$val['title']*/)."_".$val['daynumber_id'];
 
             // Патч для подмены урла архивной объявы - ссылка на редактирование
@@ -610,6 +614,9 @@ class Notice extends CActiveRecord
             /************ Конец ************/
 
             $short_advert_display = str_replace('[[advert_page_url]]', Yii::app()->createUrl($advert_page_url), $short_advert_display);
+
+            $attr_title = str_replace("'", '"', $title_ankor);
+            $short_advert_display = str_replace('class="baralink"', 'class="baralink" title=\''.$attr_title.'\' ', $short_advert_display);
 
             $props_array[$key]['props_display'] = $short_advert_display;
             $props_array[$key]['photos'] = $photos;
@@ -789,10 +796,9 @@ class Notice extends CActiveRecord
             'condition'=>'r_id='.$advert->r_id . " AND n_id=".$advert->n_id,
             'order'=>'t.hierarhy_tag DESC, t.hierarhy_level ASC, t.display_sort, t.rp_id'
         ));
-//deb::dump($props_relate);
+
         $retsign= Notice::MakeKeywordSignature($props_relate);
-//deb::dump($retsign);
-//die();
+
         $keyword_signature = $retsign['ps_ids'];
         $signature_array = explode('.', $keyword_signature);
         $prop_count = count($signature_array);
@@ -800,9 +806,6 @@ class Notice extends CActiveRecord
 
         $keywords_keys = array();
         $keywords_pos = array();
-        //$positions_array = array_flip(SeoKeywords::$position);
-
-        //$pkey = array_shift($positions_array);
 
         foreach(SeoKeywords::$position as $pkey=>$pval)
         {
@@ -818,10 +821,10 @@ class Notice extends CActiveRecord
                 if(count($signtemp) > 0)
                 {
                     $seo_keywords = SeoKeywords::model()->findAll(array(
-                        'select'=>'k_id, keyword, r_id, position, signature, signature_ps_id, prop_count, count',
+                        'select'=>'k_id, keyword, r_id, position, signature, signature_ps_id, prop_count',
                         'condition'=>'r_id = '.$advert->r_id . " AND position = '".$pkey."'
                            AND prop_count <= $prop_count AND signature_ps_id LIKE '".$signstr."%' ",
-                        'order'=>'prop_count DESC, count ASC, k_id DESC'
+                        'order'=>'prop_count DESC, k_id DESC'
                     ));
                     //deb::dump($seo_keywords);
 
@@ -829,9 +832,9 @@ class Notice extends CActiveRecord
                 else
                 {
                     $seo_keywords = SeoKeywords::model()->findAll(array(
-                        'select'=>'k_id, keyword, r_id, position, signature, signature_ps_id, prop_count, count',
+                        'select'=>'k_id, keyword, r_id, position, signature, signature_ps_id, prop_count',
                         'condition'=>'r_id = '.$advert->r_id . " AND position = '".$pkey."' ",
-                        'order'=>'prop_count ASC, count ASC, k_id DESC'
+                        'order'=>'prop_count ASC, k_id DESC'
                     ));
                     //deb::dump($seo_keywords);
                 }
@@ -840,34 +843,30 @@ class Notice extends CActiveRecord
                 {
                     foreach($seo_keywords as $skey=>$seo_keyword)
                     {
+
+                        $keywords_pos[$pkey][$seo_keyword->k_id] = $seo_keyword;
+                        /* //Старый сегмент, первый найденный ключевик
                         if(!isset($keywords_keys[$seo_keyword->keyword]))
                         {
                             $keywords_keys[$seo_keyword->keyword] = $seo_keyword->keyword;
                             $keywords_pos[$pkey] = $seo_keyword;
 
-                            /*
-                            if(count($positions_array) > 0)
-                            {
-                                $pkey = array_shift($positions_array);
-                            }
-                            else
-                            {
-                                $break_tag = 1;
-                                break;
-                            }
-                            */
                             $break_tag = 1;
                             break;
 
                         }
+                        /**/
+
                     }
                 }
 
 
+                /*
                 if($break_tag)
                 {
                     break;
                 }
+                */
 
 
                 unset($signtemp[$i]);
@@ -875,45 +874,202 @@ class Notice extends CActiveRecord
 
         }
 
-        $keywords_maked = self::KeywordByShablonGenerate($advert, $retsign['rp_selector'], $keywords_pos);
-
-        foreach($keywords_maked as $k2key=>$k2val)
+        $temp = array();
+        $maked_keywords = array();
+        foreach($keywords_pos as $kkey=>$kval)
         {
-            $advert->{'keyword_'.$k2key} = $k2val;
+            //deb::dump($kval);
+            $keywords_maked = self::KeywordByShablonGenerate($advert, $retsign['rp_selector'], $kval);
+
+            $temp = array();
+            if(count($keywords_maked))
+            {
+                foreach($keywords_maked as $kmkey=>$kmval)
+                {
+                    $temp[$kmkey]['k_id'] = $kmkey;
+                    $temp[$kmkey]['fullkeystring'] = $kmval;
+                    $temp[$kmkey]['hash'] = md5($kmval);
+                    if($countrow = SeoKeywordsWords::model()->findByAttributes(array('hash'=>md5($kmval))))
+                    {
+                        $temp[$kmkey]['count'] = $countrow->count;
+                    }
+                    else
+                    {
+                        /*
+                        $countrow = new SeoKeywordsWords();
+                        $countrow->fullkeystring = $kmval;
+                        $countrow->hash = md5($kmval);
+                        $countrow->count = 0;
+                        $countrow->save();
+                        */
+
+                        $temp[$kmkey]['count'] = 0;
+                    }
+
+                }
+
+
+                /**/
+                uasort($temp , 'cmp');
+                $temp2 = array();
+                foreach($temp as $tkey=>$tval)
+                {
+                    $temp2[$tval['count']][$tkey] = $tval;
+                }
+
+                $temp = array();
+                foreach($temp2 as $t2key=>$t2val)
+                {
+                    shuffle($temp2[$t2key]);
+                    foreach($temp2[$t2key] as $t3key=>$t3val)
+                    {
+                        $temp[] = $t3val;
+                    }
+                }
+                /**/
+            }
+
+            $maked_keywords[$kkey] = $temp;
         }
 
-        if($advert->save())
+
+
+        $index_1 = 0;
+        $index_2 = 0;
+        $keystring_1 = '';
+        $keystring_2 = '';
+        $break_tag = 0;
+        if(count($maked_keywords[1]) > 0 && count($maked_keywords[2]) > 0)
         {
-            foreach($keywords_pos as $kpkey=>$kpval)
+            for($i=0; $i<count($maked_keywords[1]); $i++)
             {
-                if(!$skn = SeoKeywordsNotice::model()->findByAttributes(array(
-                    'k_id'=>$kpval->k_id,
-                    'n_id'=>$advert->n_id
+                for($j=0; $j<count($maked_keywords[2]); $j++)
+                {
+                    if($maked_keywords[1][$index_1]['hash'] != $maked_keywords[2][$index_2]['hash'])
+                    {
+                        $keystring_1 = $maked_keywords[1][$index_1]['fullkeystring'];
+                        $keystring_2 = $maked_keywords[2][$index_2]['fullkeystring'];
+                        $break_tag = 0;
+                        break;
+                    }
+                    else
+                    {
+                        if(($index_1 > $index_2 || $index_1 == $index_2) && $index_2+1 < count($maked_keywords[2]))
+                        {
+                            $index_2++;
+                        }
+                        if(($index_1 > $index_2 || $index_1 == $index_2) && $index_2+1 >= count($maked_keywords[2]))
+                        {
+                            $index_1++;
+                        }
+
+                        if($index_2 > $index_1 && $index_1+1 < count($maked_keywords[1]))
+                        {
+                            $index_1++;
+                        }
+                        if($index_2 > $index_1 && $index_1+1 >= count($maked_keywords[1]))
+                        {
+                            $index_2++;
+                        }
+                    }
+
+                }
+
+                if($break_tag == 1)
+                {
+                    break;
+                }
+
+            }
+
+            if($keystring_1 == '' && $keystring_2 == '')
+            {
+                $index_1 = -1;
+                $index_2 = 0;
+                $keystring_2 = $maked_keywords[2][0]['fullkeystring'];
+            }
+
+        }
+        else
+        if(count($maked_keywords[1]) > 0 && count($maked_keywords[2]) == 0)
+        {
+            $index_1 = 0;
+            $index_2 = -1;
+            $keystring_1 = $maked_keywords[1][0]['fullkeystring'];
+        }
+        else
+        if(count($maked_keywords[2]) > 0 && count($maked_keywords[1]) == 0)
+        {
+            $index_1 = -1;
+            $index_2 = 0;
+            $keystring_2 = $maked_keywords[2][0]['fullkeystring'];
+        }
+        else
+        {
+            $index_1 = -1;
+            $index_2 = -1;
+        }
+
+
+        //deb::dump($keystring_1." - ".$keystring_2);
+        //deb::dump($index_1." - ".$index_2);
+        //deb::dump($maked_keywords);
+
+
+        $keywords_pos = $temp;
+
+//$k = 1;
+//deb::dump(${'index_'.$k});
+        //die();
+
+        // Очищаем старые данные
+        SeoKeywordsNotice::model()->deleteAll('n_id = '.$advert->n_id);
+
+        for($k=1; $k<=2; $k++)
+        {
+            if(${'index_'.$k} >= 0)
+            {
+                $advert->{'keyword_'.$k} = ${'keystring_'.$k};
+                $advert->save();
+
+                // Заносим сгенерированное слово в базу
+                if($keywords_words = SeoKeywordsWords::model()->findByAttributes(array(
+                    'hash'=>$maked_keywords[$k][${'index_'.$k}]['hash']
                 )))
                 {
-                    $seokeynot = new SeoKeywordsNotice();
-                    $seokeynot->k_id = $kpval->k_id;
-                    $seokeynot->n_id = $advert->n_id;
-                    $seokeynot->save();
-
-                    // Подсчет кол-ва
-                    $kpval->count = SeoKeywordsNotice::model()->count('k_id = '.$kpval->k_id);
-                    $kpval->save();
-
-                    //deb::dump($kpval);
+                    $keywords_words->count++;
+                    $keywords_words->save();
                 }
+                else
+                {
+                    $keywords_words = new SeoKeywordsWords();
+                    $keywords_words->fullkeystring = $maked_keywords[$k][${'index_'.$k}]['fullkeystring'];
+                    $keywords_words->hash = $maked_keywords[$k][${'index_'.$k}]['hash'];
+                    $keywords_words->count = 1;
+                    $keywords_words->save();
+                }
+
+
+                // Вместо удаленных
+                $seokeynot = new SeoKeywordsNotice();
+                $seokeynot->k_id = $maked_keywords[$k][${'index_'.$k}]['k_id'];
+                $seokeynot->n_id = $advert->n_id;
+                $seokeynot->position = $k;
+                $seokeynot->w_id = $keywords_words->w_id;
+                $seokeynot->save();
+
             }
         }
 
 
 
-        //deb::dump($advert);
+
+//        deb::dump($advert);
 
         //return $keywords_pos;
 
 
     }
-
 
     // Формирование ключевой фразы по шаблону
     public static function KeywordByShablonGenerate($advert, $pr_selector_array, $keywords_pos)
@@ -928,11 +1084,68 @@ class Notice extends CActiveRecord
         {
             $randwords_array[$rval->key] = explode("/",$rval->words);
         }
-//deb::dump($randwords_array);
+//deb::dump($keywords_pos);
 //die();
         foreach($keywords_pos as $kkey=>$keyword)
         {
-            //deb::dump($keyword->keyword);
+            //deb::dump($keyword);
+
+            //// Блок замены <слово1>...
+            $signature_array = array();
+            $signature_ps_id_array = array();
+
+            if(trim($keyword->signature) != '')
+            {
+                $signature_array = explode(".", $keyword->signature);
+                $signature_ps_id_array = explode(".", $keyword->signature_ps_id);
+            }
+
+            $start_i = count($signature_array);
+            $signature = $keyword->signature;
+            $signature_ps_id = $keyword->signature_ps_id;
+
+            for($i=$start_i; $i>=0; $i--)
+            {
+                if(isset($signature_array[$i]))
+                {
+                    unset($signature_array[$i]);
+                }
+                if(isset($signature_ps_id_array[$i]))
+                {
+                    unset($signature_ps_id_array[$i]);
+                }
+                $signature = '';
+                $signature_ps_id = '';
+                if(count($signature_array) > 0)
+                {
+                    $signature = implode(".", $signature_array);
+                    $signature_ps_id = implode(".", $signature_ps_id_array);
+                }
+
+
+                if($boardword = SeoBoardWords::model()->findByAttributes(array(
+                    'r_id'=>$keyword->r_id,
+                    'signature'=>$signature,
+                    'signature_ps_id'=>$signature_ps_id
+                )))
+                {
+                    $words = $boardword->words;
+
+                    preg_match_all('|<([^>]+)>([^<]+)</([^>]+)>|siU', $words, $matches);
+                    if(count($matches[1]) > 0)
+                    {
+                        foreach($matches[1] as $mkey=>$mval)
+                        {
+                            $keyword->keyword = str_replace("<".$mval.">", $matches[2][$mkey], $keyword->keyword);
+                        }
+                    }
+                }
+
+
+            }
+            ///////////////////////////////////
+
+
             if(preg_match_all('|(<[^>]+>)|siU', $keyword->keyword, $matches))
             {
                 foreach($matches[1] as $mkey=>$mval)
@@ -1227,4 +1440,13 @@ class Notice extends CActiveRecord
 
 
 
+}
+
+
+
+function cmp($a, $b) {
+    if ($a['count'] == $b['count']) {
+        return 0;
+    }
+    return ($a['count'] < $b['count']) ? -1 : 1;
 }

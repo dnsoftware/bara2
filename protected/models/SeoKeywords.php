@@ -25,12 +25,12 @@ class SeoKeywords extends CActiveRecord
         // NOTE: you should only define rules for those attributes that
         // will receive user inputs.
         return array(
-            array('keyword, r_id, position, prop_count, count', 'required'),
-            array('r_id, count', 'numerical', 'integerOnly'=>true),
+            array('keyword, r_id, position, prop_count', 'required'),
+            array('r_id', 'numerical', 'integerOnly'=>true),
             array('keyword', 'length', 'max'=>255),
             // The following rule is used by search().
             // @todo Please remove those attributes that should not be searched.
-            array('k_id, keyword, r_id, count', 'safe', 'on'=>'search'),
+            array('k_id, keyword, r_id', 'safe', 'on'=>'search'),
         );
     }
 
@@ -46,7 +46,6 @@ class SeoKeywords extends CActiveRecord
         {
             $keyprops_array[$val['rp_id']] = $val;
         }
-//deb::dump($keyprops);
 
         $props_relate = RubriksProps::model()->findAll(array(
             'select'=>'*',

@@ -3,7 +3,7 @@
     <div style="background-color: #eee; padding: 5px; ">
         <table style="">
         <tr>
-            <td style="width: 800px;">
+            <td style="width: 800px; vertical-align: top;">
 
         <div style="margin-bottom: 10px;">
             <div>Рубрика</div>
@@ -73,6 +73,20 @@
                 <br>
                 <input style="width: 150px;" id="filter_keyword" type="button" value="Фильтровать">
 
+
+
+                <div style="margin-top: 20px;">
+                    <div style="margin-bottom: 10px;">Словосочетания:</div>
+
+                    <input type="hidden" id="signature" name="signature" value="">
+                    <input type="hidden" id="signature_ps_id" name="signature_ps_id" value="">
+                    <textarea id="words" name="words" style="width: 200px; height: 120px; font-size: 11px;"></textarea>
+
+                    <br>
+                    <input type="button" id="save_board_words" value="Сохранить">
+                </div>
+
+
             </td>
         </tr>
         </table>
@@ -105,6 +119,40 @@ foreach($randomwords as $rkey=>$rval)
 
 
 <script>
+    GetPanelProps();
+
+    $('#save_board_words').click(function(){
+        $.ajax({
+            url: "<?= Yii::app()->createUrl('adminka/support/saveboardwords');?>",
+            method: "post",
+            dataType: 'json',
+            data:{
+                r_id: $('#panel_r_id').val(),
+                signature: $('#signature').val(),
+                signature_ps_id: $('#signature_ps_id').val(),
+                words: $('#words').val()
+            },
+            // обработка успешного выполнения запроса
+            success: function(data){
+                if(data['status'] == 'error')
+                {
+
+                }
+
+                if(data['status'] == 'ok')
+                {
+                    $('#words').attr('class', data['textclass']);
+                }
+            }
+        });
+
+    });
+
+    $('#words').keypress(function(){
+        $('#words').attr('class', 'bwred');
+    });
+
+
     $('#randword_list').offset({left: $('#span_seokeyword').position().left});
     $('#randword_list').offset({top: $('#span_seokeyword').position().top+40});
 //    console.log($('#span_seokeyword').position().left);

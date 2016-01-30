@@ -27,7 +27,7 @@ class SeoKeywordsNotice extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('k_id, n_id', 'required'),
+			array('k_id, position, n_id, w_id', 'required'),
 			array('k_id, n_id', 'numerical', 'integerOnly'=>true),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.

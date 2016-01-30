@@ -16,6 +16,16 @@ $this->renderPartial('/default/_admin_menu');
     {
         border: #999 solid 1px;
     }
+
+    .bwgreen
+    {
+        background-color: #6AD113;
+    }
+    .bwred
+    {
+        background-color: #ff6864;
+    }
+
 </style>
 
 <div style="margin-left: 50px; margin-top: 10px;">

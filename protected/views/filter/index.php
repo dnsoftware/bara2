@@ -214,7 +214,7 @@ if(count($rubrik_groups) > 0)
     <td style="vertical-align: top;  border: #000020 solid 0px; width: 720px; padding: 0;">
         <table style="">
         <?
-        //deb::dump(count($search_adverts));
+        //deb::dump($search_adverts);
         foreach($search_adverts as $key=>$val)
         {
         ?>
@@ -230,8 +230,9 @@ if(count($rubrik_groups) > 0)
                     <?
                     $photoname = Notice::getPhotoName($props_array[$key]['photos'][0], "_medium");
                     $curr_dir = Notice::getPhotoDir($photoname);
+                    $alt = str_replace("'", '"', $val['title']);
                     ?>
-                    <a href="<?= $advert_page_url;?>"><img src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>"></a>
+                    <a href="<?= $advert_page_url;?>"><img alt='<?= $alt;?>' src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>"></a>
                     <?
                     if(count($props_array[$key]['photos']) > 1)
                     {
@@ -253,6 +254,7 @@ if(count($rubrik_groups) > 0)
         </tr>
 
         <?
+        /* // Для смены цены прямо на сайте, раскомментировать при необходимости
         if(isset($_GET['changeprice']))
         {
         ?>
@@ -286,6 +288,7 @@ if(count($rubrik_groups) > 0)
         </tr>
         <?
         }
+        */
         ?>
 
         <tr>
@@ -296,37 +299,14 @@ if(count($rubrik_groups) > 0)
         ?>
         </table>
 
+        <div style="text-align: center;">
         <?
-        $page_url = Yii::app()->getRequest()->getUrl();
-
-        $allreg_prefix = "";
-        if($m_id == 0 && ($page_url == '/' || preg_match('|index.php|siU', $page_url, $match)))
-        {
-            $page_url = '/all';
-        }
-
-//        deb::dump($page_url);
-
-        $page_substr = '&page';
-        if(strpos($page_url, '?') === false || strpos($page_url, '/?page') !== false)
-        {
-            $page_substr = '/?page';
-        }
-//deb::dump($page_substr);
-
-        $page_url = preg_replace('|&page=\d+?|siU', '', $page_url);
-        $page_url = preg_replace('|/\?page=\d+?|siU', '', $page_url);
-//deb::dump($page_url);
-        if($kolpages > 1)
-        {
-            for($i=1; $i<=$kolpages; $i++)
-            {
-            ?>
-                <a href="<?= $page_url;?><?= $page_substr;?>=<?= $i;?>"><?= $i;?></a>
-            <?
-            }
-        }
+        $this->widget('application.extensions.bpaginator.BPaginatorWidget', $paginator_params);
         ?>
+        </div>
+
+
+
     </td>
     <td style="vertical-align: top; height: 1000px;  border: #000020 solid 0px; width: 300px; padding: 0">
         <aside>
@@ -409,6 +389,10 @@ if(count($rubrik_groups) > 0)
     });
 
 
+    <?
+    /* // для смены цен прямо на сайте. Раскомментировать при необходимости
+    ?>
+
     $('.changeprice').click(function(){
         input = $(this);
 
@@ -438,5 +422,8 @@ if(count($rubrik_groups) > 0)
         });
 
     });
+    <?
+    */
+    ?>
 
 </script>

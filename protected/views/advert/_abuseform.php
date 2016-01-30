@@ -62,14 +62,14 @@ public $verifyCode;
 <script>
     $('#reload_abuse_captcha').click(function(){
         rnd = Math.random() * (999999 - 11111) + 11111;
-        $('#abuse_captcha_image').attr('src', '/advert/showabusecaptcha/rnd/'+rnd);
+        $('#abuse_captcha_image').attr('src', '<?= Yii::app()->createUrl('/advert/showabusecaptcha/rnd/');?>/'+rnd);
     });
 
     $('#send_abuse_button').click(function(){
 
         $.ajax({
             type: 'POST',
-            url: '/advert/sendabuse',
+            url: '<?= Yii::app()->createUrl('/advert/sendabuse');?>',
             dataType: 'json',
             data: $('#abuse_form').serialize(),
             success: function(msg){

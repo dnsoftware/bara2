@@ -283,7 +283,7 @@ class RubriksProps extends CActiveRecord
                     {
                         if(preg_match('|[^0-9]+|siU', $value))
                         {
-                            return 'Только числовые значения!';
+                            return 'Неправильно указано значение. Оно может содержать только цифры без пробелов или любых других знаков.';
                         }
                     }
                 break;

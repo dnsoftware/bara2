@@ -47,14 +47,14 @@
 <script>
     $('#reload_share_captcha').click(function(){
         rnd = Math.random() * (999999 - 11111) + 11111;
-        $('#share_captcha_image').attr('src', '/advert/showsharecaptcha/rnd/'+rnd);
+        $('#share_captcha_image').attr('src', '<?= Yii::app()->createUrl('/advert/showsharecaptcha/rnd/');?>/'+rnd);
     });
 
     $('#send_share_button').click(function(){
 
         $.ajax({
             type: 'POST',
-            url: '/advert/sendshare',
+            url: '<?= Yii::app()->createUrl('/advert/sendshare');?>',
             dataType: 'json',
             data: $('#share_form').serialize(),
             success: function(msg){

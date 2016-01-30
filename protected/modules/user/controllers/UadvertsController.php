@@ -110,27 +110,36 @@ class UadvertsController extends Controller
 
         //deb::dump($search_adverts);
         //deb::dump($useradverts);
+        //die();
 
         $subrub_array = array();
         $parent_ids = array();
         $parent_ids_count = array();
-        if($rubriks = Rubriks::model()->findAll(array(
-            'select'=>'*',
-            'condition'=>'r_id IN ('.implode(", ", $rub_ids).')'
-        )))
+
+        $rubriks = array();
+        $parent_rubriks = array();
+        if(count($rub_ids) > 0)
         {
-            foreach($rubriks as $rkey=>$rval)
+            if($rubriks = Rubriks::model()->findAll(array(
+                'select'=>'*',
+                'condition'=>'r_id IN ('.implode(", ", $rub_ids).')'
+            )))
             {
-                $subrub_array[$rval->parent_id][$rval->r_id] = $rval;
-                $parent_ids[$rval->parent_id] = $rval->parent_id;
-                $parent_ids_count[$rval->parent_id] += $rub_counter[$rval->r_id];
+                foreach($rubriks as $rkey=>$rval)
+                {
+                    $subrub_array[$rval->parent_id][$rval->r_id] = $rval;
+                    $parent_ids[$rval->parent_id] = $rval->parent_id;
+                    $parent_ids_count[$rval->parent_id] += $rub_counter[$rval->r_id];
+                }
             }
+
+            $parent_rubriks = Rubriks::model()->findAll(array(
+                'select'=>'*',
+                'condition'=>'r_id IN ('.implode(", ", $parent_ids).')'
+            ));
+
         }
 
-        $parent_rubriks = Rubriks::model()->findAll(array(
-            'select'=>'*',
-            'condition'=>'r_id IN ('.implode(", ", $parent_ids).')'
-        ));
 
         // Данные для формы поиска
         $rub_array = Rubriks::get_rublist();
