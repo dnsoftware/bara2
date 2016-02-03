@@ -437,7 +437,7 @@ if(Yii::app()->controller->action->id == 'addpreview')
             </div>
 
             <div style="width: 682px; margin-top: 10px;">
-                <div style="font-weight: bold;">Похожие<?= " ".$mainblock['keyword_1'];?>:</div>
+                <div style="font-weight: bold;" class="pohozh"><h3>Похожие<?= " ".$mainblock['keyword_1'];?>:</h3></div>
 
                 <table style="width: auto;">
                     <tr>

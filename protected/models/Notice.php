@@ -1056,6 +1056,59 @@ class Notice extends CActiveRecord
                 $seokeynot->n_id = $advert->n_id;
                 $seokeynot->position = $k;
                 $seokeynot->w_id = $keywords_words->w_id;
+
+
+                ///////////////// Генерация ссылки с ключевика
+                $seokeywords = SeoKeywords::model()->findByPk($seokeynot->k_id);
+                $url_path_ids_array = array();
+                if($seokeywords->url_path_ids != '')
+                {
+                    $url_path_ids_array = explode(".", $seokeywords->url_path_ids);
+                }
+
+                $url_path_transnames = "";
+                if(preg_match('|<город>|siU', $seokeywords->keyword, $match))
+                {
+                    $town = Towns::model()->findByPk($advert->t_id);
+                    $url_path_transnames = $town->transname;
+                }
+                else
+                if(preg_match('|<регион>|siU', $seokeywords->keyword, $match))
+                {
+                    $region = Regions::model()->findByPk($advert->reg_id);
+                    $url_path_transnames = $region->transname;
+                }
+
+
+                if(isset($url_path_ids_array[0]))
+                {
+                    if($rubrik = Rubriks::model()->findByPk($url_path_ids_array[0]))
+                    {
+                        $url_path_transnames .= "/".$rubrik->transname;
+
+                        unset($url_path_ids_array[0]);
+                        if(count($url_path_ids_array) > 0)
+                        {
+                            $props_rows = PropsSprav::model()->findall(array(
+                                'select'=>'*',
+                                'condition'=>'ps_id IN ('.implode(",", $url_path_ids_array).')'
+                            ));
+
+                            foreach($props_rows as $prkey=>$prval)
+                            {
+                                $url_path_transnames .= "/".$prval->transname;
+                            }
+                        }
+                    }
+                }
+
+                // Город или регион в ссылке в футере
+
+                $seokeynot->keyword_url = $url_path_transnames;
+
+                //////////// Конец генерации ссылки с ключевика
+
+
                 $seokeynot->save();
 
             }
@@ -1214,7 +1267,7 @@ class Notice extends CActiveRecord
 
                         case "<регион>":
                             $region = Regions::model()->findByPk($advert->reg_id);
-                            $keywords_maked[$kkey] = str_replace($rval, $region->name, $keywords_maked[$kkey]);
+                            $keywords_maked[$kkey] = str_replace($rval, $region->vregione, $keywords_maked[$kkey]);
                         break;
 
                     }

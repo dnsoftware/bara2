@@ -3,6 +3,15 @@
 
 ?>
 <table style="border-collapse: collapse;">
+    <tr>
+        <td>Ключевик</td>
+        <td>Позиция</td>
+        <td>Свойства</td>
+        <td>Коды для ссылки</td>
+        <td>Сигнатура</td>
+        <td>Кол-во</td>
+        <td>Действия</td>
+    </tr>
 <?
 foreach($search_keywords as $key=>$val)
 {
@@ -16,6 +25,9 @@ foreach($search_keywords as $key=>$val)
     </td>
     <td class="td_keyword" id="td_keysign_<?= $key;?>" style="width: 300px;">
         <?= str_replace(";", "<br>", $val['propnames']);?>
+    </td>
+    <td class="td_keyword" >
+        <?= $val['url_path_ids'];?>
     </td>
     <td class="td_keyword" >
         <?= $val['signature'];?><br>

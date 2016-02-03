@@ -2539,6 +2539,7 @@ class AdvertController extends Controller
         )))
         {
 
+
 Notice::KeywordsGenerate($advert->n_id);
 
             $props_relate = RubriksProps::model()->with('notice_props')->findAll(array(
@@ -2788,7 +2789,23 @@ Notice::KeywordsGenerate($advert->n_id);
             }
 
             $rub_array = Rubriks::get_rublist();
-            Yii::app()->params['footer_keyword'] = $mainblock['keyword_2'];
+
+            // Ключевик в футер
+            //$keyword_url = '/'.$town->transname;
+            $keyword_url = '';
+            if($footer_keyword = SeoKeywordsNotice::model()->findByAttributes(array(
+                'n_id'=>$advert->n_id,
+                'position'=>2
+            )))
+            {
+                $keyword_url .= "/".$footer_keyword->keyword_url;
+            }
+
+            if($mainblock['keyword_2'] != '')
+            {
+                Yii::app()->params['footer_keyword'] = '<a class="footkey" href="'.$keyword_url.'">'.$mainblock['keyword_2'].'</a>';
+            }
+            //////////////////////////////////
 
             $this->pageTitle = htmlspecialchars($mainblock['title'])." купить в г. ".$this->mainblock_data['town']->name . " - объявление на ".$_SERVER['HTTP_HOST'];
 

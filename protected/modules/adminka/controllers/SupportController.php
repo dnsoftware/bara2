@@ -1534,6 +1534,7 @@ deb::dump($files_array);
         }
 
         $r_id = intval($keyword['r_id']);
+        $rubrik = Rubriks::model()->findByPk($r_id);
 
         $rubriks_props = RubriksProps::model()->findAll(array(
             'select'=>'*',
@@ -1623,20 +1624,38 @@ deb::dump($files_array);
         unset($postkeyword['r_id']);
         unset($postkeyword['seokeyword']);
 
-        $path = array();
+        $props_path = array();
+        $props_path_ids = array();
+        $props_path_names = array();
         if(count($postkeyword) > 0)
         {
             foreach($postkeyword as $pkey=>$pval)
             {
                 if($pval > 0)
                 {
-                    $path[$pval]['name'] = $props_route_items_by_id[$pval]->value;
-                    $path[$pval]['transname'] = $props_route_items_by_id[$pval]['transname'];
+                    if($props_route_items_by_id[$pval]->value != null)
+                    {
+                        $props_path[$pval]['name'] = $props_route_items_by_id[$pval]->value;
+                        $props_path[$pval]['transname'] = $props_route_items_by_id[$pval]['transname'];
+                        $props_path_ids[$pval] = $pval;
+                        $props_path_names[$pval] = $props_route_items_by_id[$pval]->value;
+                    }
                 }
             }
         }
 
-        //deb::dump($path);
+//        deb::dump($postkeyword);
+        //deb::dump($props_path_names);
+        if($r_id > 0)
+        {
+            $url_path_ids = $r_id;
+            $url_path_names = $rubrik->name;
+            if(count($props_path_ids) > 0)
+            {
+                $url_path_ids .= ".".implode(".", $props_path_ids);
+                $url_path_names .= " / ".implode(" / ", $props_path_names);
+            }
+        }
         ////////////////////////////////
 
 //deb::dump($keyword);
@@ -1645,6 +1664,12 @@ deb::dump($files_array);
         $signature_ps_id_array = array();
 
         ?>
+        <div style="margin: 15px;">
+            Код рубрики.коды свойств (для ссылки в футере)<br>
+            <input type="text" name="url_path_ids" id="url_path_ids" value="<?= $url_path_ids;?>">
+            <span id="url_path_names"><?= $url_path_names;?></span>
+        </div>
+
         <div style="margin-top: 5px;">Свойства:</div>
         <table>
         <tr>
@@ -1721,10 +1746,83 @@ deb::dump($files_array);
             $('.prop_item').change(function(){
                 GetPanelProps();
             });
+
+            $('#url_path_ids').keyup(function(){
+                $.ajax({
+                    url: "<?= Yii::app()->createUrl('adminka/support/getkeywordurlpath');?>",
+                    method: "post",
+                    dataType: 'json',
+                    data:{
+                        r_id: $('#panel_r_id').val(),
+                        url_path_ids: $(this).val()
+                    },
+                    // обработка успешного выполнения запроса
+                    success: function(data){
+                        if(data['status'] == 'ok')
+                        {
+                            $('#url_path_names').html(data['data']);
+                        }
+                    }
+                });
+
+            });
+
+
         </script>
     <?
 
     }
+
+
+    // Генерация наименования ссылки в футере из кодов рубрики и кодов свойств
+    public function actionGetKeywordUrlPath()
+    {
+        $ret['status'] = 'ok';
+        $ret['data'] = '';
+
+        if(isset($_POST['url_path_ids']) && trim($_POST['url_path_ids']) != '')
+        {
+            $url_path_ids = $_POST['url_path_ids'];
+            $url_path_ids_array = explode(".", $url_path_ids);
+            $url_path_names = "";
+            if(isset($url_path_ids_array[0]))
+            {
+                if($rubrik = Rubriks::model()->findByPk($url_path_ids_array[0]))
+                {
+                    $url_path_names .= $rubrik->name;
+
+                    unset($url_path_ids_array[0]);
+                    if(count($url_path_ids_array) > 0)
+                    {
+                        $props_rows = PropsSprav::model()->findall(array(
+                            'select'=>'*',
+                            'condition'=>'ps_id IN ('.implode(",", $url_path_ids_array).')'
+                        ));
+
+                        foreach($props_rows as $prkey=>$prval)
+                        {
+                            $url_path_names .= " / ".$prval->value;
+                        }
+                    }
+                }
+            }
+
+            $ret['status'] = 'ok';
+            $ret['data'] = $url_path_names;
+        }
+        else
+        if(trim($_POST['url_path_ids']) == '' && intval($_POST['r_id']) > 0)
+        {
+            $subrubrik = Rubriks::model()->findByPk(intval($_POST['r_id']));
+            $rubrik = Rubriks::model()->findByPk($subrubrik->parent_id);
+
+            $ret['status'] = 'ok';
+            $ret['data'] = $rubrik->name;
+        }
+
+        echo json_encode($ret);
+    }
+
 
     // Сохранение словосочетания для набора свойств
     public function actionSaveboardwords()
@@ -1833,20 +1931,31 @@ deb::dump($files_array);
             $position_array[] = $position;
         }
 
-        // Если ключевая фраза многострочтная
+        // Если ключевая фраза многострочная
         $seokeyword_array = array();
         $seokeyword_array = explode("\r\n", $seokeyword);
+
+
+        // Ссылка для футера
+        $url_path_ids_fromform = trim($_POST['url_path_ids']);
 
 
         // Добавление
         $errors_array = array();
         foreach($r_id_array as $r_id_key=>$r_id_val)
         {
+            $url_path_ids = $url_path_ids_fromform;
+            if($url_path_ids == '')
+            {
+                $subrubrik = Rubriks::model()->findByPk($r_id_val);
+                $url_path_ids = $subrubrik->parent_id;
+            }
+
             foreach($position_array as $position_key=>$position_val)
             {
                 foreach($seokeyword_array as $seokeyword_key=>$seokeyword_val)
                 {
-                    $ret = $this->AddNewSingleKeyword($seokeyword_val, $r_id_val, $position_val, $props);
+                    $ret = $this->AddNewSingleKeyword($seokeyword_val, $r_id_val, $position_val, $props, $url_path_ids);
                     if($ret['status'] == 'error')
                     {
                         $errors_array[] = $ret['errors'];
@@ -1871,7 +1980,7 @@ deb::dump($files_array);
 
 
     // Добавление единичной ключевой фразы
-    public function AddNewSingleKeyword($seokeyword, $r_id, $position, $props)
+    public function AddNewSingleKeyword($seokeyword, $r_id, $position, $props, $url_path_ids)
     {
         $keyword = new SeoKeywords();
 
@@ -1879,6 +1988,7 @@ deb::dump($files_array);
         $keyword->r_id = $r_id;
         $keyword->position = $position;
         $keyword->prop_count = 0;
+        $keyword->url_path_ids = $url_path_ids;
         $keyword->save();
 
         $errors = $keyword->getErrors();

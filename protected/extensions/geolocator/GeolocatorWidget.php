@@ -29,7 +29,7 @@ class GeolocatorWidget extends CWidget
             //$ip = '178.213.108.155';
         }
         //$ip = '127.0.0.1';
-        //$ip = '176.31.32.106';
+        $ip = '176.31.32.106';
         //$ip = '1761.31.32.106';
         $geodata = $SxGeo->getCityFull($ip);
         //deb::dump($ip);
