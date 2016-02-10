@@ -351,3 +351,55 @@ ul#menu_goriz ul li.iehover ul {
     text-decoration: underline;
 }
 
+
+.rub-block
+{
+    text-align: center;
+}
+.rub-list li
+{
+    font-size: 18px; font-weight: bold; list-style-type: none;
+    display: inline-block; padding: 0 10px; width: 17%;
+    margin: 0 0 20px; vertical-align: top;
+}
+.rub-list li a
+{
+    text-decoration: none;
+}
+.rub-list li a:hover
+{
+    text-decoration: underline;
+}
+
+.rub-list li a.sub
+{
+    font-size: 14px; font-weight: normal;
+    display: block;
+    text-decoration: none;
+}
+.rub-list li a.sub:hover
+{
+    font-size: 14px; font-weight: normal;
+    display: block;
+    text-decoration: underline;
+}
+.drop
+{
+    margin-top: 5px;
+    text-align: left;
+}
+
+.titultext
+{
+    list-style-type: none;
+}
+
+.titulhide
+{
+    display: none;
+}
+
+.smap
+{
+    font-size: 11px; color: #aaa;
+}

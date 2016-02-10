@@ -1471,6 +1471,21 @@ deb::dump($files_array);
 
         $rub_array = Rubriks::get_rublist();
         $randomwords = SeoRandomword::model()->findall();
+//deb::dump(implode(", ", array_keys($search_keywords)));
+
+        $connection = Yii::app()->db;
+        $keyword_count = array();
+        $sql = "SELECT k_id, count(k_id) cnt
+                        FROM ". $connection->tablePrefix . "seo_keywords_notice kn
+                        WHERE k_id IN (".implode(", ", array_keys($search_keywords)).")
+                        GROUP BY k_id ";
+        $command = $connection->createCommand($sql);
+        $dataReader = $command->query();
+        while(($row = $dataReader->read())!==false)
+        {
+            $keyword_count[$row['k_id']] = $row['cnt'];
+        }
+//deb::dump($keyword_count);
 
         switch($query_type)
         {
@@ -1483,6 +1498,7 @@ deb::dump($files_array);
                     'search_keywords'=>$search_keywords,
                     'query_type'=>$query_type,
                     'randomwords'=>$randomwords,
+                    'keyword_count'=>$keyword_count
 
                 ));
             break;
@@ -1494,8 +1510,8 @@ deb::dump($files_array);
                     'rub_array'=>$rub_array,
                     'keyword'=>$keyword,
                     'search_keywords'=>$search_keywords,
-                    'query_type'=>$query_type
-
+                    'query_type'=>$query_type,
+                    'keyword_count'=>$keyword_count
                 ));
             break;
 

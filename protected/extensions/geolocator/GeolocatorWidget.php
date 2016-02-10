@@ -26,10 +26,10 @@ class GeolocatorWidget extends CWidget
         $ip = $_SERVER['REMOTE_ADDR'];
         if($ip == '127.0.0.1')
         {
-            //$ip = '178.213.108.155';
+            $ip = '178.213.108.155';
         }
         //$ip = '127.0.0.1';
-        $ip = '176.31.32.106';
+        //$ip = '176.31.32.106';
         //$ip = '1761.31.32.106';
         $geodata = $SxGeo->getCityFull($ip);
         //deb::dump($ip);
@@ -38,24 +38,28 @@ class GeolocatorWidget extends CWidget
         $cookie_mytown_handchange_tag = Yii::app()->request->cookies->contains('geo_mytown_handchange_tag') ?
             Yii::app()->request->cookies['geo_mytown_handchange_tag']->value : 0;
 
-        $cookie['mytown'] = Yii::app()->request->cookies->contains('geo_mytown') ?
-            Yii::app()->request->cookies['geo_mytown']->value : 0;
-        $cookie['myregion'] = Yii::app()->request->cookies->contains('geo_myregion') ?
-            Yii::app()->request->cookies['geo_myregion']->value : 0;
-        $cookie['mycountry'] = Yii::app()->request->cookies->contains('geo_mycountry') ?
-            Yii::app()->request->cookies['geo_mycountry']->value : 0;
+        if($cookie_mytown_handchange_tag)
+        {
+            $cookie['mytown'] = Yii::app()->request->cookies->contains('geo_mytown') ?
+                Yii::app()->request->cookies['geo_mytown']->value : 0;
+            $cookie['myregion'] = Yii::app()->request->cookies->contains('geo_myregion') ?
+                Yii::app()->request->cookies['geo_myregion']->value : 0;
+            $cookie['mycountry'] = Yii::app()->request->cookies->contains('geo_mycountry') ?
+                Yii::app()->request->cookies['geo_mycountry']->value : 0;
 
-        $cookie['mytown_name'] = Yii::app()->request->cookies->contains('geo_mytown_name') ?
-            Yii::app()->request->cookies['geo_mytown_name']->value : '';
-        $cookie['myregion_name'] = Yii::app()->request->cookies->contains('geo_myregion_name') ?
-            Yii::app()->request->cookies['geo_myregion_name']->value : '';
-        $cookie['mycountry_name'] = Yii::app()->request->cookies->contains('geo_mycountry_name') ?
-            Yii::app()->request->cookies['geo_mycountry_name']->value : '';
-//deb::dump($cookie);
+            $cookie['mytown_name'] = Yii::app()->request->cookies->contains('geo_mytown_name') ?
+                Yii::app()->request->cookies['geo_mytown_name']->value : '';
+            $cookie['myregion_name'] = Yii::app()->request->cookies->contains('geo_myregion_name') ?
+                Yii::app()->request->cookies['geo_myregion_name']->value : '';
+            $cookie['mycountry_name'] = Yii::app()->request->cookies->contains('geo_mycountry_name') ?
+                Yii::app()->request->cookies['geo_mycountry_name']->value : '';
+        }
+
+//deb::dump(Yii::app()->request->cookies);
         // Если титул - проверяем если установлен тег ручной смены - редирект на зафиксированный регион
         // если тег не установлен - вычисляем регион, выставляем его в куки и редиректим туда
         $cur_url = Yii::app()->getRequest()->getRequestUri();
-
+//deb::dump($cookie_mytown_handchange_tag);
         if($cookie_mytown_handchange_tag == 1)
         {
             // Если титул и куки уже определены вручную
@@ -66,7 +70,7 @@ class GeolocatorWidget extends CWidget
                 {
                     if($town = Towns::model()->findByPk($cookie['mytown']))
                     {
-                        header('Location: /'.$town->transname);
+                        //header('Location: /'.$town->transname);
                     }
                     else
                     {
@@ -79,7 +83,7 @@ class GeolocatorWidget extends CWidget
                 {
                     if($region = Regions::model()->findByPk($cookie['myregion']))
                     {
-                        header('Location: /'.$region->transname);
+                        //header('Location: /'.$region->transname);
                     }
                     else
                     {
@@ -92,7 +96,7 @@ class GeolocatorWidget extends CWidget
                 {
                     if($country = Countries::model()->findByPk($cookie['mycountry']))
                     {
-                        header('Location: /'.$country->transname);
+                        //header('Location: /'.$country->transname);
                     }
                     else
                     {
@@ -156,13 +160,13 @@ class GeolocatorWidget extends CWidget
                 $cookie->expire = time() + 86400*30;
                 Yii::app()->request->cookies['geo_mycountry_name'] = $cookie;
 
-                self::SetGeolocatorCookie('geo_mytown_handchange_tag', 1, 86400*30);
+                //self::SetGeolocatorCookie('geo_mytown_handchange_tag', 1, 86400*30);
 
                 if ($cur_url == '/' || $cur_url == '/site/index')
                 {
                     if($city = Towns::model()->findByPk($geodata['city']['id']))
                     {
-                        header('Location: /'.$city->transname);
+                        //header('Location: /'.$city->transname);
                     }
                     else
                     {
@@ -179,7 +183,7 @@ class GeolocatorWidget extends CWidget
                 $cookie->expire = time() + 86400*30;
                 Yii::app()->request->cookies['geo_myregion'] = $cookie;
 
-                self::SetGeolocatorCookie('geo_mytown_handchange_tag', 1, 86400*30);
+                //self::SetGeolocatorCookie('geo_mytown_handchange_tag', 1, 86400*30);
 
                 $cookie = new CHttpCookie('geo_myregion_name', $geodata['region']['name_ru']);
                 $cookie->expire = time() + 86400*30;
@@ -189,7 +193,7 @@ class GeolocatorWidget extends CWidget
                 {
                     if($region = Regions::model()->findByPk($geodata['region']['id']))
                     {
-                        header('Location: /'.$region->transname);
+                        //header('Location: /'.$region->transname);
                     }
                     else
                     {
@@ -205,7 +209,7 @@ class GeolocatorWidget extends CWidget
                 $cookie->expire = time() + 86400*30;
                 Yii::app()->request->cookies['geo_mycountry'] = $cookie;
 
-                self::SetGeolocatorCookie('geo_mytown_handchange_tag', 1, 86400*30);
+                //self::SetGeolocatorCookie('geo_mytown_handchange_tag', 1, 86400*30);
 
                 $cookie = new CHttpCookie('geo_mycountry_name', $geodata['country']['name_ru']);
                 $cookie->expire = time() + 86400*30;
@@ -215,7 +219,7 @@ class GeolocatorWidget extends CWidget
                 {
                     if($country = Countries::model()->findByPk($geodata['country']['id']))
                     {
-                        header('Location: /'.$country->transname);
+                        //header('Location: /'.$country->transname);
                     }
                     else
                     {

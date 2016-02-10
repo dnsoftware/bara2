@@ -61,7 +61,8 @@ $this->renderPartial('/default/_admin_menu');
         'rub_array'=>$rub_array,
         'keyword'=>$keyword,
         'search_keywords'=>$search_keywords,
-        'query_type'=>$query_type
+        'query_type'=>$query_type,
+        'keyword_count'=>$keyword_count
     ));
     ?>
 

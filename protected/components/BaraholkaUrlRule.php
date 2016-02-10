@@ -29,7 +29,7 @@ class BaraholkaUrlRule extends CBaseUrlRule
         }
         parse_str($query, $query_array);
         //deb::dump($query_array);
-        //deb::dump($request);
+        //deb::dump($pathInfo);
         $parts = explode("/", $pathInfo);
 
         // Проверка на старую ссылку

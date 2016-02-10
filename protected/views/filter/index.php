@@ -110,12 +110,11 @@ $this->renderPartial('/filter/_search_form', array(
     'm_id'=>$m_id,
     'props_sprav_sorted_array'=>$props_sprav_sorted_array,
     'rubriks_props_array'=>$rubriks_props_array,
+    'cookie'=>$cookie
 
 ));
 
 ?>
-
-
 <div style="margin: 5px; 0px 5px 0px">
     <?
     $url_parts = array();
@@ -137,6 +136,10 @@ $this->renderPartial('/filter/_search_form', array(
             $url_part_groups[$bkey] = $bval;
         }
         $url = implode("/", $url_parts);;
+        if($url == 'all')
+        {
+            $url = '';
+        }
         ?>
         <a  class="baralink" href="/<?= $url;?>"><?= $bval['name'];?></a>
         <?
@@ -146,7 +149,13 @@ $this->renderPartial('/filter/_search_form', array(
         }
     }
 
+    if($bread_count == 0)
+    {
+        $url_parts[1] = 'all';
+    }
+
     $url_group = $url;
+
     if($url_part_groups[count($url_part_groups)]['type'] == 'rubrik')
     {
         unset($url_part_groups[count($url_part_groups)]);
@@ -161,11 +170,8 @@ $this->renderPartial('/filter/_search_form', array(
         }
         $url_group = implode("/", $url_part_groups_array);
     }
-
-
     ?>
 </div>
-
 
 <div style="text-align: center; padding-left: 0px; border: #000099 solid 0px;">
     <?
@@ -182,6 +188,11 @@ $this->renderPartial('/filter/_search_form', array(
 
 </div>
 
+
+<?
+if($display_titul_tag == 0)
+{
+?>
 <div style="margin-bottom: 15px; text-align: left;">
 <?
 if(count($rubrik_groups) > 0)
@@ -189,7 +200,7 @@ if(count($rubrik_groups) > 0)
     $page_url = Yii::app()->getRequest()->getUrl();
 
     $allreg_prefix = "";
-    if($m_id == 0 && ($page_url == '/' || preg_match('|index.php|siU', $page_url, $match)))
+    if($m_id == 0 && ($page_url == '/' || preg_match('|index.php|siU', $page_url, $match) ) )
     {
         $allreg_prefix = '/all';
     }
@@ -200,25 +211,50 @@ if(count($rubrik_groups) > 0)
         {
             continue;
         }
+        $href = $allreg_prefix.Yii::app()->createUrl($url_group."/".$rval['transname']/*$rval['path']*/);
         ?>
-        <a style="margin-right: 0px;" class="baralink_plus" href="<?= $allreg_prefix.Yii::app()->createUrl($url_group."/".$rval['transname']/*$rval['path']*/);?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
+        <a style="margin-right: 0px;" class="baralink_plus" href="<?= $href;?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
     <?
     }
 }
-//deb::dump($props_array);
 ?>
 </div>
+<?
+}
+
+if($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/index.php')
+{
+    $this->renderPartial('/filter/_titulrubriks', array(
+        'rub_array'=>$rub_array,
+        'url_parts'=>$url_parts
+    ));
+
+
+}
+?>
+
 
 <table style="" cellpadding="0" cellspacing="0" >
 <tr>
     <td style="vertical-align: top;  border: #000020 solid 0px; width: 720px; padding: 0;">
         <table style="">
         <?
-        //deb::dump($search_adverts);
+        $k=0;
         foreach($search_adverts as $key=>$val)
         {
+            $k++;
+            // Для главного титула кол-во показываемых объяв на странице другое,
+            // остальные скрыты до нажатия
+            $hidetype = '';
+            //if(intval($_GET['mainblock']['r_id']) == 0 && !isset($_GET['prop']) && !isset($_GET['addfield'])
+            //    && !isset($_GET['page']) && $k>10)
+            if(($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/index.php') && $k>10)
+            {
+                $hidetype = 'titulhide';
+            }
+
         ?>
-        <tr style="">
+        <tr style="" class="<?= $hidetype;?>">
             <td style="padding: 0 10px 0 0; margin: 0; width: 140px; height: 105px; vertical-align: middle; text-align: center; border: #000 solid 0px;">
             <?
             if(count($props_array[$key]['photos']) > 0)
@@ -291,7 +327,7 @@ if(count($rubrik_groups) > 0)
         */
         ?>
 
-        <tr>
+        <tr class="<?= $hidetype;?>">
             <td style="height: 10px;"></td><td></td>
         </tr>
         <?
@@ -299,16 +335,27 @@ if(count($rubrik_groups) > 0)
         ?>
         </table>
 
-        <div style="text-align: center;">
+        <div style="text-align: center;" class="<?= $hidetype;?>" id="paginator">
         <?
         $this->widget('application.extensions.bpaginator.BPaginatorWidget', $paginator_params);
         ?>
         </div>
 
 
-
     </td>
     <td style="vertical-align: top; height: 1000px;  border: #000020 solid 0px; width: 300px; padding: 0">
+
+        <div style="margin-bottom: 30px;">
+        <?
+        if($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/index.php')
+        {
+            $this->renderPartial('/filter/_titultext', array(
+
+            ));
+        }
+        ?>
+        </div>
+
         <aside>
             <div style="width: 300px; height: 600px; border: #000020 solid 0px;">
             <?
@@ -321,6 +368,20 @@ if(count($rubrik_groups) > 0)
     </td>
 </tr>
 </table>
+
+<?
+if($hidetype == 'titulhide')
+{
+    ?>
+    <span id="razvorot" style="width: 100%; border-bottom: #ddd solid 1px; display: inline-block; margin-bottom: 30px; text-align: center;">
+            <span style="display: inline-block; background-color: #fff; font-size: 16px; margin-bottom: -10px; padding-left: 10px; padding-right: 10px;">
+                <span id="display_otheradverts" style="border-bottom: dashed 1px; cursor: pointer;">Показать еще</span>
+            </span>
+    </span>
+
+<?
+}
+?>
 
 
 <?
@@ -386,6 +447,20 @@ if(count($rubrik_groups) > 0)
             }
         });
 
+    });
+
+    $('#display_otheradverts').click(function(){
+        if($('.titulhide').css('display') == 'none')
+        {
+            $('.titulhide').css('display', 'table-row');
+            $('#paginator').css('display', 'block');
+            $(this).html('Свернуть');
+        }
+        else
+        {
+            $('.titulhide').css('display', 'none');
+            $(this).html('Развернуть');
+        }
     });
 
 

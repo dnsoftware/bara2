@@ -35,11 +35,18 @@ header("Content-type: text/html; charset=utf-8");
     ?>
 
 
+    <?
+    if(1)
+    {
+    ?>
     <!-- BEGIN JIVOSITE CODE {literal} -->
     <script type='text/javascript'>
         (function(){ var widget_id = 'qNIlckKhzn';
             var s = document.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = '//code.jivosite.com/script/widget/'+widget_id; var ss = document.getElementsByTagName('script')[0]; ss.parentNode.insertBefore(s, ss);})();</script>
     <!-- {/literal} END JIVOSITE CODE -->
+    <?
+    }
+    ?>
 
 	<title><?php echo CHtml::encode($this->pageTitle); ?></title>
 </head>
@@ -59,7 +66,6 @@ header("Content-type: text/html; charset=utf-8");
 </script>
 
 
-<div style="width: 100%; padding: 16px; text-align: center;"></div>
 <?
 /*
 ?>
@@ -197,13 +203,8 @@ border-radius: 3px;">
 
 
     <div id="footer" style="">
-        baraholka.ru
-        <?
-            if(Yii::app()->params['footer_keyword'] != '')
-            {
-                echo " - ".Yii::app()->params['footer_keyword'];
-            }
-        ?>
+
+        <a href="/map">карта сайта</a>
 
         <div style="float: right;">
         <!--LiveInternet counter--><script type="text/javascript"><!--
@@ -218,6 +219,17 @@ border-radius: 3px;">
                 "border='0' width='88' height='15'><\/a>")
 
             //--></script><!--/LiveInternet-->
+        </div>
+
+        <div>
+            baraholka.ru
+            <?
+            if(Yii::app()->params['footer_keyword'] != '')
+            {
+                echo " - ".Yii::app()->params['footer_keyword'];
+            }
+            ?>
+
         </div>
 
     </div><!-- footer -->
@@ -364,6 +376,7 @@ if($_SERVER['HTTP_HOST'] != 'baraholka2.dn')
         } else { f(); }
     })(document, window, "yandex_metrika_callbacks");
 </script>
+
 <noscript><div><img src="https://mc.yandex.ru/watch/10041385" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <!-- /Yandex.Metrika counter -->
 <?

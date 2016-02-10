@@ -34,7 +34,17 @@ foreach($search_keywords as $key=>$val)
         <?= $val['signature_ps_id'];?>
     </td>
     <td class="td_keyword" id="td_keycount_<?= $key;?>" style="width: 20px;">
-        <?= $val['count'];?>
+        <?
+        if(isset($keyword_count[$val['k_id']]))
+        {
+            echo $keyword_count[$val['k_id']];
+        }
+        else
+        {
+            echo "0";
+        }
+
+        ?>
     </td>
     <td class="td_keyword" style="width: 100px;">
         <!--<span class="keyword_edit" k_id="<?= $key;?>">Редактировать</span>-->

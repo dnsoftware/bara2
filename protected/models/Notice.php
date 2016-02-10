@@ -796,7 +796,6 @@ class Notice extends CActiveRecord
             'condition'=>'r_id='.$advert->r_id . " AND n_id=".$advert->n_id,
             'order'=>'t.hierarhy_tag DESC, t.hierarhy_level ASC, t.display_sort, t.rp_id'
         ));
-
         $retsign= Notice::MakeKeywordSignature($props_relate);
 
         $keyword_signature = $retsign['ps_ids'];
@@ -826,6 +825,7 @@ class Notice extends CActiveRecord
                            AND prop_count <= $prop_count AND signature_ps_id LIKE '".$signstr."%' ",
                         'order'=>'prop_count DESC, k_id DESC'
                     ));
+
                     //deb::dump($seo_keywords);
 
                 }
@@ -833,9 +833,11 @@ class Notice extends CActiveRecord
                 {
                     $seo_keywords = SeoKeywords::model()->findAll(array(
                         'select'=>'k_id, keyword, r_id, position, signature, signature_ps_id, prop_count',
-                        'condition'=>'r_id = '.$advert->r_id . " AND position = '".$pkey."' ",
-                        'order'=>'prop_count ASC, k_id DESC'
+                        'condition'=>'r_id = '.$advert->r_id . " AND position = '".$pkey."'
+                           AND prop_count <= $prop_count AND signature_ps_id = '' ",
+                        'order'=>'prop_count DESC, k_id DESC'
                     ));
+
                     //deb::dump($seo_keywords);
                 }
 

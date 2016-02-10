@@ -1761,7 +1761,7 @@ class AdvertController extends Controller
             // Генерируем xml данные свойств
             self::PropsXmlGenerate($newmodel->n_id);
 
-            mail('ddaemon@mail.ru', $newmodel->daynumber_id.' XML - after_PropsXmlGenerate', 'After PropsXmlGenerate');
+            //mail('ddaemon@mail.ru', $newmodel->daynumber_id.' XML - after_PropsXmlGenerate', 'After PropsXmlGenerate');
 
             /*
             // Так как теперь перед подачей объявы надо залогиницо, то занесение проверенного телефона
@@ -2533,6 +2533,14 @@ class AdvertController extends Controller
         $m_id = 0;
         /***********************/
 
+/****
+$advert = Notice::model()->find(array(
+    'select'=>'*',
+    'condition'=>'daynumber_id = "'.$daynumber_id.'"  '
+));
+Notice::KeywordsGenerate($advert->n_id);
+/****/
+
         if($advert = Notice::model()->find(array(
             'select'=>'*',
             'condition'=>'daynumber_id = "'.$daynumber_id.'"  '
@@ -2540,7 +2548,6 @@ class AdvertController extends Controller
         {
 
 
-Notice::KeywordsGenerate($advert->n_id);
 
             $props_relate = RubriksProps::model()->with('notice_props')->findAll(array(
                 'select'=>'*',

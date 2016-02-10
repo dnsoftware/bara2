@@ -5,18 +5,27 @@
     if(Yii::app()->request->cookies['geo_mytown_name']->value != '')
     {
         $region_name = Yii::app()->request->cookies['geo_mycountry_name']->value .", ". Yii::app()->request->cookies['geo_mytown_name']->value;
-        echo $region_name;
+        //echo $region_name;
     }
     else
     if(Yii::app()->request->cookies['geo_myregion_name']->value != '')
     {
         $region_name = Yii::app()->request->cookies['geo_mycountry_name']->value .", ". Yii::app()->request->cookies['geo_myregion_name']->value;
-        echo $region_name;
+        //echo $region_name;
     }
     else
     if (Yii::app()->request->cookies['geo_mycountry_name']->value != '')
     {
         $region_name = Yii::app()->request->cookies['geo_mycountry_name']->value;
+        //echo $region_name;
+    }
+    else
+    {
+        $region_name = "Регион не определен";
+    }
+
+    if(Yii::app()->request->cookies['geo_mytown_handchange_tag']->value == 1)
+    {
         echo $region_name;
     }
     else
@@ -67,11 +76,13 @@ if(Yii::app()->request->cookies['region_confirm_tag']->value == 0)
     ?>
     <div style="font-size: 12px;">
     <?
-    if($region_name != '')
+    if($region_name != '' && $region_name != "Регион не определен")
     {
     ?>
         <div style="margin-bottom: 5px;">
-            Мы определили Ваш регион как <span style="font-weight: bold; font-style: italic;"><?= $region_name;?></span>
+            <div style="font-weight: bold; margin-bottom: 10px;">Выберите город или регион для фильтрации<br>
+            объявлений по территориальному признаку.</div>
+            Мы определили Ваш регион как <span style="font-weight: bold; font-style: italic;"><?= $region_name;?></span>:
         </div>
 
         <span id="reg_confirm_yes" class="reg_confirm_yes" style="cursor: pointer; border-bottom: #fff solid 1px; font-weight: bold; font-size: 16px;">Да, правильно</span>
@@ -195,6 +206,7 @@ if(Yii::app()->request->cookies['region_confirm_tag']->value == 0)
             // обработка успешного выполнения запроса
             success: function(data){
                 $('#div_reg_confirm').css('display', 'none');
+                //location.href = '/';
             }
         });
     });

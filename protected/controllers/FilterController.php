@@ -11,6 +11,8 @@ class FilterController extends Controller
         //deb::dump($_GET);
         $query_delta = 0;
 
+        $display_titul_tag = 0; // Признак того что мы на "титуле" региона или на главной
+
         $connection=Yii::app()->db;
 
         $cookie['mytown'] = Yii::app()->request->cookies->contains('geo_mytown') ?
@@ -43,7 +45,6 @@ class FilterController extends Controller
             $m_id = intval($parts[1]);
         }
 
-
         // страница
         $page = 1;
         if(isset($_GET['page']))
@@ -64,8 +65,9 @@ class FilterController extends Controller
         // Конец Показ архивных
 
         // Куки местоположения
-        if(isset($_GET['filter_submit_button']))
+        if(isset($_GET['filter_submit_button']) && $_GET['mesto_id'] != 'none_0')
         {
+            //deb::dump($_COOKIE);
             self::unsetRegionCookies();
             self::SetGeolocatorCookie('geo_mytown_handchange_tag', 1, 86400*30);
 
@@ -109,29 +111,63 @@ class FilterController extends Controller
         }
 
 
+
         // Местоположение
         $mesto_sql = "1 ";
         $mesto_use_index_prefix = '';
-        if($mesto_isset_tag && $mselector == 'c')
-        {
-            $mesto_sql = " n.c_id = ".intval($m_id);
-            $mesto_use_index_prefix = 'c_id';
-        }
-        if($mesto_isset_tag && $mselector == 'reg')
-        {
-            $mesto_sql = " n.reg_id = ".intval($m_id);
-            $mesto_use_index_prefix = 'reg_id';
-        }
+        $urlparts = explode("/", parse_url($_SERVER['REQUEST_URI'])['path']);
         if($mesto_isset_tag && $mselector == 't')
         {
             $mesto_sql = " n.t_id = ".intval($m_id);
             $mesto_use_index_prefix = 't_id';
         }
-//deb::dump($mesto_sql);
+        else
+        if($mesto_isset_tag && $mselector == 'reg')
+        {
+            $mesto_sql = " n.reg_id = ".intval($m_id);
+            $mesto_use_index_prefix = 'reg_id';
+        }
+        else
+        if($mesto_isset_tag && $mselector == 'c')
+        {
+            $mesto_sql = " n.c_id = ".intval($m_id);
+            $mesto_use_index_prefix = 'c_id';
+        }
+        else
+        if(Yii::app()->request->cookies['region_confirm_tag']->value != 0
+                    && (isset($urlparts[1]) && $urlparts[1] != 'all'))
+        {
+            if($cookie['mytown'] > 0)
+            {
+                $mesto_sql = " n.t_id = ".intval($cookie['mytown']);
+                $mesto_use_index_prefix = 't_id';
+                $mesto_isset_tag = 1;
+                $mselector = 't';
+                $m_id = $cookie['mytown'];
+            }
+            else
+            if($cookie['myregion'] > 0)
+            {
+                $mesto_sql = " n.reg_id = ".intval($cookie['myregion']);
+                $mesto_use_index_prefix = 'reg_id';
+                $mesto_isset_tag = 1;
+                $mselector = 'reg';
+                $m_id = $cookie['myregion'];
+            }
+            else
+            if($cookie['mycountry'] > 0)
+            {
+                $mesto_sql = " n.c_id = ".intval($cookie['mycountry']);
+                $mesto_use_index_prefix = 'c_id';
+                $mesto_isset_tag = 1;
+                $mselector = 'c';
+                $m_id = $cookie['mycountry'];
+            }
+        }
+
 
 
         //Рубрика
-
         $rubrik_sql = " 1 ";
         if(!isset($_GET['parent_r_id']) && isset($_GET['mainblock']['r_id']) && $_GET['mainblock']['r_id'] != '')
         {
@@ -185,8 +221,8 @@ class FilterController extends Controller
 
         //deb::dump($rubriks_poryadok_props_array);
 //deb::dump($pubriks_props_array);
-        //deb::dump($_GET['prop']);
-//        deb::dump($_GET['addfield']);
+//deb::dump($_GET['prop']);
+//deb::dump($_GET['addfield']);
         //deb::dump($pubriks_props_array);
 
         // Переводим переменные из $_GET['prop'] в $_GET['addfield']
@@ -312,7 +348,7 @@ class FilterController extends Controller
         }
 
         // КОНЕЦ Переводим переменные из $_GET['addfield'] в $_GET['prop']
-//deb::dump($_GET['prop']);
+
 
         // Удаление из $_GET['addfield'] пустых диапазонов
         if(isset($_GET['addfield']) && count($_GET['addfield']) > 0 )
@@ -326,6 +362,15 @@ class FilterController extends Controller
             }
         }
 
+
+        // Для титулов-регионов кол-во объяв на странице другое, плюс добавлена вставка рубрик и текстовый блок
+        if(intval($_GET['mainblock']['r_id']) == 0 && !isset($_GET['prop']) && !isset($_GET['addfield'])
+            && !isset($_GET['page']))
+        {
+            $display_titul_tag = 1;
+        }
+
+//deb::dump(intval($_GET['mainblock']['r_id']));
 //deb::dump($_GET['prop']);
 //deb::dump($_GET['addfield']);
 
@@ -787,7 +832,6 @@ class FilterController extends Controller
                     $mesto_sql AND ".$rubrik_sql.$q_sql." AND n.t_id = t.t_id
                     ORDER BY n.date_add DESC
                     LIMIT ".$offset.", ".Yii::app()->params['countonpage'];
-
             $command = $connection->cache(600)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
 
             $adverts = $command->queryAll();
@@ -836,8 +880,9 @@ class FilterController extends Controller
             {
 
 //deb::dump($_GET['mainblock']['r_id']);
-                if(count($rubriks_props) > 0)
+                if(count($rubriks_props) > 0 && $rubriks_props[0]['vibor_type'] != 'photoblock')
                 {
+
                     $props_sprav = PropsSprav::model()->findAll(array('condition'=>'rp_id = '.$rubriks_props[0]->rp_id));
 
                     $props_groups = array();
@@ -934,6 +979,7 @@ class FilterController extends Controller
         //Местоположение
         $bread_number = 0;  // индекс в массиве $this->breadcrumbs
         $region_for_titul = '';
+        $url_parts = explode("/", parse_url(Yii::app()->getRequest()->getUrl())['path']);
         if($mesto_isset_tag && $mselector == 't')
         {
             if(!isset($town))
@@ -959,7 +1005,7 @@ class FilterController extends Controller
             $this->breadcrumbs[$bread_number]['transname'] = $region->transname;
             $this->breadcrumbs[$bread_number]['type'] = 'region';
             $this->breadcrumbs[$bread_number]['name'] = $region->name . ": все объявления";
-            $region_for_titul = $region->name;
+            $region_for_titul = $region->vregione;
         }
         else
         if($mesto_isset_tag && $mselector == 'c')
@@ -974,6 +1020,15 @@ class FilterController extends Controller
             $this->breadcrumbs[$bread_number]['type'] = 'country';
             $this->breadcrumbs[$bread_number]['name'] = $country->name . ": все объявления";
             $region_for_titul = $country->name;
+        }
+        else
+        if($mesto_isset_tag == 0 && $mselector == '' && isset($url_parts[1]) && $url_parts[1] == 'all')
+        {
+            $bread_number++;
+            $this->breadcrumbs[$bread_number]['transname'] = 'all';
+            $this->breadcrumbs[$bread_number]['type'] = 'country';
+            $this->breadcrumbs[$bread_number]['name'] = "Все объявления";
+            $region_for_titul = 'Все объявления';
         }
 
         //Рубрикация
@@ -1073,28 +1128,32 @@ class FilterController extends Controller
             }
         }
 
-//deb::dump($bread_rubrik);
         $curr_url = Yii::app()->getRequest()->getUrl();
+        $regstr = 'регионе';
+        if(isset($region))
+        {
+            $regstr = '';
+        }
+        if(isset($town))
+        {
+            $regstr = 'г. ';
+        }
+
         if($curr_url == '/' || stripos('/index.php', $curr_url) !== false)
         {
-            $this->pageTitle = 'Доска бесплатных частных объявлений - '.$_SERVER['HTTP_HOST'];
+            $this->pageTitle = 'Доска бесплатных объявлений от частных лиц - '.$_SERVER['HTTP_HOST'];
         }
+        else
         if(count($titul_array) == 0 && $mesto_isset_tag > 0)
         {
-            //deb::dump($town);
-            $regstr = 'регионе';
-            if(isset($town))
-            {
-                $regstr = 'г. ';
-            }
+            //deb::dump($region);
             $this->pageTitle = 'Доска бесплатных частных объявлений в '.$regstr.' '.$region_for_titul.' - '.$_SERVER['HTTP_HOST'];
         }
         else
         {
-            $this->pageTitle = implode(", ", $titulpart) ." - ". $deystvie. " на ".$_SERVER['HTTP_HOST'];
+            $this->pageTitle = implode(", ", $titulpart)  ." в ".$regstr.' '.$region_for_titul." - ". $deystvie. " на ".$_SERVER['HTTP_HOST'];
         }
         //Доска бесплатных частных объявлений в регионе Россия - baraholka.ru
-
         ////////// Конец формирования титула
 
 
@@ -1140,7 +1199,9 @@ class FilterController extends Controller
             'm_id'=>$m_id,
             'rubriks_all_array'=>$rubriks_all_array,
             'kolpages'=>$kolpages,
-            'paginator_params'=>$paginator_params
+            'paginator_params'=>$paginator_params,
+            'display_titul_tag'=>$display_titul_tag,
+            'cookie'=>$cookie
         ));
 
 	}
@@ -1461,7 +1522,7 @@ class FilterController extends Controller
         }
         else
         {
-            $url_parts[0] = 'russia';
+            $url_parts[0] = 'all';
         }
 
         if(($r_id = intval($_POST['mainblock']['r_id'])) > 0)
@@ -1776,13 +1837,13 @@ class FilterController extends Controller
 
             if($parts[0] == 'none')
             {
-                header('Location: /russia');
+                header('Location: /all');
             }
 
         }
         else
         {
-            header('Location: /russia');
+            header('Location: /all');
         }
 
     }

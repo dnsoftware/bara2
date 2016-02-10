@@ -51,21 +51,38 @@
                         $data = FilterController::ListMestoForSearch('t', $m_id);
                     }
                     else
-                        //if(isset($_GET['mainblock']['reg_id']) && intval($_GET['mainblock']['reg_id']) > 0)
-                        if($mselector == 'reg' && $m_id > 0)
-                        {
-                            $data = FilterController::ListMestoForSearch('reg', $m_id);
-                        }
-                        else
-                            //if(isset($_GET['mainblock']['c_id']) && intval($_GET['mainblock']['c_id']) > 0)
-                            if($mselector == 'c' && $m_id > 0)
-                            {
-                                $data = FilterController::ListMestoForSearch('c', $m_id);
-                            }
-                            else
-                            {
-                                $data = FilterController::ListMestoForSearch('none', 0);
-                            }
+                    //if(isset($_GET['mainblock']['reg_id']) && intval($_GET['mainblock']['reg_id']) > 0)
+                    if($mselector == 'reg' && $m_id > 0)
+                    {
+                        $data = FilterController::ListMestoForSearch('reg', $m_id);
+                    }
+                    else
+                    //if(isset($_GET['mainblock']['c_id']) && intval($_GET['mainblock']['c_id']) > 0)
+                    if($mselector == 'c' && $m_id > 0)
+                    {
+                        $data = FilterController::ListMestoForSearch('c', $m_id);
+                    }
+                    /*
+                    else
+                    if($cookie['mytown'] > 0)
+                    {
+                        $data = FilterController::ListMestoForSearch('t', $cookie['mytown']);
+                    }
+                    else
+                    if($cookie['myregion'] > 0)
+                    {
+                        $data = FilterController::ListMestoForSearch('reg', $cookie['myregion']);
+                    }
+                    else
+                    if($cookie['mycountry'] > 0)
+                    {
+                        $data = FilterController::ListMestoForSearch('c', $cookie['mycountry']);
+                    }
+                    */
+                    else
+                    {
+                        $data = FilterController::ListMestoForSearch('none', 0);
+                    }
                     echo $data;
                     ?>
                 </select>
