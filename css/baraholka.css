@@ -403,3 +403,28 @@ ul#menu_goriz ul li.iehover ul {
 {
     font-size: 11px; color: #aaa;
 }
+
+.titulrub
+{
+    padding-top: 10px;
+    border: #fff solid 1px;
+    border-radius: 3px;
+    height: 150px;
+
+}
+.titulrub:hover
+{
+    border: #008cc3 solid 1px;
+}
+
+a.atitulrub
+{
+    color: #000;
+    text-decoration: none;
+}
+
+a.atitulrub:hover
+{
+    color: #008cc3;
+    text-decoration: none;
+}

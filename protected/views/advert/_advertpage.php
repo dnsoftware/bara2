@@ -480,6 +480,10 @@ if(Yii::app()->controller->action->id == 'addpreview')
                                     ?>
                                     <div style="margin-top: 5px;"><h3 style="display: inline;"><a title="<?= $ahref_title;?>" class="baralink" href="<?= $advert_page_url;?>"><?= $sval['title'];?></a></h3></div>
 
+                                    <?
+                                    if($sval['cost'] > 0)
+                                    {
+                                    ?>
                                     <div  style="color: #777;">
                                     <?= Notice::costCalcAndView(
                                         $sval['cost_valuta'],
@@ -489,6 +493,9 @@ if(Yii::app()->controller->action->id == 'addpreview')
 
                                     <span><?= Options::$valutes[Yii::app()->request->cookies['user_valuta_view']->value]['symbol2'];?></span>
                                     </div>
+                                    <?
+                                    }
+                                    ?>
 
                                 </td>
                             <?

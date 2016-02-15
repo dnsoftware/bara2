@@ -562,12 +562,13 @@ class AdvertController extends Controller
             {
             ?>
                $('#div_title').css('display', 'none');
+               $('#title').val('');
             <?
             }
             else
             {
             ?>
-            $('#div_title').css('display', 'block');
+                $('#div_title').css('display', 'block');
             <?
             }
 
@@ -2725,11 +2726,12 @@ Notice::KeywordsGenerate($advert->n_id);
             $rubrik = Rubriks::model()->findByPk($subrubrik->parent_id);
 
             // Формирование заголовка в зависимости от шаблона в рубрике
-//            deb::dump($addfield);
         //deb::dump($this->addfield_data['props_data']);
             if($subrubrik->title_advert_shablon != '' && $mainblock['old_base_tag'] == 0)
             {
+                $mainblock['title'] = self::MakeTitleByShablon($advert, $subrubrik->title_advert_shablon);
 
+                /* Удалить, устаревший сегмент - перенесен в функцию MakeTitleByShablon
                 $res = Notice::MakePropsDisplayData($advert->props_xml);
                 $props_display = $res['props_display'];
                 $photos = $res['photos'];
@@ -2747,6 +2749,7 @@ Notice::KeywordsGenerate($advert->n_id);
                 {
                     $mainblock['title'] = str_replace('{'.$match.'}', $advert->$match, $mainblock['title']);
                 }
+                */
 
             }
             ///////////END Формирование заголовка в зависимости от шаблона в рубрике/////////////////
@@ -2887,6 +2890,31 @@ Notice::KeywordsGenerate($advert->n_id);
 //deb::dump($breadcrumbs);
 
 
+
+    }
+
+
+    // Генерация титула объявы по шаблону
+    public static function MakeTitleByShablon($advert, $title_advert_shablon)
+    {
+        $res = Notice::MakePropsDisplayData($advert->props_xml);
+        $props_display = $res['props_display'];
+        $photos = $res['photos'];
+
+        $title = $title_advert_shablon;
+        foreach($props_display as $pkey=>$pval)
+        {
+            $title = str_replace('['.$pkey.']', $pval, $title);
+        }
+
+        preg_match_all('|\{([a-zA-Z0-9_-]+)\}|siU', $title, $matches);
+
+        foreach($matches[1] as $match)
+        {
+            $title = str_replace('{'.$match.'}', $advert->$match, $title);
+        }
+
+        return $title;
 
     }
 

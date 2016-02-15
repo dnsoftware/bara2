@@ -36,7 +36,7 @@ header("Content-type: text/html; charset=utf-8");
 
 
     <?
-    if(1)
+    if(0)
     {
     ?>
     <!-- BEGIN JIVOSITE CODE {literal} -->

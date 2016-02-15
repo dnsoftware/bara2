@@ -72,7 +72,9 @@ $this->renderPartial('_advertpage', array(
     'towns_array'=>$towns_array,
     'user'=>$user,
     'path_category'=>$path_category,
-    'advert_url_category'=>$breadcrumbs[-2]['transname']."/".$breadcrumbs[0]['transname']."/".$path_category,
+    //'advert_url_category'=>$breadcrumbs[-2]['transname']."/".$breadcrumbs[0]['transname']."/".$path_category,
+    'advert_url_category'=>$mainblock_data['region']->transname."/".$breadcrumbs[0]['transname']."/".$path_category,
+
 
 ));
 

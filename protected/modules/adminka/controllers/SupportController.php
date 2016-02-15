@@ -1158,6 +1158,21 @@ deb::dump($files_array);
     // Работа с ключевыми словами
     public function actionSeo()
     {
+        /* Удалить
+        $keywords = SeoKeywords::model()->findAll(array(
+            'select'=>'*',
+            'condition'=>'propnames = "" && signature = "" '
+        ));
+        deb::dump($keywords);
+        foreach($keywords as $key=>$keyword)
+        {
+            $rubrik = Rubriks::model()->findByPk($keyword->r_id);
+            $keyword->propnames = $rubrik->name;
+            $keyword->save();
+        }
+        die();
+        */
+
         $query_delta = 0;
 
         $query_type = 'all';
@@ -2053,6 +2068,12 @@ deb::dump($files_array);
 
                 $keyword->save();
             }
+            else
+            {
+                $rubrik = Rubriks::model()->findByPk($keyword->r_id);
+                $keyword->propnames = $rubrik->name;
+                $keyword->save();
+            }
         }
         else
         {
@@ -2358,6 +2379,31 @@ deb::dump($files_array);
         /************ КОНЕЦ ***************/
 
     }
+
+
+    // Заполнение RealTime индекса объявлений
+    public function actionRtAdvertsIndexFill()
+    {
+        $connection = Yii::app()->db;
+
+        $sql = "SELECT n_id
+                FROM ". $connection->tablePrefix . "notice
+                WHERE deleted_tag = 0 AND date_expire > UNIX_TIMESTAMP(NOW())
+                 ";
+        $command = $connection->createCommand($sql);
+        if($rows = $command->queryAll())
+        {
+            foreach($rows as $rkey=>$rval)
+            {
+                Notice::InsertRealtimeIndex($rval['n_id']);
+            }
+        }
+
+
+
+    }
+
+
 
     // Uncomment the following methods and override them if needed
 	/*

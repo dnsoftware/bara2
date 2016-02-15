@@ -822,9 +822,10 @@ class Notice extends CActiveRecord
                     $seo_keywords = SeoKeywords::model()->findAll(array(
                         'select'=>'k_id, keyword, r_id, position, signature, signature_ps_id, prop_count',
                         'condition'=>'r_id = '.$advert->r_id . " AND position = '".$pkey."'
-                           AND prop_count <= $prop_count AND signature_ps_id LIKE '".$signstr."%' ",
+                           AND prop_count <= $prop_count AND signature_ps_id = '".$signstr."' ",
                         'order'=>'prop_count DESC, k_id DESC'
                     ));
+                    // AND prop_count <= $prop_count AND signature_ps_id LIKE '".$signstr."%' ",
 
                     //deb::dump($seo_keywords);
 
@@ -1363,7 +1364,99 @@ class Notice extends CActiveRecord
     }
 
 
-	/**
+    // Экранирование поисковой строки для SphinxQL запросов
+    public static function SphinxEscapeString ( $string )
+    {
+        $from = array ( '\\', '(',')','|','-','!','@','~','"','&', '/', '^', '$', '=', '<' );
+        $to   = array ( '\\\\', '\(','\)','\|','\-','\!','\@','\~','\"', '\&', '\/', '\^', '\$', '\=', '\<' );
+
+        return str_replace ( $from, $to, $string );
+    }
+
+
+    // Занесение данных по объявлению в RealTime индекс
+    public static function InsertRealtimeIndex($n_id)
+    {
+        $connection = Yii::app()->db;
+        $con_sphinx = Yii::app()->db_sphinx;
+
+        $sql = "SELECT n.n_id id, n.title title, n.notice_text notice_text, n.props_xml props_xml,
+                n.active_tag active_tag, n.verify_tag verify_tag,
+                n.props_for_index props_for_index,
+                r.name rubrik,
+                t.name town, reg.name region, c.name country
+            FROM ". $connection->tablePrefix . "notice n,
+                 ". $connection->tablePrefix . "rubriks r,
+                 ". $connection->tablePrefix . "towns t,
+                 ". $connection->tablePrefix . "regions reg,
+                 ". $connection->tablePrefix . "countries c
+            WHERE n.n_id = $n_id
+                AND n.r_id = r.r_id
+                AND n.t_id = t.t_id AND n.reg_id = reg.reg_id AND n.c_id = c.c_id ";
+        $command = $connection->createCommand($sql);
+        if($row = $command->queryAll())
+        {
+            //deb::dump($row);
+            $sqlins = "REPLACE INTO rt_adverts
+                        (id, title, notice_text, props_xml, active_tag, verify_tag, props_for_index,
+                            rubrik, town, region, country)
+                       VALUES(:id, :title, :notice_text, :props_xml, :active_tag, :verify_tag,
+                              :props_for_index, :rubrik, :town, :region, :country) ";
+            $command_ins = $con_sphinx->createCommand($sqlins);
+            $row = $row[0];
+
+            $res = $command_ins->execute(array(
+                ':id'              => $row['id'],
+                ':title'           => $row['title'],
+                ':notice_text'     => $row['notice_text'],
+                ':props_xml'       => $row['props_xml'],
+                ':active_tag'      => $row['active_tag'],
+                ':verify_tag'      => $row['verify_tag'],
+                ':props_for_index' => $row['props_for_index'],
+                ':rubrik'          => $row['rubrik'],
+                ':town'            => $row['town'],
+                ':region'          => $row['region'],
+                ':country'         => $row['country']
+            ));
+
+            /*
+            $res = $command_ins->execute(array(
+                 ':id'              => $row['id'],
+                 ':title'           => Notice::SphinxEscapeString($row['title']),
+                 ':notice_text'     => Notice::SphinxEscapeString($row['notice_text']),
+                 ':props_xml'       => Notice::SphinxEscapeString($row['props_xml']),
+                 ':active_tag'      => $row['active_tag'],
+                 ':verify_tag'      => $row['verify_tag'],
+                 ':props_for_index' => Notice::SphinxEscapeString($row['props_for_index']),
+                 ':rubrik'          => Notice::SphinxEscapeString($row['rubrik']),
+                 ':town'            => Notice::SphinxEscapeString($row['town']),
+                 ':region'          => Notice::SphinxEscapeString($row['region']),
+                 ':country'         => Notice::SphinxEscapeString($row['country'])
+                ));
+            */
+
+/*
+            $command_ins->bindParam(":title", Notice::SphinxEscapeString($row['title']), PDO::PARAM_STR);
+            $command_ins->bindParam(":notice_text", Notice::SphinxEscapeString($row['notice_text']), PDO::PARAM_STR);
+            $command_ins->bindParam(":props_xml", Notice::SphinxEscapeString($row['props_xml']), PDO::PARAM_STR);
+            $command_ins->bindParam(":active_tag", $row['active_tag'], PDO::PARAM_INT);
+            $command_ins->bindParam(":verify_tag", $row['verify_tag'], PDO::PARAM_INT);
+            $command_ins->bindParam(":props_for_index", Notice::SphinxEscapeString($row['props_for_index']), PDO::PARAM_STR);
+            $command_ins->bindParam(":rubrik", Notice::SphinxEscapeString($row['rubrik']), PDO::PARAM_STR);
+            $command_ins->bindParam(":town", Notice::SphinxEscapeString($row['town']), PDO::PARAM_STR);
+            $command_ins->bindParam(":region", Notice::SphinxEscapeString($row['region']), PDO::PARAM_STR);
+            $command_ins->bindParam(":country", Notice::SphinxEscapeString($row['country']), PDO::PARAM_STR);
+            */
+
+            deb::dump($res);
+        }
+
+
+    }
+
+
+
+    /**
 	 * @return array relational rules.
 	 */
 	public function relations()

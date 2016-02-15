@@ -515,7 +515,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
     <label id="lbl-notice_text" class="add-form-label"><?= Notice::model()->getAttributeLabel('notice_text');?>:</label>
     <div class="add-input-block">
         <div class="input-field-border" id="input-error-notice_text">
-            <textarea style="width: 600px; height: 100px;" name="mainblock[notice_text]" id="title"><?= $this->getMainblockValue($model, 'notice_text');?></textarea>
+            <textarea style="width: 600px; height: 100px;" name="mainblock[notice_text]" id="notice_text"><?= $this->getMainblockValue($model, 'notice_text');?></textarea>
         </div>
         <div class="input-error-msg"></div>
     </div>

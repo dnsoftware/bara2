@@ -222,7 +222,7 @@ if(count($rubrik_groups) > 0)
 <?
 }
 
-if($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/index.php')
+if($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/index.php' )
 {
     $this->renderPartial('/filter/_titulrubriks', array(
         'rub_array'=>$rub_array,

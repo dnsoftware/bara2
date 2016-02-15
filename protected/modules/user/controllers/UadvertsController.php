@@ -57,7 +57,7 @@ class UadvertsController extends Controller
                 $towns_ids[$uval->t_id] = $uval->t_id;
             }
 
-            // Города
+            // Р“РѕСЂРѕРґР°
             $towns = Towns::model()->findAll(array(
                 'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
             ));
@@ -86,8 +86,8 @@ class UadvertsController extends Controller
                 $search_adverts[$uval->n_id]['town_transname'] = $towns_array[$uval->t_id]->transname;
             }
 
-            // Подготовка данных для отображения
-            //// Шаблоны отображения из рубрик
+            // РџРѕРґРіРѕС‚РѕРІРєР° РґР°РЅРЅС‹С… РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ
+            //// РЁР°Р±Р»РѕРЅС‹ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РёР· СЂСѓР±СЂРёРє
             $shablons_display = Rubriks::GetShablonsDisplay();
             $rubriks_all_array = Rubriks::get_all_subrubs();
             $props_array = Notice::DisplayAdvertsList($search_adverts, $shablons_display, $rubriks_all_array);
@@ -96,7 +96,7 @@ class UadvertsController extends Controller
             $useradverts_photos = array();
             foreach($useradverts as $ukey=>$uval)
             {
-                // Фотографии
+                // Р¤РѕС‚РѕРіСЂР°С„РёРё
                 preg_match('|<vibor_type>photoblock</vibor_type>.+<hand_input_value>([^<]+)</hand_input_value>.+</item>|siU', $uval->props_xml, $match);
                 $photos = explode(";", $match[1]);
                 unset($photos[count($photos)-1]);
@@ -141,11 +141,11 @@ class UadvertsController extends Controller
         }
 
 
-        // Данные для формы поиска
+        // Р”Р°РЅРЅС‹Рµ РґР»СЏ С„РѕСЂРјС‹ РїРѕРёСЃРєР°
         $rub_array = Rubriks::get_rublist();
 
-        $props_sprav_sorted_array = array();    // Заглушка, при необходимости нужно нормально инициализировать
-        $rubriks_props_array = array();    // Заглушка, при необходимости нужно нормально инициализировать
+        $props_sprav_sorted_array = array();    // Р—Р°РіР»СѓС€РєР°, РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РЅСѓР¶РЅРѕ РЅРѕСЂРјР°Р»СЊРЅРѕ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊ
+        $rubriks_props_array = array();    // Р—Р°РіР»СѓС€РєР°, РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РЅСѓР¶РЅРѕ РЅРѕСЂРјР°Р»СЊРЅРѕ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊ
 
         if(Yii::app()->request->cookies->contains('geo_mytown'))
         {
@@ -172,6 +172,7 @@ class UadvertsController extends Controller
 
         $user = Users::model()->findByPk($u_id);
 
+        $this->pageTitle = "РћР±СЉСЏРІР»РµРЅРёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ ".$user->privat_name . " РЅР° baraholka.ru";
 
 		$this->render('index', array(
             'u_id'=>$u_id,
@@ -185,7 +186,7 @@ class UadvertsController extends Controller
             'props_array'=>$props_array,
 
 
-            /********для формы поиска*********/
+            /********РґР»СЏ С„РѕСЂРјС‹ РїРѕРёСЃРєР°*********/
             'rub_array'=>$rub_array,
             'mselector'=>$mselector,
             'm_id'=>$m_id,
@@ -198,7 +199,7 @@ class UadvertsController extends Controller
 	}
 
 
-    // Избранное
+    // РР·Р±СЂР°РЅРЅРѕРµ
     public function actionFavorit()
     {
 
@@ -264,7 +265,7 @@ class UadvertsController extends Controller
                     $towns_ids[$uval->t_id] = $uval->t_id;
                 }
 
-                // Города
+                // Р“РѕСЂРѕРґР°
                 $towns = Towns::model()->findAll(array(
                     'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
                 ));
@@ -293,8 +294,8 @@ class UadvertsController extends Controller
                     $search_adverts[$uval->n_id]['town_transname'] = $towns_array[$uval->t_id]->transname;
                 }
 
-                // Подготовка данных для отображения
-                //// Шаблоны отображения из рубрик
+                // РџРѕРґРіРѕС‚РѕРІРєР° РґР°РЅРЅС‹С… РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ
+                //// РЁР°Р±Р»РѕРЅС‹ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РёР· СЂСѓР±СЂРёРє
                 $shablons_display = Rubriks::GetShablonsDisplay();
                 $rubriks_all_array = Rubriks::get_all_subrubs();
                 $props_array = Notice::DisplayAdvertsList($search_adverts, $shablons_display, $rubriks_all_array);
@@ -303,7 +304,7 @@ class UadvertsController extends Controller
                 $useradverts_photos = array();
                 foreach($useradverts as $ukey=>$uval)
                 {
-                    // Фотографии
+                    // Р¤РѕС‚РѕРіСЂР°С„РёРё
                     preg_match('|<vibor_type>photoblock</vibor_type>.+<hand_input_value>([^<]+)</hand_input_value>.+</item>|siU', $uval->props_xml, $match);
                     $photos = explode(";", $match[1]);
                     unset($photos[count($photos)-1]);
@@ -338,11 +339,11 @@ class UadvertsController extends Controller
 
         }
 
-        // Данные для формы поиска
+        // Р”Р°РЅРЅС‹Рµ РґР»СЏ С„РѕСЂРјС‹ РїРѕРёСЃРєР°
         $rub_array = Rubriks::get_rublist();
 
-        $props_sprav_sorted_array = array();    // Заглушка, при необходимости нужно нормально инициализировать
-        $rubriks_props_array = array();    // Заглушка, при необходимости нужно нормально инициализировать
+        $props_sprav_sorted_array = array();    // Р—Р°РіР»СѓС€РєР°, РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РЅСѓР¶РЅРѕ РЅРѕСЂРјР°Р»СЊРЅРѕ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊ
+        $rubriks_props_array = array();    // Р—Р°РіР»СѓС€РєР°, РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РЅСѓР¶РЅРѕ РЅРѕСЂРјР°Р»СЊРЅРѕ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊ
 
         if(Yii::app()->request->cookies->contains('geo_mytown'))
         {
@@ -377,7 +378,7 @@ class UadvertsController extends Controller
             'search_adverts'=>$search_adverts,
             'props_array'=>$props_array,
 
-            /********для формы поиска*********/
+            /********РґР»СЏ С„РѕСЂРјС‹ РїРѕРёСЃРєР°*********/
             'rub_array'=>$rub_array,
             'mselector'=>$mselector,
             'm_id'=>$m_id,
@@ -391,7 +392,7 @@ class UadvertsController extends Controller
     }
 
 
-    // Избранное
+    // РР·Р±СЂР°РЅРЅРѕРµ
     public function actionLastvisit()
     {
 
@@ -468,7 +469,7 @@ class UadvertsController extends Controller
                     $towns_ids[$uval->t_id] = $uval->t_id;
                 }
 
-                // Города
+                // Р“РѕСЂРѕРґР°
                 $towns = Towns::model()->findAll(array(
                     'condition'=>'t_id IN ('.implode(",", $towns_ids).')'
                 ));
@@ -496,8 +497,8 @@ class UadvertsController extends Controller
                     $search_adverts[$uval->n_id]['town_transname'] = $towns_array[$uval->t_id]->transname;
                 }
 
-                // Подготовка данных для отображения
-                //// Шаблоны отображения из рубрик
+                // РџРѕРґРіРѕС‚РѕРІРєР° РґР°РЅРЅС‹С… РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ
+                //// РЁР°Р±Р»РѕРЅС‹ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РёР· СЂСѓР±СЂРёРє
                 $shablons_display = Rubriks::GetShablonsDisplay();
                 $rubriks_all_array = Rubriks::get_all_subrubs();
                 $props_array = Notice::DisplayAdvertsList($search_adverts, $shablons_display, $rubriks_all_array);
@@ -506,10 +507,10 @@ class UadvertsController extends Controller
                 $useradverts_photos = array();
                 foreach($useradverts_temp as $ukey=>$uval)
                 {
-                    // Заносим в нужном порядке сортировки
+                    // Р—Р°РЅРѕСЃРёРј РІ РЅСѓР¶РЅРѕРј РїРѕСЂСЏРґРєРµ СЃРѕСЂС‚РёСЂРѕРІРєРё
                     $useradverts[$uval->n_id] = $uval;
 
-                    // Фотографии
+                    // Р¤РѕС‚РѕРіСЂР°С„РёРё
                     preg_match('|<vibor_type>photoblock</vibor_type>.+<hand_input_value>([^<]+)</hand_input_value>.+</item>|siU', $uval->props_xml, $match);
                     $photos = explode(";", $match[1]);
                     unset($photos[count($photos)-1]);
@@ -542,11 +543,11 @@ class UadvertsController extends Controller
 
         }
 
-        // Данные для формы поиска
+        // Р”Р°РЅРЅС‹Рµ РґР»СЏ С„РѕСЂРјС‹ РїРѕРёСЃРєР°
         $rub_array = Rubriks::get_rublist();
 
-        $props_sprav_sorted_array = array();    // Заглушка, при необходимости нужно нормально инициализировать
-        $rubriks_props_array = array();    // Заглушка, при необходимости нужно нормально инициализировать
+        $props_sprav_sorted_array = array();    // Р—Р°РіР»СѓС€РєР°, РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РЅСѓР¶РЅРѕ РЅРѕСЂРјР°Р»СЊРЅРѕ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊ
+        $rubriks_props_array = array();    // Р—Р°РіР»СѓС€РєР°, РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РЅСѓР¶РЅРѕ РЅРѕСЂРјР°Р»СЊРЅРѕ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊ
 
         if(Yii::app()->request->cookies->contains('geo_mytown'))
         {
@@ -582,7 +583,7 @@ class UadvertsController extends Controller
             'search_adverts'=>$search_adverts,
             'props_array'=>$props_array,
 
-            /********для формы поиска*********/
+            /********РґР»СЏ С„РѕСЂРјС‹ РїРѕРёСЃРєР°*********/
             'rub_array'=>$rub_array,
             'mselector'=>$mselector,
             'm_id'=>$m_id,

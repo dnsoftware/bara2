@@ -459,6 +459,7 @@ class AdminadvertController extends Controller
                 )
             );
 
+            $rubriks = Rubriks::get_simple_rublist();
 
             foreach ($adverts as $akey=>$aval)
             {
@@ -466,6 +467,11 @@ class AdminadvertController extends Controller
                 $search_adverts[$aval->n_id] = $aval->attributes;
                 $search_adverts[$aval->n_id]['town_name'] = $aval->town['name'];
                 $search_adverts[$aval->n_id]['town_transname'] = $aval->town['transname'];
+
+                if($rubriks[$aval->r_id]->title_advert_shablon != '' && $aval['old_base_tag'] == 0)
+                {
+                    $search_adverts[$aval->n_id]['title'] = AdvertController::MakeTitleByShablon($aval, $rubriks[$aval->r_id]->title_advert_shablon);
+                }
             }
 
 //deb::dump(count($search_adverts));
@@ -596,8 +602,6 @@ class AdminadvertController extends Controller
 
         $props_sprav_sorted_array = $ret['props_sprav_sorted_array'];
         $rubriks_props_array = $ret['rubriks_props_array'];
-
-        $rubriks = Rubriks::get_simple_rublist();
 
         $rub_old_array = RubriksOld::get_rublist();
 //deb::dump($rub_old_array);
