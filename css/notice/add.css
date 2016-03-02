@@ -1,0 +1,242 @@
+.radio-listitem
+{
+    cursor: pointer; background-color: #dddddd; padding: 1px 2px; margin: 1px; display: inline-block;
+}
+.radio-listitem:hover
+{
+    cursor: pointer; background-color: #fff;
+}
+
+.add_hideinput
+{
+    display: none;
+}
+
+.add_hideselector, .add_hidevibortype
+{
+    display: none;
+}
+
+.prop_name
+{
+    width: 188px;
+    float: left;
+}
+
+.prop_block
+{
+    margin-top: 5px; margin-bottom: 20px;
+}
+
+.tbl-prop-name
+{
+    width: 1px; padding: 0px; margin: 0px;
+}
+
+.addnot-field-selected
+{
+    color: #006600; font-size: 16px; font-weight: bold; cursor: pointer;
+}
+
+.mainfileborder
+{
+    border: #bd362f solid 3px;
+    cursor: pointer;
+}
+.otherfileborder
+{
+    border: #ffffff solid 3px;
+    cursor: pointer;
+}
+.form-row
+{
+    width: 100%; clear: both;
+}
+.add-form-label
+{
+    width: 188px;
+    float: left;
+}
+.form-input-text
+{
+    width: 200px;;
+}
+.selrub
+{
+    width: 220px;
+}
+.add-form-select
+{
+    width: 220px;
+}
+.add-input-block
+{
+    float: left;
+}
+.input-field-border
+{
+    width: auto; float: left;
+}
+.input-error-msg
+{
+    color: #f00; float: left; clear: left;
+}
+.input-error-prop
+{
+    display: table-cell;
+}
+.input-error-prop-msg
+{
+    color: #f00;
+}
+
+.h1-addnot
+{
+    margin-bottom: 30px;
+}
+
+.notice-add-actnot
+{
+    font-size: 14px;
+    color: #f00;
+    margin-bottom: 20px;
+}
+
+#span_country
+{
+    border-bottom: #000 dotted 1px;
+    cursor: pointer;
+}
+
+.div_hand_input_phone
+{
+    width: 800px;
+}
+
+#client_phone
+{
+    width: 100px;
+}
+
+#select_phone_from_list
+{
+    border-bottom: #000 dotted 1px;
+    cursor: pointer;
+}
+
+#send_check_phone_error
+{
+    color: #f00;
+}
+
+#send_check_phone_ok
+{
+    color: #299e12;
+}
+
+#send_check_code
+{
+    border: #999 solid 1px;
+    display: none;
+    padding: 5px;
+}
+
+.td-select_country
+{
+    margin: 0;
+    padding: 0;
+}
+
+.selrub-opt
+{
+    color:#000;
+    font-weight: bold;
+}
+
+#div_errors
+{
+    color: #f00;
+    display: none;
+}
+
+#div_ajax_loader_icon
+{
+    clear: both;
+    text-align: center;
+    margin-top: 50px;
+    margin-bottom: 30px;
+    display: none;
+}
+
+#div_props
+{
+    margin: 0px;
+    margin-top: 30px;
+    clear: both;
+}
+
+#title
+{
+    width: 600px;
+}
+
+#notice_text
+{
+    width: 600px;
+    height: 100px;
+}
+
+#cost
+{
+    width: 70px;
+}
+
+#status
+{
+    clear: both;
+    font-size: 16px;
+    text-align: center;
+    margin: 10px;
+    margin-top: 50px;
+    margin-bottom: 0;
+    color: #f00;
+    padding-top: 10px;
+}
+
+#add_or_save
+{
+    text-align: center;
+}
+
+#submitadvert
+{
+    font-size: 20px;
+    margin: 10px;
+    background-color: #259c1d;
+    color: #fff;
+    border: #268017 solid 1px;
+    padding-bottom: 2px;
+    border-radius: 3px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

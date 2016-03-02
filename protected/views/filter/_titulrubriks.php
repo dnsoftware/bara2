@@ -1,10 +1,12 @@
 <?php
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/filter/titulrubriks.css');
 
+Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/filter/titulrubriks.js', CClientScript::POS_END);
 
 ?>
 <div class="rub-block">
     <h2>Выберите нужную категорию объявлений:</h2>
-    <ul class="rub-list" style="margin-bottom: 0px;">
+    <ul class="rub-list">
     <?
     // Патч для сортировки согласно тепловой карты
     $hotrub_array[60] = array();
@@ -39,7 +41,7 @@
     {
     ?>
         <li>
-            <a title="<?= $rval['alt'];?>" class="atitulrub" style="text-decoration: none;" href="/<?= $url_parts[1]."/".$rval['parent']->transname;?>">
+            <a title="<?= $rval['alt'];?>" class="atitulrub" href="/<?= $url_parts[1]."/".$rval['parent']->transname;?>">
             <div class="titulrub">
                 <div>
                 <img alt="<?= $rval['alt'];?>" src="/images/rubicons/<?= $rval['parent']->r_id;?>.png">
@@ -49,7 +51,7 @@
             </div>
             </a>
 
-            <div class="drop" style="display: none;">
+            <div class="drop">
             <?
             foreach($rval['childs'] as $ckey=>$cval)
             {
@@ -64,23 +66,11 @@
     }
     ?>
     </ul>
-    <span style="width: 100%; border-bottom: #ddd solid 1px; display: inline-block; margin-bottom: 30px;">
-        <span style="display: inline-block; background-color: #fff; font-size: 16px; margin-bottom: -10px; padding-left: 10px; padding-right: 10px;">
-            <span id="display_allrub" style="border-bottom: dashed 1px; cursor: pointer;">Все категории</span>
+    <span id="allcat_1">
+        <span id="allcat_2">
+            <span id="display_allrub">Все категории</span>
         </span>
     </span>
 </div>
 
 
-<script>
-    $('#display_allrub').click(function(){
-        if($('.drop').css('display') == 'none')
-        {
-            $('.drop').css('display', 'block');
-        }
-        else
-        {
-            $('.drop').css('display', 'none');
-        }
-    });
-</script>

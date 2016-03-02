@@ -1,0 +1,47 @@
+.rub-list
+{
+    margin-bottom: 0;
+}
+
+.atitulrub
+{
+    text-decoration: none;
+}
+
+.drop
+{
+    display: none;
+}
+
+#allcat_1
+{
+    width: 100%;
+    border-bottom: #ddd solid 1px;
+    display: inline-block;
+    margin-bottom: 30px;
+}
+
+#allcat_2
+{
+    display: inline-block;
+    background-color: #fff;
+    font-size: 16px;
+    margin-bottom: -10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+#display_allrub
+{
+    border-bottom: dashed 1px;
+    cursor: pointer;
+}
+
+
+
+
+
+
+
+
+

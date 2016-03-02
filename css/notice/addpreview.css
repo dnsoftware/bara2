@@ -1,0 +1,44 @@
+
+.h1-preview
+{
+    clear: both;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#mask {
+    position:absolute;
+    left:0;
+    top:0;
+    z-index:9000;
+    background-color:#000;
+    display:none;
+}
+#boxes .window {
+    position:absolute;
+    left:0;
+    top:0px;
+    -top: 40px;
+    width:440px;
+    height:200px;
+    display:none;
+    z-index:9999;
+    padding: 20px;
+    overflow: hidden;
+    text-align: center;
+}
+#boxes #dialog {
+    width:375px;
+    height:203px;
+    padding:10px;
+    background-color:#ffffff;
+}
+.close {
+    text-align: center;
+    border: #ddd solid 1px; background-color: #dedede; cursor: pointer; padding: 5px;;
+}
+.content {
+    padding-top: 35px;
+    text-align: center;
+    margin-bottom: 20px;
+}

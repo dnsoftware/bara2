@@ -85,6 +85,15 @@ class Notice extends CActiveRecord
     );
 
 
+    // Коды видов сортировки
+    public static $sort_codes = array(
+        ''=>'По дате',
+        'dr'=>'Дороже',
+        'ds'=>'Дешевле',
+        'rl'=>'По релевантности'
+    );
+
+
     /**
 	 * @return string the associated database table name
 	 */
@@ -191,45 +200,53 @@ class Notice extends CActiveRecord
                || Yii::app()->controller->action->id == 'saveedit'
                 || Yii::app()->controller->action->id == 'advert_activate')
         {
-            if(intval($this->client_phone_c_id) == Yii::app()->params['russia_id'])
+            if( !Yii::app()->user->isAdmin() )
             {
-                if(Yii::app()->session['usercheckphone_tag'] == 1
-                    && $this->client_phone == Yii::app()->session['usercheckphone'])
+                if(intval($this->client_phone_c_id) == Yii::app()->params['russia_id'])
                 {
-
-                }
-                else
-                {
-                    if(Yii::app()->session['usercheckphone_tag'] == 0)
+                    if(Yii::app()->session['usercheckphone_tag'] == 1
+                        && $this->client_phone == Yii::app()->session['usercheckphone'])
                     {
-                        if($user_phone = UserPhones::model()->findByAttributes(array(
-                            'u_id'=>Yii::app()->user->id,
-                            'c_id'=>$this->client_phone_c_id,
-                            'phone'=>$this->client_phone,
-                            'verify_tag'=>1
-                        )))
-                        {
 
+                    }
+                    else
+                    {
+                        if(Yii::app()->session['usercheckphone_tag'] == 0)
+                        {
+                            if($user_phone = UserPhones::model()->findByAttributes(array(
+                                'u_id'=>Yii::app()->user->id,
+                                'c_id'=>$this->client_phone_c_id,
+                                'phone'=>$this->client_phone,
+                                'verify_tag'=>1
+                            )))
+                            {
+
+                            }
+                            else
+                            {
+                                $this->addError('client_phone', 'Необходимо подтвердить номер телефона!');
+                            }
                         }
                         else
                         {
                             $this->addError('client_phone', 'Необходимо подтвердить номер телефона!');
                         }
-                    }
-                    else
-                    {
-                        $this->addError('client_phone', 'Необходимо подтвердить номер телефона!');
-                    }
 
+                    }
+                }
+                else
+                {
+                    if(strlen($this->client_phone) < 7)
+                    {
+                        $this->addError('client_phone', 'Необходимо указать номер телефона');
+                    }
                 }
             }
             else
             {
-                if(strlen($this->client_phone) < 7)
-                {
-                    $this->addError('client_phone', 'Необходимо указать номер телефона');
-                }
+
             }
+
         }
     }
 
@@ -531,8 +548,7 @@ class Notice extends CActiveRecord
             $short_advert_display = $shablons_display[$val['r_id']];
 
             /*********Патч для старых объявлений**********/
-            //deb::dump($val);
-            if($val['old_base_tag'] == 1)
+            if($val['old_base_tag'] == 1 && trim($val['title']) != '')
             {
                 $short_advert_display = preg_replace('|<!--list_data_body-->.*<!--/list_data_body-->|siU', '', $short_advert_display);
                 $short_advert_display = preg_replace('|<!--list_data_title-->.*<!--/list_data_title-->|siU', $val['title'], $short_advert_display);
@@ -573,8 +589,8 @@ class Notice extends CActiveRecord
                 $favprefix = "_yellow";
             }
             ?>
-            <a class="span_lnk favoritstar" advert_id="<?= $val['n_id'];?>" style="background-image: url('/images/favorit<?= $favprefix;?>.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px; margin-left: 0px; text-decoration: none;">
-                <span class="favorit_button" advert_id="<?= $val['n_id'];?>" style="border-bottom: #008CC3 dotted; border-width: 1px;"></span>
+            <a class="span_lnk favoritstar" advert_id="<?= $val['n_id'];?>" style="background-image: url('/images/favorit<?= $favprefix;?>.png');">
+                <span class="favorit_button" advert_id="<?= $val['n_id'];?>"></span>
             </a>
             <?
             $favoritstar_block = ob_get_contents();
@@ -599,7 +615,7 @@ class Notice extends CActiveRecord
             // Генерация ссылки на объяву
             $transliter = new Supporter();
 
-            preg_match('|<a class="baralink"[^>]+>(.+)</a>|siU', $short_advert_display, $match);
+            preg_match('|<a class="baralink at"[^>]+>(.+)</a>|siU', $short_advert_display, $match);
             $title_ankor = $match[1];
 
 //deb::dump($val['title']);
@@ -1373,6 +1389,46 @@ class Notice extends CActiveRecord
         return str_replace ( $from, $to, $string );
     }
 
+    // Экранирование и замена поисковой строки для SphinxQL запросов
+    public static function SphinxStringPrepare ( $string )
+    {
+        $from = array ( '\\', '(',')','|','-','!','@','~','"','&', '/', '^', '$', '=', '<', '\'' );
+        $to   = array ( ' ', '\(','\)','\|','\-','\!','\@','\~',' ', '\&', '\/', '\^', '\$', ' ', '\<', '\\\'' );
+
+        return str_replace ( $from, $to, $string );
+    }
+
+    // Полнотекстовый поиск по объявлениям
+    // Возвращает спискок идентификаторов найденных объяв
+    public static function GetSphinxSearchAdvert($str, $quorum, &$ids_array = array())
+    {
+        $connection_sphinx = Yii::app()->db_sphinx;
+
+        $substr = self::SphinxStringPrepare($str);
+
+        $sphinx_sql = "SELECT id, WEIGHT() weight FROM rt_adverts
+                               WHERE MATCH('\"".$substr."\"/".$quorum."')
+                               LIMIT 1000";
+        $command = $connection_sphinx->createCommand($sphinx_sql);
+        if($rows = $command->queryAll())
+        {
+            $temp = array();
+            foreach($rows as $rkey=>$rval)
+            {
+                $temp[] = $rval['id'];
+            }
+            $ids_array = $temp;
+            $q_sql = " AND n.n_id IN (".implode(", ", $temp).")";
+        }
+        else
+        {
+            $q_sql = " AND 0 ";
+        }
+
+        return $q_sql;
+
+    }
+
 
     // Занесение данных по объявлению в RealTime индекс
     public static function InsertRealtimeIndex($n_id)
@@ -1393,6 +1449,7 @@ class Notice extends CActiveRecord
             WHERE n.n_id = $n_id
                 AND n.r_id = r.r_id
                 AND n.t_id = t.t_id AND n.reg_id = reg.reg_id AND n.c_id = c.c_id ";
+
         $command = $connection->createCommand($sql);
         if($row = $command->queryAll())
         {
@@ -1419,38 +1476,99 @@ class Notice extends CActiveRecord
                 ':country'         => $row['country']
             ));
 
-            /*
-            $res = $command_ins->execute(array(
-                 ':id'              => $row['id'],
-                 ':title'           => Notice::SphinxEscapeString($row['title']),
-                 ':notice_text'     => Notice::SphinxEscapeString($row['notice_text']),
-                 ':props_xml'       => Notice::SphinxEscapeString($row['props_xml']),
-                 ':active_tag'      => $row['active_tag'],
-                 ':verify_tag'      => $row['verify_tag'],
-                 ':props_for_index' => Notice::SphinxEscapeString($row['props_for_index']),
-                 ':rubrik'          => Notice::SphinxEscapeString($row['rubrik']),
-                 ':town'            => Notice::SphinxEscapeString($row['town']),
-                 ':region'          => Notice::SphinxEscapeString($row['region']),
-                 ':country'         => Notice::SphinxEscapeString($row['country'])
-                ));
-            */
 
-/*
-            $command_ins->bindParam(":title", Notice::SphinxEscapeString($row['title']), PDO::PARAM_STR);
-            $command_ins->bindParam(":notice_text", Notice::SphinxEscapeString($row['notice_text']), PDO::PARAM_STR);
-            $command_ins->bindParam(":props_xml", Notice::SphinxEscapeString($row['props_xml']), PDO::PARAM_STR);
-            $command_ins->bindParam(":active_tag", $row['active_tag'], PDO::PARAM_INT);
-            $command_ins->bindParam(":verify_tag", $row['verify_tag'], PDO::PARAM_INT);
-            $command_ins->bindParam(":props_for_index", Notice::SphinxEscapeString($row['props_for_index']), PDO::PARAM_STR);
-            $command_ins->bindParam(":rubrik", Notice::SphinxEscapeString($row['rubrik']), PDO::PARAM_STR);
-            $command_ins->bindParam(":town", Notice::SphinxEscapeString($row['town']), PDO::PARAM_STR);
-            $command_ins->bindParam(":region", Notice::SphinxEscapeString($row['region']), PDO::PARAM_STR);
-            $command_ins->bindParam(":country", Notice::SphinxEscapeString($row['country']), PDO::PARAM_STR);
-            */
-
-            deb::dump($res);
         }
 
+
+    }
+
+    // Удаление данных по объявлению из RealTime индекса
+    public static function DeleteRealtimeIndex($n_id)
+    {
+        $con_sphinx = Yii::app()->db_sphinx;
+
+        $sql = "DELETE FROM rt_adverts WHERE id = " . $n_id;
+        $command = $con_sphinx->createCommand($sql);
+        $command->execute();
+    }
+
+
+    // Переопределение функции сохранения
+    public function save($runValidation=true,$attributes=null)
+    {
+        if($ret = parent::save($runValidation,$attributes))
+        {
+            // Заносим в индекс
+            self::InsertRealtimeIndex($this->n_id);
+        }
+
+        return $ret;
+    }
+
+
+    // Переопределение функции удаления для работы со сфинкс индексом
+    public function delete()
+    {
+        if(parent::delete())
+        {
+            // Заносим в индекс
+            self::DeleteRealtimeIndex($this->n_id);
+        }
+
+    }
+
+
+    /********************************* Сфинкс для поиска ***********************************/
+
+    // Занесение данных по поиску в RealTime индекс
+    public static function InsertRtIndexSearch($ss_id)
+    {
+        $connection = Yii::app()->db;
+        $con_sphinx = Yii::app()->db_sphinx;
+
+        $sql = "SELECT *
+            FROM ". $connection->tablePrefix . "search_stat
+            WHERE ss_id = $ss_id ";
+
+        $command = $connection->createCommand($sql);
+        if($row = $command->queryAll())
+        {
+            //deb::dump($row);
+            $sqlins = "REPLACE INTO rt_search_stat
+                        (id, query, count)
+                       VALUES(:id, :query, :count) ";
+            $command_ins = $con_sphinx->createCommand($sqlins);
+            $row = $row[0];
+
+            $res = $command_ins->execute(array(
+                ':id'              => $row['ss_id'],
+                ':query'           => $row['query'],
+                ':count'     => $row['count']
+            ));
+
+            //deb::dump($res);
+
+        }
+
+
+    }
+
+    // Полнотекстовый поиск по поисковым фразам
+    // Возвращает спискок идентификаторов найденных поисковых фраз
+    public static function GetSphinxSearchStat($str, $quorum, &$ids_array = array())
+    {
+        $connection_sphinx = Yii::app()->db_sphinx;
+
+        $substr = self::SphinxStringPrepare($str);
+
+        $sphinx_sql = "SELECT *, WEIGHT() weight FROM rt_search_stat
+                               WHERE MATCH('\"".$substr."\"/".$quorum."')
+                               ORDER BY count DESC, weight DESC
+                               ";
+        $command = $connection_sphinx->createCommand($sphinx_sql);
+        $rows = $command->queryAll();
+
+        return $rows;
 
     }
 
@@ -1464,7 +1582,7 @@ class Notice extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
-            'user'=>array(self::BELONGS_TO, 'Users', array('id'=>'u_id')),
+            'user'=>array(self::BELONGS_TO, 'Users', array('u_id'=>'id')),
             'country'=>array(self::BELONGS_TO, 'Countries', 'c_id'),
             'town'=>array(self::BELONGS_TO, 'Towns', array('t_id'=>'t_id')),
             'rubriks'=>array(self::BELONGS_TO, 'Rubriks', 'r_id'),

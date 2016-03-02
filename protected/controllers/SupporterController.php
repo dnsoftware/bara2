@@ -32,9 +32,22 @@ class SupporterController extends Controller
         }
         deb::dump($kurs_array);
 
+
+        $usd_kurs = str_replace(",", ".", $kurs_array['USD']);
+        $eur_kurs = str_replace(",", ".", $kurs_array['EUR']);
+
         Options::setOption('kurs_date', $kurs_date);
-        Options::setOption('kurs_usd', str_replace(",", ".", $kurs_array['USD']));
-        Options::setOption('kurs_eur', str_replace(",", ".", $kurs_array['EUR']));
+        Options::setOption('kurs_usd', $usd_kurs);
+        Options::setOption('kurs_eur', $eur_kurs);
+
+        $valuta = Valutes::model()->findByPk('USD');
+        $valuta->kurs = $usd_kurs;
+        $valuta->save();
+
+        $valuta = Valutes::model()->findByPk('EUR');
+        $valuta->kurs = $eur_kurs;
+        $valuta->save();
+
 
     }
 

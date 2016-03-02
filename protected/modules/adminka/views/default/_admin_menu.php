@@ -24,6 +24,12 @@
 
 <a href="<?= Yii::app()->createUrl('/adminka/support/index');?>">Служебные</a>
 
+&nbsp;
 
+<a href="<?= Yii::app()->createUrl('/adminka/support/sphinx');?>">Sphinx индексы</a>
+
+&nbsp;
+
+<a href="<?= Yii::app()->createUrl('/adminka/support/searchstat');?>">Поисковая статистика</a>
 
 </div>

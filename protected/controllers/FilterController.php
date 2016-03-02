@@ -9,9 +9,6 @@ class FilterController extends Controller
     public function actionSphinx()
     {
         $connection = Yii::app()->db_sphinx;
-        $sql = "SET NAMES utf8";
-        $command = $connection->createCommand($sql);
-        $command->query();
 
         $str = Notice::SphinxEscapeString ('ЖК "Высокий Берег" - уютный жилой комплекс нового формата, с благоустроенной территорией и сетями инженерной инфраструктуры. Предлагаются 1-комнатные квартиры современной планировки. Площадь 42/20/10 кв. м. Квартиры в ЖК «Высокий Берег» отличаются оптимальными планировочными решениями. В каждой квартире предусматривается остекление окон двухкамерными стеклопакетами. Высота потолков согласно проекту - 2,8 м. Все квартиры оборудованы застекленными лоджиями. Выполняется устройство внутриквартирных перегородок. Производится установка счетчиков расхода горячей и холодной воды. Комплекс расположен в городе Ногинске (35 км от МКАД) в районе с развитой инфраструктурой, на берегу реки Клязьма, вблизи домов 226-230 на одной из главных улиц города - Третьего Интернационала. Первая очередь строительства - возведение 17-этажного 2-подъездного дома №1 из двух секций на 128 квартир с встроенным детским садом на 1 этаже. ФЗ-214. Страхование ответственности Застройщика. Ипотека Сбербанк РФ. Сдача 1 квартал 2016 года.<br>Цена (руб.): 2300 000 руб. <br>На период с 01 июня по 01 сентября 2015 года действуют выгодные условия на приобретение квартиры: В случае 100% оплаты, включая ипотеку и материнский капитал, каждому покупателю квартиры гарантирована скидка 3%, при покупке 2-х и более квартир – 4,5%. В рамках акции покупатель может воспользоваться рассрочкой на выгодных условиях: рассрочка от 20% на 1-й взнос, остаток на 6 месяцев без удорожания. Спешите приобрести квартиру на выгодных для Вас условиях! Официальный брокер по продаже недвижимости: МИЭЛЬ Офис «В Ногинске» Застройщик: ООО «Контакт Строй». Срок сдачи 1 очереди: I квартал 2016 года<br>Цена: 1712002 руб.');
 
@@ -21,9 +18,18 @@ class FilterController extends Controller
                 WHERE MATCH('@notice_text \"".$str."\"/0.95')
                 LIMIT 100";
         */
-        $sql = "SELECT WEIGHT() weight, * FROM rt_adverts
-                WHERE MATCH('шуба дочке')
-                LIMIT 100";
+
+        /*
+        $sql = "SELECT WEIGHT() weight, * FROM rt_search_stat
+                WHERE MATCH('кварт')
+                ORDER BY count DESC, weight DESC";
+        */
+
+        //deb::dump(Notice::GetSphinxSearchStat('кварт', 0.9, $ids_array));
+
+        //$sql = "CALL KEYWORDS('грози южному', 'rt_search_stat') ";
+        $sql = "CALL SNIPPETS(('this is my document text', 'text this botva'), 'rt_search_stat', 'this', 1 AS query_mode)";
+
         $command = $connection->createCommand($sql);
         $row_notices = $command->queryAll();
 deb::dump($row_notices);
@@ -81,6 +87,61 @@ deb::dump($row_notices);
             }
         }
 
+        // Тег сортировки
+        $sort_select_mode = 0;
+//deb::dump($_SESSION['sort_select_mode']);
+        if($_SESSION['sort_select_mode'] == 1 && trim($_GET['params']['q']) != '')
+        {
+            $sort_select_mode = 1;
+        }
+
+        if(trim($_GET['params']['q']) == '')
+        {
+            $sort_select_mode = 0;
+            $_SESSION['sort_select_mode'] = 0;
+        }
+//deb::dump($sort_select_mode);
+
+
+        if(isset($_GET['params']['s']) && trim($_GET['params']['s']) == 'rl'
+                    && trim($_GET['params']['q']) == '')
+        {
+            $_GET['params']['s'] = '';
+        }
+
+
+        if(trim($_GET['params']['q']) != '' && $sort_select_mode == 0)
+        {
+            $_GET['params']['s'] = 'rl';
+        }
+
+        // Сортировка
+        $order_sql = " n.date_add DESC ";
+        if(isset($_GET['params']['s']))
+        {
+            switch($_GET['params']['s'])
+            {
+                case "":
+                    $order_sql = " n.date_add DESC ";
+                break;
+
+                case "dr":
+                    $order_sql = " rubcost DESC ";
+                break;
+
+                case "ds":
+                    $order_sql = " rubcost ASC ";
+                break;
+
+                case "rl":
+                    $order_sql = " n.date_add DESC ";
+                break;
+            }
+        }
+
+
+
+
         // Показ архивных
         $expire_sql = " date_expire > '".time()."' AND ";
         if(isset($_GET['viewarchive']) && $_GET['viewarchive'] == 1)
@@ -134,7 +195,6 @@ deb::dump($row_notices);
             }
 
         }
-
 
 
         // Местоположение
@@ -220,12 +280,6 @@ deb::dump($row_notices);
             //'limit'=>'10'
             )
         );
-
-        $q_sql = " ";
-        if(isset($_GET['params']['q']) && trim($_GET['params']['q']) != '')
-        {
-            $q_sql = " AND ( n.title LIKE :q_sql OR n.notice_text LIKE  :q_sql OR n.props_xml LIKE  :q_sql ) ";
-        }
 
         $rp_ids = array();
         $rubriks_props_poryadok_array = array();
@@ -399,11 +453,12 @@ deb::dump($row_notices);
 //deb::dump($_GET['prop']);
 //deb::dump($_GET['addfield']);
 
+
         $search_adverts = array();  // Найденные объявы
+        $ps_ids_array = array(); // Список кодов св-в используемых в фильтре (для построения титула страницы)
 
-        $ps_ids_array = array();    // Список кодов свойств используемых в фильтре (для построения титула страницы)
-
-        if( /*count($_GET['prop']) > 0 || */(isset($_GET['addfield']) && count($_GET['addfield']) > 0 ) )
+        // Сложный поиск по свойствам
+        if(isset($_GET['addfield']) && count($_GET['addfield']) > 0 )
         {
             $props_sprav = PropsSprav::model()->findAll(array('condition'=>'rp_id IN ('.implode(", ", $rp_ids).')'));
             $props_route_items = array();
@@ -670,15 +725,18 @@ deb::dump($row_notices);
                 $rubrik_prop_sql = str_replace("r_id", "n.r_id", $rubrik_sql);
 
                 // Выбираем какой индекс будем использовать
-                // используем $expire_sql, $mesto_sql, $rubrik_sql
-                /*
-                deb::dump($expire_sql);
-                echo "<br>";
-                deb::dump($mesto_sql);
-                echo "<br>";
-                deb::dump($rubrik_sql);
-                /**/
                 $use_index_sql = Notice::GetUseIndexSql($expire_sql, $mesto_sql, $rubrik_sql, $mesto_use_index_prefix);
+
+                $q_sql = " ";
+                if(isset($_GET['params']['q']) && strlen(trim($_GET['params']['q'])) > 0)
+                {
+                    $q_sql = Notice::GetSphinxSearchAdvert($_GET['params']['q'], 0.9, $ids_array);
+                    $use_index_sql = ' ';
+                    if(count($ids_array) > 0 && isset($_GET['params']['s']) && $_GET['params']['s'] == 'rl')
+                    {
+                        $order_sql = " FIND_IN_SET(n.n_id, '".implode(",", $ids_array)."'), date_add DESC";
+                    }
+                }
 
                 // Для подсчета количества
                 $sql = "SELECT COUNT(DISTINCT n.n_id) cnt
@@ -693,37 +751,29 @@ deb::dump($row_notices);
                         AND n.t_id = t.t_id ";
                 //deb::dump($sql);
 
-                if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
-                {
-                    $substr = "%".$_GET['params']['q']."%";
-                }
-
-                $command = $connection->cache(600)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
+                $command = $connection->cache(600)->createCommand($sql);
 
                 $row_count = $command->queryAll();
 
                 $offset = ($page-1)*Yii::app()->params['countonpage'];
 
                 // Для отображаемой страницы
-                $sql = "SELECT DISTINCT n.*, t.name town_name, t.transname town_transname
+                $sql = "SELECT DISTINCT n.*, t.name town_name, t.transname town_transname,
+                                        v.kurs*n.cost rubcost
                         FROM ". $connection->tablePrefix . "notice n ".$use_index_sql.",
                         ".$from_tables_sql.",
-                        ". $connection->tablePrefix . "towns t
+                        ". $connection->tablePrefix . "towns t,
+                        ". $connection->tablePrefix . "valutes v
                         WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
                         $mesto_sql AND $rubrik_prop_sql AND
                         $where_filter_sql
                         ".$where_n.$q_sql."
                         AND n1.n_id = n.n_id
-                        AND n.t_id = t.t_id
-                        ORDER BY n.date_add DESC
+                        AND n.t_id = t.t_id  AND n.cost_valuta = v.code
+                        ORDER BY $order_sql
                         LIMIT $offset, ".Yii::app()->params['countonpage'];
 //deb::dump($sql);
-                if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
-                {
-                    $substr = "%".$_GET['params']['q']."%";
-                }
-
-                $command = $connection->cache(600)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
+                $command = $connection->cache(600)->createCommand($sql);
 
                 $row_notices = $command->queryAll();
 
@@ -760,7 +810,7 @@ deb::dump($row_notices);
                             WHERE
                             $mesto_sql AND $rubrik_prop_sql AND
                             $where_filter_sql
-                            ".$where_n."
+                            ".$where_n.$q_sql."
                             AND n1.n_id = n.n_id
                             AND n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0
                             AND $expire_sql n.n_id = nsub.n_id AND nsub.rp_id = ".$subprop_rp_id . "
@@ -788,92 +838,65 @@ deb::dump($row_notices);
             }
 
         }
+        /****************************** ПРОСТОЙ ЗАПРОС БЕЗ СВОЙСТВ *******************************/
         // Если поиск только по местоположению/рубрике - простой запрос
         else
         {
-            //$mesto_rub_sql = str_replace(" n.", " t.", $mesto_sql);
-            //$q_sql = str_replace(" n.", " t.", $q_sql);
-
-/*
-            $adverts_count = Notice::model()->cache(600)->with('town')->count(
-                array(
-                    'select'=>'n_id',
-                    'condition'=>' active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND '.$expire_sql.
-                        $mesto_rub_sql." AND ".$rubrik_sql.$q_sql,
-                    'params'=>array(':q_sql'=>'%'.$_GET['params']['q'].'%')
-                )
-            );
-*/
-//deb::dump($expire_sql);
-
-            // Выбираем какой индекс будем использовать
-            // используем $expire_sql, $mesto_sql, $rubrik_sql
-            /*
-            deb::dump($expire_sql);
-            echo "<br>";
-            deb::dump($mesto_sql);
-            echo "<br>";
-            deb::dump($rubrik_sql);
-            /**/
             $use_index_sql = Notice::GetUseIndexSql($expire_sql, $mesto_sql, $rubrik_sql, $mesto_use_index_prefix);
-//deb::dump($q_sql);
+
+
+            $q_sql = " ";
+            if(isset($_GET['params']['q']) && strlen(trim($_GET['params']['q'])) > 0)
+            {
+                $q_sql = Notice::GetSphinxSearchAdvert($_GET['params']['q'], 0.9, $ids_array);
+                $use_index_sql = ' ';
+                if(count($ids_array) > 0 && isset($_GET['params']['s']) && $_GET['params']['s'] == 'rl')
+                {
+                    $order_sql = " FIND_IN_SET(n.n_id, '".implode(",", $ids_array)."'), date_add DESC";
+                }
+            }
+//deb::dump($ids_list);
             $sql = "SELECT COUNT(*) cnt
                     FROM ". $connection->tablePrefix . "notice n ".$use_index_sql.",
                     ". $connection->tablePrefix . "towns t
                     WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
                     $mesto_sql AND ".$rubrik_sql.$q_sql." AND n.t_id = t.t_id ";
 //deb::dump($sql);
-            if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
-            {
-                $substr = "%".$_GET['params']['q']."%";
-            }
 
-            $command = $connection->cache(600)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
+            $command = $connection->cache(600)->createCommand($sql);
 
             $row_count = $command->queryAll();
 
             $offset = ($page-1)*Yii::app()->params['countonpage'];
             $kolpages = ceil($row_count[0]['cnt']/Yii::app()->params['countonpage']);
 
-
-/*
-            $adverts = Notice::model()->cache(600)->with('town')->findAll(
-                array(
-                    'select'=>'*, town.name as town_name, town.transname as town_transname',
-                    'condition'=>' active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 AND '.$expire_sql.
-                                $mesto_rub_sql." AND ".$rubrik_sql.$q_sql,
-                    'order'=>'t.date_add DESC',
-                    'limit'=>Yii::app()->params['countonpage'],
-                    'offset'=>$offset,
-                    'params'=>array(':q_sql'=>'%'.$_GET['params']['q'].'%')
-                )
-            );
-*/
-
-            $sql = "SELECT n.*, t.name as town_name, t.transname as town_transname
+            $sql = "SELECT n.*, t.name as town_name, t.transname as town_transname,
+                            v.kurs*n.cost as rubcost
                     FROM ". $connection->tablePrefix . "notice n ".$use_index_sql.",
-                    ". $connection->tablePrefix . "towns t
+                    ". $connection->tablePrefix . "towns t,
+                    ". $connection->tablePrefix . "valutes v
                     WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
-                    $mesto_sql AND ".$rubrik_sql.$q_sql." AND n.t_id = t.t_id
-                    ORDER BY n.date_add DESC
+                    $mesto_sql AND ".$rubrik_sql.$q_sql." AND n.t_id = t.t_id AND n.cost_valuta = v.code
+                    ORDER BY $order_sql
                     LIMIT ".$offset.", ".Yii::app()->params['countonpage'];
 //deb::dump($sql);
-
-            $command = $connection->cache(600)->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
+            $command = $connection->cache(600)->createCommand($sql);
 
             $adverts = $command->queryAll();
 
 
 //deb::dump($adverts);
+            //$ddd = array();
             foreach ($adverts as $akey=>$aval)
             {
+                //$ddd[] = $aval['n_id'];
                 //deb::dump($aval->town['name']);
                 //$search_adverts[$aval->n_id] = $aval->attributes;
                 $search_adverts[$aval['n_id']] = $aval;
                 $search_adverts[$aval['n_id']]['town_name'] = $aval['town_name'];
                 $search_adverts[$aval['n_id']]['town_transname'] = $aval['town_transname'];
             }
-//deb::dump(count($search_adverts));
+//deb::dump($ddd);
 
             // Разбивка выбранного раздела на подгруппы
             // Если выбранный раздел является родительской рубрикой
@@ -890,7 +913,7 @@ deb::dump($row_notices);
                         AND r.parent_id <> 0 AND n.r_id = r.r_id
                         GROUP BY r.name, r.transname ";
 //                deb::dump($sql);
-                $command=$connection->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
+                $command=$connection->createCommand($sql);
                 $dataReader=$command->query();
                 $rubrik_groups = array();
                 while(($rowgroup = $dataReader->read())!==false)
@@ -906,7 +929,6 @@ deb::dump($row_notices);
             else if (isset($_GET['mainblock']['r_id']) && $_GET['mainblock']['r_id'] != '' && !isset($_GET['mainblock']['parent_r_id']) )
             {
 
-//deb::dump($_GET['mainblock']['r_id']);
                 if(count($rubriks_props) > 0 && $rubriks_props[0]['vibor_type'] != 'photoblock')
                 {
 
@@ -932,8 +954,8 @@ deb::dump($row_notices);
                         AND n.r_id = r.r_id AND n.n_id = p.n_id
                         AND p.ps_id IN (".implode(", ", $props_groups).")
                         GROUP BY p.ps_id ";
-                    //deb::dump($sql);
-                    $command=$connection->createCommand($sql)->bindParam(":q_sql", $substr, PDO::PARAM_STR);
+//deb::dump($sql);
+                    $command=$connection->createCommand($sql);
                     $dataReader=$command->query();
                     $rubrik_groups = array();
                     while(($row = $dataReader->read())!==false)
@@ -961,7 +983,7 @@ deb::dump($row_notices);
                         ". $connection->tablePrefix . "rubriks r,
                         ". $connection->tablePrefix . "rubriks r2
                         WHERE n.active_tag = 1 AND n.verify_tag = 1 AND n.deleted_tag = 0 AND $expire_sql
-                        ".$mesto_sql." AND r.parent_id = 0 AND r2.parent_id = r.r_id
+                        ".$mesto_sql.$q_sql." AND r.parent_id = 0 AND r2.parent_id = r.r_id
                         AND n.r_id = r2.r_id
                         GROUP BY r.name, r.transname ";
                 //deb::dump($sql);
@@ -1046,7 +1068,7 @@ deb::dump($row_notices);
             $this->breadcrumbs[$bread_number]['transname'] = $country->transname;
             $this->breadcrumbs[$bread_number]['type'] = 'country';
             $this->breadcrumbs[$bread_number]['name'] = $country->name . ": все объявления";
-            $region_for_titul = $country->name;
+            $region_for_titul = $country->vregione;
         }
         else
         if($mesto_isset_tag == 0 && $mselector == '' && isset($url_parts[1]) && $url_parts[1] == 'all')
@@ -1157,7 +1179,7 @@ deb::dump($row_notices);
 
         $curr_url = Yii::app()->getRequest()->getUrl();
         $regstr = 'регионе';
-        if(isset($region))
+        if(isset($region) || isset($country))
         {
             $regstr = '';
         }
@@ -1166,7 +1188,9 @@ deb::dump($row_notices);
             $regstr = 'г. ';
         }
 
-        if($curr_url == '/' || stripos('/index.php', $curr_url) !== false)
+        $h1_text = '';
+        if($curr_url == '/' || (stripos($curr_url, '/index.php') !== false)
+            || (stripos($curr_url, 'all') !== false) )
         {
             $this->pageTitle = 'Доска бесплатных объявлений от частных лиц - '.$_SERVER['HTTP_HOST'];
         }
@@ -1175,23 +1199,66 @@ deb::dump($row_notices);
         {
             //deb::dump($region);
             $this->pageTitle = 'Доска бесплатных частных объявлений в '.$regstr.' '.$region_for_titul.' - '.$_SERVER['HTTP_HOST'];
+            $h1_text = 'Доска бесплатных частных объявлений в '.$regstr.' '.$region_for_titul;
         }
         else
         {
             $this->pageTitle = implode(", ", $titulpart)  ." в ".$regstr.' '.$region_for_titul." - ". $deystvie. " на ".$_SERVER['HTTP_HOST'];
+            $h1_text = implode(", ", $titulpart)  ." в ".$regstr.' '.$region_for_titul;
         }
-        //Доска бесплатных частных объявлений в регионе Россия - baraholka.ru
+
+        $this->pageTitle = preg_replace("|в[ ]+Украине|siU", "на Украине", $this->pageTitle);
+        $h1_text = preg_replace("|в[ ]+Украине|siU", "на Украине", $h1_text);
+
         ////////// Конец формирования титула
 
 
         // Формирование данных для пагинатора
         $page_url = Yii::app()->getRequest()->getUrl();
-
+//deb::dump($m_id);
         $allreg_prefix = "";
         if($m_id == 0 && ($page_url == '/' || preg_match('|index.php|siU', $page_url, $match)))
         {
             $page_url = '/all';
         }
+        else
+        if($m_id > 0 && ($page_url == '/' || preg_match('|index.php|siU', $page_url, $match)))
+        {
+            $mesto = '';
+            if($mesto_isset_tag && $mselector == 't')
+            {
+                $town = Towns::model()->findByPk($m_id);
+                $mesto = $town->transname;
+            }
+
+            if($mesto_isset_tag && $mselector == 'reg')
+            {
+                $region = Regions::model()->findByPk($m_id);
+                $mesto = $region->transname;
+            }
+
+            if($mesto_isset_tag && $mselector == 'c')
+            {
+                $country = Countries::model()->findByPk($m_id);
+                $mesto = $country->transname;
+            }
+
+            if($mesto != '')
+            {
+                if($page_url == '/')
+                {
+                    $page_url = '/'.$mesto;
+                }
+            }
+
+        }
+
+
+        if($page_url == '/all/')
+        {
+            $page_url = '/all';
+        }
+
 
         // Переменная page с префиксом ? или & в зависимости от урла
         $page_substr = '&page';
@@ -1214,6 +1281,101 @@ deb::dump($row_notices);
         $paginator_params['css_class'] = 'bpaginator';
 
 
+        /********************** Статистика поиска ***************************/
+if(0)
+{
+deb::dump($town);
+deb::dump($region);
+deb::dump($country);
+}
+
+        if(isset($_GET['params']['q']) && trim($_GET['params']['q']) != '')
+        {
+            $query = trim(mb_strtolower($_GET['params']['q']));
+            $hash = md5($query);
+
+            if(!$search_stat = SearchStat::model()->findByAttributes(array('hash'=>$hash)))
+            {
+                $search_stat = new SearchStat();
+                $search_stat->query = $query;
+                $search_stat->hash = $hash;
+                $search_stat->count = 1;
+            }
+            else
+            {
+                $search_stat->count++;
+                $search_log_old = SearchLog::model()->find(array(
+                    'select'=>'*',
+                    'condition'=>'ss_id = '.$search_stat->ss_id,
+                    'order'=>'date_add DESC'
+                ));
+            }
+
+
+            if(!isset($search_log_old)
+                || (isset($search_log_old) && $search_log_old->ip != $_SERVER['REMOTE_ADDR'])
+                || (isset($search_log_old) && $search_log_old->ip == $_SERVER['REMOTE_ADDR'] && (time() - $search_log_old->date_add) > 86400 ))
+            {
+                if(!SearchLog::IsSearchBot($_SERVER['HTTP_USER_AGENT'])
+                        && Yii::app()->user->id != 1)
+                {
+                    // Заносим в базу и в индекс
+                    $search_stat->save();
+                    Notice::InsertRtIndexSearch($search_stat->ss_id);
+
+                    $search_log = new SearchLog();
+                    $search_log->ss_id = $search_stat->ss_id;
+                    $search_log->date_add = time();
+                    $search_log->ip = $_SERVER['REMOTE_ADDR'];
+                    $search_log->useragent = $_SERVER['HTTP_USER_AGENT'];
+                    $search_log->u_id = Yii::app()->user->id;
+                    $search_log->r_id = intval($_GET['mainblock']['r_id']);
+
+                    $search_log->t_id = 0;
+                    $search_log->reg_id = 0;
+                    $search_log->c_id = 0;
+                    if(isset($town))
+                    {
+                        $search_log->t_id = $town->t_id;
+                        $search_log->reg_id = $town->reg_id;
+                        $search_log->c_id = $town->c_id;
+                    }
+                    else
+                    if(isset($region))
+                    {
+                        $search_log->t_id = 0;
+                        $search_log->reg_id = $region->reg_id;
+                        $search_log->c_id = $region->c_id;
+                    }
+                    else
+                    if(isset($country))
+                    {
+                        $search_log->t_id = 0;
+                        $search_log->reg_id = 0;
+                        $search_log->c_id = $country->c_id;
+                    }
+
+                    $search_log->props_data = '';
+                    if(isset($_GET['addfield']))
+                    {
+                        $search_log->props_data = json_encode($_GET['addfield']);
+                    }
+                    $search_log->save();
+
+                }
+            }
+
+
+        }
+
+
+        //echo($query);
+
+        /******************** Конец Статистика поиска ***********************/
+
+
+//deb::dump($paginator_params);
+//die();
         $this->render('index', array(
             'rubrik_groups'=>$rubrik_groups,
             'search_adverts'=>$search_adverts,
@@ -1228,7 +1390,8 @@ deb::dump($row_notices);
             'kolpages'=>$kolpages,
             'paginator_params'=>$paginator_params,
             'display_titul_tag'=>$display_titul_tag,
-            'cookie'=>$cookie
+            'cookie'=>$cookie,
+            'h1_text'=>$h1_text
         ));
 
 	}
@@ -1731,6 +1894,59 @@ deb::dump($row_notices);
 
     }
 
+
+    // Поиск подсказок для строки поиска
+    public function actionGetquerylist()
+    {
+        $connection = Yii::app()->db_sphinx;
+
+        $searchstr = $_POST['searchstr'];
+
+        $ret = array();
+        $res_array = array();
+        $for_snippets_array = array();
+        if($rows = Notice::GetSphinxSearchStat($searchstr, 0.9, $ids_array))
+        {
+            $i=0;
+            foreach($rows as $rkey=>$rval)
+            {
+                $for_snippets_array[$i] = Notice::SphinxStringPrepare($rval['query']);
+                $i++;
+            }
+
+            $strs = '';
+            $strs = "('".implode("','", $for_snippets_array)."')";
+            $snipstr = Notice::SphinxStringPrepare($searchstr);
+
+            $sql = "CALL SNIPPETS(".$strs.", 'rt_search_stat', '".$snipstr."', 1 AS query_mode)";
+            $command = $connection->createCommand($sql);
+            $row_snippets = $command->queryAll();
+
+            $snippets = array();
+            foreach($row_snippets as $key=>$val)
+            {
+                $snippets[$key] = str_replace($searchstr, "<b>".$searchstr."</b>", $val['snippet']);
+            }
+//deb::dump($snippets);
+
+            $i=0;
+            foreach($rows as $rkey=>$rval)
+            {
+                $temp = array();
+                $temp['id'] = $rval['id'];
+                $temp['val'] = htmlspecialchars($rval['query']);
+                $temp['snippet'] = $snippets[$i];
+                $ret[$i] = $temp;
+
+                $i++;
+            }
+        }
+
+        echo json_encode($ret);
+
+    }
+
+
     // Установка куки выбранного региона и редирект на соответствующую страницу
     public function  actionSetRegionCookie()
     {
@@ -2038,6 +2254,16 @@ deb::dump($row_notices);
         echo json_encode($ret);
     }
 
+    // Установка $_SESSION['sort_select_mode'] = 1
+    public function actionSetsortmode()
+    {
+        if(isset($_POST['m']) && $_POST['m'] == 1 )
+        {
+            $_SESSION['sort_select_mode'] = 1;
+
+            echo "1";
+        }
+    }
 
 
 

@@ -1,20 +1,24 @@
 <?
 Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/galleria/galleria-1.4.2.js');
+
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/notice/advertpage.css');
+
+Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/notice/noticepage.js', CClientScript::POS_END);
 ?>
 
 <?
 if(Yii::app()->controller->action->id == 'addpreview')
 {
 ?>
-<div style="width: 100%; text-align: center; margin-bottom: 20px;">
+<div id="editpubbuttons">
     <?
     if(Yii::app()->user->id > 0)
     {
 //echo "Вы залогинены, все ок";
-        ?>
-        <a style="margin-left: 20px; padding: 8px; background-color: #f00; text-decoration: none; color: #fff; border-radius: 3px; font-size: 16px;" href="<?= Yii::app()->createUrl('advert/addadvert');?>">Редактировать</a>
+    ?>
+        <a id="preview-editbutton" href="<?= Yii::app()->createUrl('advert/addadvert');?>">Редактировать</a>
 
-        <a style="margin-left: 20px; padding: 8px; background-color: #0D9D0D; text-decoration: none; color: #fff; border-radius: 3px; font-size: 16px;" href="<?= Yii::app()->createUrl('advert/savenew');?>">Опубликовать</a>
+        <a id="preview-savebutton" href="<?= Yii::app()->createUrl('advert/savenew');?>">Опубликовать</a>
     <?
     }
     ?>
@@ -23,9 +27,9 @@ if(Yii::app()->controller->action->id == 'addpreview')
 }
 ?>
 
-<h1 style="display: inline; font-size: 28px; padding: 3px 3px 3px 0; "><?= $mainblock['title'];?></h1>
+<h1 id="adverttitul"><?= $mainblock['title'];?></h1>
 
-<span style=" margin-left: 10px; padding: 5px; padding-left: 6px; padding-right: 6px; display: inline; font-size: 22px; font-weight: normal;  background-color: #0D9D0D; color: #fff; text-align: center; ">
+<span id="cost_block">
 
     Цена:
     <?
@@ -38,7 +42,7 @@ if(Yii::app()->controller->action->id == 'addpreview')
         Yii::app()->request->cookies['user_valuta_view']->value
         ), 0, '.', ' ');?>
 
-        <span id="valute_symbol" style="border-bottom-style: dotted; cursor: pointer; border-width: 1px;" onclick="displayHide('div_valute_change');"><?= Options::$valutes[Yii::app()->request->cookies['user_valuta_view']->value]['symbol'];?></span>
+        <span id="valute_symbol" onclick="displayHide('div_valute_change');"><?= Options::$valutes[Yii::app()->request->cookies['user_valuta_view']->value]['symbol'];?></span>
     <?
     }
     else
@@ -49,20 +53,19 @@ if(Yii::app()->controller->action->id == 'addpreview')
 
 </span>
 
-<div id="div_valute_change" style="display: none; position: absolute; z-index: 90; width: 250px; height: 110px; border: #000000 solid 1px; background-color: #eee; padding: 5px;">
+<div id="div_valute_change">
 
-    <div style=" background-image: url('/images/x.png'); background-position: 0px 0px; width: 17px; height: 17px; margin-right: 0px; float: right; cursor: pointer;" onclick="$('#div_valute_change').css('display', 'none');"></div>
+    <div id="valute_change_close" onclick="$('#div_valute_change').css('display', 'none');"></div>
 
-    <div style="float: left; width: 230px;">
-        <table cellpadding="0" style="margin: 0; padding: 3px; float: left; ">
+    <div id="divvch">
+        <table cellpadding="0" id="tbl_valute_change">
             <tr>
                 <?
                 foreach(Options::$valutes as $vkey=>$vval)
                 {
                     ?>
-                    <td style="text-align:center; border-bottom: #ccc solid  1px; border-width: 1px;">
-
-                        <a class="baralink" style="border-bottom: #008CC3 dotted 1px;" href="<?= Yii::app()->createUrl('supporter/setvalutaview', array('valuta_view'=>$vval['abbr']));?>"><?= $vval['name_rodit'];?></a>
+                    <td class="valutecell">
+                        <a class="baralink vc" href="<?= Yii::app()->createUrl('supporter/setvalutaview', array('valuta_view'=>$vval['abbr']));?>"><?= $vval['name_rodit'];?></a>
                         <?
                         if($vval['abbr'] != 'RUB')
                         {
@@ -79,7 +82,7 @@ if(Yii::app()->controller->action->id == 'addpreview')
                 foreach(Options::$valutes as $vkey=>$vval)
                 {
                     ?>
-                    <td style="text-align:center; color: #000;">
+                    <td class="valuteval">
                         <?= Notice::costCalcAndView(
                             $mainblock['cost_valuta'],
                             $mainblock['cost'],
@@ -93,18 +96,18 @@ if(Yii::app()->controller->action->id == 'addpreview')
         </table>
     </div>
 
-    <div style="margin: 5px; float: left; font-size: 11px;">
+    <div id="cbrtext">
         *по курсу ЦБ на <?= date("d.m.Y", Yii::app()->params['options']['kurs_date']);?>
         <? //Yii::app()->params['month_padezh'][intval(date("m", Yii::app()->params['options']['kurs_date']))];?>
         <? //date("Y", Yii::app()->params['options']['kurs_date']);?>
-        <div style="margin-top: 5px;">
+        <div>
             Для отображения цен на сайте в другой валюте нажмите на ее название
         </div>
     </div>
 
 </div>
 
-<div style="margin-top: 10px; margin-bottom: 5px; color: #000; border: #000020 solid 0px; ">
+<div id="topadvertdata">
 <?
     if(Yii::app()->controller->action->id == 'addpreview')
     {
@@ -114,45 +117,43 @@ if(Yii::app()->controller->action->id == 'addpreview')
     $date_add_str = date('d-m-Y H:i', $mainblock['date_add']);
     $day_string = Notice::TodayStrGenerate($mainblock['date_add'], 1);
 ?>
-    <div style=" float: left; width: 682px; border: #000000 solid 0px;">
-        <span style="padding-left: 15px; margin-right: 3px; background-image: url('/images/dateadd.png'); background-position: left center; background-repeat: no-repeat;" title="Время размещения объявления"></span> <?= $day_string;?>
+    <div id="timeadd">
+        <span id="timedata" title="Время размещения объявления"></span> <?= $day_string;?>
 
         <?
         if(Yii::app()->controller->action->id != 'addpreview')
         {
         ?>
-        <span style="float: right; color: #999;">№ объявления: <?= $mainblock['daynumber_id'];?></span>
+        <span id="daynumber">№ объявления: <?= $mainblock['daynumber_id'];?></span>
         <?
         }
         ?>
-
     </div>
 
     <?
     if(Yii::app()->controller->action->id != 'addpreview')
     {
     ?>
-    <div style="float: right; clear: right;">
+    <div id="viewscount">
         Просмотров: всего <?= $mainblock['counter_total']+1;?>, сегодня <?= $mainblock['counter_daily']+1;?>
         <img src="<?= Yii::app()->createUrl('supporter/advertcounter', array('n_id'=>$mainblock['n_id']));?>" width="0">
     </div>
     <?
     }
     ?>
-
     <br>
 </div>
 
 
 <table>
     <tr>
-        <td style="vertical-align: top; padding: 0px;">
+        <td id="photoscell">
 <?
 //deb::dump(Yii::app()->controller->action->id);
 //deb::dump(Yii::app()->user->create_at);
 ?>
-            <div id="notice" style="" >
-                <div class="galleria" id="galleria" style="width: 600px;">
+            <div id="notice">
+                <div class="galleria" id="galleria">
                     <?
                     //deb::dump($uploadfiles_array);
                     $i=0;
@@ -206,8 +207,8 @@ if(Yii::app()->controller->action->id == 'addpreview')
             if(count($uploadfiles_array) > 0)
             {
             ?>
-                <div id="gallery_fullview" style="z-index: 10; position: absolute; top: 10px; left: 570px; cursor: pointer; ">
-                    <div style="background-image: url('/images/lupa_s.png'); background-position: 0px 0px; width: 20px; height: 20px;"></div>
+                <div id="gallery_fullview">
+                    <div></div>
                 </div>
             <?
             }
@@ -222,43 +223,42 @@ if(Yii::app()->controller->action->id == 'addpreview')
                     $mainblock['user_date_reg'] = Yii::app()->user->create_at;
                 }
             ?>
-            <table style="border: #000 solid 0px; width: 682px; margin: 0px; padding: 0px;">
+            <table id="advertattributes">
             <tr>
 
-            <td style="padding: 0px; vertical-align: top; padding-top: 13px;"><img src="/images/client.png"></td>
+            <td id="client_pict"><img src="/images/client.png"></td>
 
-            <td style="border: #000 solid 0px; padding: 0px; padding-left: 3px;">
-            <div style="margin-top: 10px; font-weight: normal; width: 362px; border: #000000 solid 0px;">
-
-                <span style="background-position: left center; background-repeat: no-repeat; font-weight: bold;" title="Имя"><a style="color: inherit; text-decoration: none;" href="/user/uadverts/<?= $mainblock['u_id'];?>"><?= $mainblock['client_name'];?></a></span>
-                <span style="font-weight: normal;">на baraholka.ru с <?= Yii::app()->params['month_padezh'][intval(date("m", strtotime($mainblock['user_date_reg'])))];?> <?= date("Y", strtotime($mainblock['user_date_reg']));?> года
+            <td id="client_name">
+            <div id="div_client_name">
+                <span id="span_client_name" title="Имя"><a id="a_client_name" href="/user/uadverts/<?= $mainblock['u_id'];?>"><?= $mainblock['client_name'];?></a></span>
+                <span>на baraholka.ru с <?= Yii::app()->params['month_padezh'][intval(date("m", strtotime($mainblock['user_date_reg'])))];?> <?= date("Y", strtotime($mainblock['user_date_reg']));?> года
                 </span>
             </div>
             </td>
 
-            <td style="padding: 0px; vertical-align: top;" rowspan="2">
+            <td id="client_do" rowspan="2">
             <?
             if(Yii::app()->controller->action->id != 'addpreview')
             {
                 ?>
-                <div style="border: #000 solid 0px; float: right; margin-top: 10px;">
-                    <a class="span_lnk" style="background: url('/images/phone-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px; width: 135px;"><span id="display_phone"  style="border-bottom: #008CC3 dotted; border-width: 1px; ">Показать телефон</span><img id="img_display_phone" src="/images/actions/loader.gif" style="display: none; margin-bottom: -8px; height: 20px;"></a>
+                <div id="phoneauth">
+                    <a id="a_display_phone" class="span_lnk"><span id="display_phone">Показать телефон</span><img id="img_display_phone" src="/images/actions/loader.gif"></a>
 
-                    <a class="span_lnk" style="margin-left: 15px; background: url('/images/write-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px;">
-                        <span id="writeauthor_btn" style="border-bottom: #008CC3 dotted; border-width: 1px;">Написать автору</span>
+                    <a id="a_write_author" class="span_lnk">
+                        <span id="writeauthor_btn">Написать автору</span>
                     </a>
                 </div>
 
-                <div style="float: right; margin-top: 3px;">
-                    <a href="/user/uadverts/<?= $mainblock['u_id'];?>" class="span_lnk" style="background: url('/images/alladvert-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;">
-                        <span style="border-bottom: #008CC3 dotted; border-width: 1px;">Все объявления автора</span>
+                <div id="div_alladverts">
+                    <a href="/user/uadverts/<?= $mainblock['u_id'];?>" class="span_lnk">
+                        <span id="span_alladverts">Все объявления автора</span>
                     </a>
                 </div>
 
                 <?
                 if(Yii::app()->controller->action->id != 'addpreview')
                 {
-                    ?>
+                ?>
                 <?
                 }
                 ?>
@@ -271,10 +271,10 @@ if(Yii::app()->controller->action->id == 'addpreview')
 
 
             <tr>
-            <td style="padding: 0px; vertical-align: top; padding-top: 2px; padding-left: 3px;"><img src="/images/location.png"></td>
-            <td style="border: #000 solid 0px; padding: 0px; padding-left: 3px;">
-            <div style="margin-top: 0px; ">
-            <span style="font-weight: bold; " title="Город">
+            <td id="td_location_pict"><img src="/images/location.png"></td>
+            <td id="td_location_data">
+            <div>
+            <span id="span_location" title="Город">
             <?
             $region_str = $mainblock_data['region']->name;
             if($mainblock_data['region']->name != $mainblock_data['town']->name)
@@ -298,8 +298,8 @@ if(Yii::app()->controller->action->id == 'addpreview')
             else
             {
             ?>
-                <div style="margin-top: 5px; width: 682px;">
-                <span style="padding-left: 15px; margin-left: 3px; font-weight: bold; background-image: url('/images/location.png'); background-position: left center; background-repeat: no-repeat;" title="Город">
+                <div id="advnoact">
+                <span id="advnoacttown" title="Город">
                 <?
                 $region_str = $mainblock_data['region']->name;
                 if($mainblock_data['region']->name != $mainblock_data['town']->name)
@@ -310,8 +310,8 @@ if(Yii::app()->controller->action->id == 'addpreview')
                 <?= $region_str.", ".$mainblock_data['country']->name;?>
                 </span>
 
-                    <div style="background-color: #f00; color: #fff; font-size: 14px; padding: 5px;">
-                    К сожалению, данное объявление потеряло актуальность за сроком давности. Сейчас Вы будете автоматически перенаправлены на похожие объявления в Вашем городе. Нажмите <a class="baralink" style="font-size: 14px;" href="/<?= $advert_url_category;?>">здесь</a>, если Ваш браузер не поддерживает автоматическую переадресацию.
+                    <div id="noacttext">
+                    К сожалению, данное объявление потеряло актуальность за сроком давности. Сейчас Вы будете автоматически перенаправлены на похожие объявления в Вашем городе. Нажмите <a id="a_noact" class="baralink" href="/<?= $advert_url_category;?>">здесь</a>, если Ваш браузер не поддерживает автоматическую переадресацию.
                     <?
                     Yii::app()->clientScript->registerMetaTag("5; URL=/".$advert_url_category, "archive", "refresh");
                     ?>
@@ -321,16 +321,13 @@ if(Yii::app()->controller->action->id == 'addpreview')
             <?
             }
 
-            ?>
-
-            <?
             if( ($mainblock['u_id'] == Yii::app()->user->id || Yii::app()->user->isAdmin())
                 && Yii::app()->controller->action->id == 'viewadvert')
             {
                 if($mainblock['active_tag'] == 0)
                 {
                 ?>
-                <div style="background-color: #f00; padding: 5px; width: 682px; margin-top: 10px; color: #fff;">
+                <div id="nedostup">
                     Объявление неактивно и поэтому не доступно к просмотру другими пользователями!
                 </div>
                 <?
@@ -339,7 +336,7 @@ if(Yii::app()->controller->action->id == 'addpreview')
                 if($mainblock['verify_tag'] == 0)
                 {
                 ?>
-                    <div style="background-color: #f00; padding: 5px;  width: 682px; margin-top: 10px; color: #fff;">
+                    <div id="advnoverify">
                         Объявление еще не верифицировано и поэтому не доступно к просмотру другими пользователями!
                     </div>
                 <?
@@ -348,14 +345,14 @@ if(Yii::app()->controller->action->id == 'addpreview')
             ?>
 
 
-            <div id="properties" style="border: #000 solid 0px; margin-top: 5px;">
-                <table style="width: auto; margin: 0px; padding: 0px;">
+            <div id="properties">
+                <table id="tbl_properties">
                     <?
                     foreach($addfield_data['notice_props'] as $nkey=>$nval)
                     {
                         ?>
                         <tr>
-                            <td style="text-align: right;"><?= $addfield_data['rubrik_props_rp_id'][$nkey]->name;?>:</td>
+                            <td class="right"><?= $addfield_data['rubrik_props_rp_id'][$nkey]->name;?>:</td>
                             <td>
                                 <?
                                 switch($addfield_data['rubrik_props_rp_id'][$nkey]->vibor_type)
@@ -390,7 +387,7 @@ if(Yii::app()->controller->action->id == 'addpreview')
 
             </div>
 
-            <div style="margin-top: 20px;">
+            <div id="notice_text">
                 <?= nl2br($mainblock['notice_text']);?>
             </div>
 
@@ -399,13 +396,12 @@ if(Yii::app()->controller->action->id == 'addpreview')
             {
             ?>
 
-            <div style="margin-top: 20px;">
+            <div id="do_ipp">
 
-                <div style="margin-top: 10px;">
-                    <table style="width: 682px; border: #000099 solid 0px;">
+                    <table id="do_table">
                     <tr>
                         <td style="text-align: center;">
-                        <a class="span_lnk" style="background: url('/images/favorit.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px; margin-left: 0px; text-decoration: none;">
+                        <a class="span_lnk" id="a_favorit">
                             <?
                             $favorit_title = 'В избранное';
                             if(Notice::CheckAdvertInFavorit($mainblock['n_id']))
@@ -413,26 +409,25 @@ if(Yii::app()->controller->action->id == 'addpreview')
                                 $favorit_title = 'В избранном';
                             }
                             ?>
-                            <span id="favorit_button" advert_id="<?= $mainblock['n_id'];?>" style="border-bottom: #008CC3 dotted; border-width: 1px;"><?= $favorit_title;?></span>
+                            <span id="favorit_button" advert_id="<?= $mainblock['n_id'];?>"><?= $favorit_title;?></span>
+                        </a>
+                        </td>
+                        <td id="td_abuse">
+                        <a class="span_lnk" id="a_abuse">
+                            <span id="abuse_button">Пожаловаться</span>
                         </a>
                         </td>
                         <td style="text-align: center;">
-                        <a class="span_lnk" style="background: url('/images/abuse.png'); background-position: left center; background-repeat: no-repeat; padding-left: 17px; margin-left: 5px; text-decoration: none;">
-                            <span id="abuse_button" style="border-bottom: #008CC3 dotted; border-width: 1px;" >Пожаловаться</span>
+                        <a class="span_lnk" id="a_share">
+                            <span id="share_button" share_n_id="<?= $mainblock['n_id'];?>">Поделиться</span>
                         </a>
                         </td>
-                        <td style="text-align: center;">
-                        <a class="span_lnk" style="background: url('/images/podelit.png'); background-position: left center; background-repeat: no-repeat; padding-left: 15px; margin-left: 5px; text-decoration: none;">
-                            <span id="share_button" share_n_id="<?= $mainblock['n_id'];?>" style="border-bottom: #008CC3 dotted; border-width: 1px;">Поделиться</span>
-                        </a>
-                        </td>
-                        <td style="text-align: center;">
+                        <td id="td_socials">
                         <script type="text/javascript" src="//yastatic.net/share/share.js" charset="utf-8"></script>
                         <div style="display: inline;" class="yashare-auto-init" data-yashareL10n="ru" data-yashareType="small" data-yashareQuickServices="vkontakte,facebook,twitter,odnoklassniki,moimir,lj,gplus" data-yashareTheme="counter"></div>
                         </td>
                     </tr>
                     </table>
-                </div>
 
             </div>
 
@@ -455,7 +450,7 @@ if(Yii::app()->controller->action->id == 'addpreview')
 
                                 $i++;
                                 ?>
-                                <td style="vertical-align: top; text-align: center; width: 120px;">
+                                <td class="td_similar">
                                     <?
                                     //deb::dump($towns_array);
                                     $transliter = new Supporter();
@@ -471,14 +466,14 @@ if(Yii::app()->controller->action->id == 'addpreview')
                                         $photoname = str_replace(".", "_medium.", $similar_photos[$sval['n_id']][0]);
                                         $curr_dir = Notice::getPhotoDir($photoname);
                                         ?>
-                                    <a class="baralink" title="<?= $image_title;?>" href="<?= $advert_page_url;?>"><img style="height: 80px;" alt="<?= $image_title_alt;?>" src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>"></a>
+                                    <a class="baralink img_similar" title="<?= $image_title;?>" href="<?= $advert_page_url;?>"><img   alt="<?= $image_title_alt;?>" src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>"></a>
                                     <?
                                     }
 
                                     $ahref_title = str_replace("'", '', $sval['title']);
                                     $ahref_title = addslashes($ahref_title.' в г. '.$towns_array[$sval['t_id']]->name);
                                     ?>
-                                    <div style="margin-top: 5px;"><h3 style="display: inline;"><a title="<?= $ahref_title;?>" class="baralink" href="<?= $advert_page_url;?>"><?= $sval['title'];?></a></h3></div>
+                                    <div class="divsimname"><h3 class="h_similar"><a title="<?= $ahref_title;?>" class="baralink" href="<?= $advert_page_url;?>"><?= $sval['title'];?></a></h3></div>
 
                                     <?
                                     if($sval['cost'] > 0)
@@ -548,10 +543,9 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
 ?>
 </div>
 
-<div id="abuse_window" style="border: #ddd solid 2px; display: none; padding: 5px; width: 200px; background-color: #fff; z-index: 90; position: absolute;">
+<div id="abuse_window">
 
-    <div id="" style="float: right; margin-top: -5px; cursor: pointer;" onclick="$('#abuse_window').css('display', 'none');">x</div>
-
+    <div id="awclose" onclick="$('#abuse_window').css('display', 'none');">x</div>
     <?
     foreach(Notice::$abuse_items as $akey=>$aval)
     {
@@ -563,8 +557,8 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
 
 </div>
 
-<div class="form" id="modal_abusecaptcha" style="border: #999 solid 1px; width: 360px; padding: 20px; z-index: 12;">
-    <div id="modal_abusecaptcha_close" style="z-index: 13;">X</div>
+<div class="form" id="modal_abusecaptcha">
+    <div id="modal_abusecaptcha_close">X</div>
 
     <div id="modal_abusecaptcha_content">
 
@@ -578,10 +572,10 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
 
 <!---------------------------- Поделиться ------------------------------>
 
-<div class="form" id="modal_share" style="border: #999 solid 1px; width: 360px; padding: 20px; z-index: 12;">
-    <div id="modal_share_close" style="z-index: 13;">X</div>
+<div class="form" id="modal_share">
+    <div id="modal_share_close">X</div>
 
-    <div id="modal_share_content" style="display: table-cell; vertical-align: middle; border: #000000 solid 0px; height: 310px; padding-left: 20px;">
+    <div id="modal_share_content">
 
     </div>
 
@@ -594,173 +588,13 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
 
 <script>
 
-    $('#abuse_button').click(function(){
-
-        $('#abuse_window').css('display', 'block');
-        $('#abuse_window').offset({
-            left: $('#abuse_button').offset().left - 10,
-            top: $('#abuse_button').offset().top - 123
-        });
-
-    });
 
     $(document).ready(function()
     {
-        $('.abuse_quick, .abuse_other').click( function(event){
-            item = $(this);
-            event.preventDefault(); // выключaем стaндaртную рoль элементa
-            $('#modal_abusecaptcha_overlay').fadeIn(400, // снaчaлa плaвнo пoкaзывaем темную пoдлoжку
-                function(){
-
-                    if(item.attr('abusetype') != 'other_abuse')
-                    {
-                        $('#modal_abusecaptcha').css('height', '140px');
-                    }
-                    else
-                    {
-                        $('#modal_abusecaptcha').css('height', '230px');
-                    }
-
-                    $.ajax({
-                        url: "<?= Yii::app()->createUrl('/advert/getabuseform');?>",
-                        method: "post",
-                        data:{
-                            n_id: item.attr('abuse_n_id'),
-                            class: item.attr('abuseclass'),
-                            type: item.attr('abusetype')
-                        },
-                        // обработка успешного выполнения запроса
-                        success: function(data){
-                            $('#modal_abusecaptcha_content').html(data);
-
-                        }
-                    });
-
-                    $('#abuse_window').css('display', 'none');
-
-                    $('#modal_abusecaptcha')
-                        .css('display', 'block') // убирaем у мoдaльнoгo oкнa display: none;
-                        .animate({opacity: 1, top: '50%'}, 200); // плaвнo прибaвляем прoзрaчнoсть oднoвременнo сo съезжaнием вниз
-
-                });
-        });
-
-        /* Зaкрытие мoдaльнoгo oкнa, тут делaем тo же сaмoе нo в oбрaтнoм пoрядке */
-        $('#modal_abusecaptcha_close, #modal_abusecaptcha_overlay').click( function(){ // лoвим клик пo крестику или пoдлoжке
-            $('#modal_abusecaptcha')
-                .animate({opacity: 0, top: '45%'}, 200,  // плaвнo меняем прoзрaчнoсть нa 0 и oднoвременнo двигaем oкнo вверх
-                function(){ // пoсле aнимaции
-                    $(this).css('display', 'none'); // делaем ему display: none;
-                    $('#modal_abusecaptcha_overlay').fadeOut(400); // скрывaем пoдлoжку
-                }
-            );
-        });
-
-
-        /****************************** Поделиться*********************************/
-
-        $('#share_button').click( function(event){
-            item = $(this);
-            event.preventDefault(); // выключaем стaндaртную рoль элементa
-            $('#modal_share_overlay').fadeIn(400, // снaчaлa плaвнo пoкaзывaем темную пoдлoжку
-                function(){
-
-                    $.ajax({
-                        url: "<?= Yii::app()->createUrl('/advert/getshareform');?>",
-                        method: "post",
-                        data:{
-                            n_id: item.attr('share_n_id')
-                        },
-                        // обработка успешного выполнения запроса
-                        success: function(data){
-                            $('#modal_share_content').html(data);
-
-                        }
-                    });
-
-                    $('#modal_share')
-                        .css('display', 'block') // убирaем у мoдaльнoгo oкнa display: none;
-                        .animate({opacity: 1, top: '50%'}, 200); // плaвнo прибaвляем прoзрaчнoсть oднoвременнo сo съезжaнием вниз
-
-                });
-        });
-
-        /* Зaкрытие мoдaльнoгo oкнa, тут делaем тo же сaмoе нo в oбрaтнoм пoрядке */
-        $('#modal_share_close, #modal_share_overlay').click( function(){ // лoвим клик пo крестику или пoдлoжке
-            $('#modal_share')
-                .animate({opacity: 0, top: '45%'}, 200,  // плaвнo меняем прoзрaчнoсть нa 0 и oднoвременнo двигaем oкнo вверх
-                function(){ // пoсле aнимaции
-                    $(this).css('display', 'none'); // делaем ему display: none;
-                    $('#modal_share_overlay').fadeOut(400); // скрывaем пoдлoжку
-                }
-            );
-        });
-
+        share_and_abuse('<?= Yii::app()->createUrl('/advert/getabuseform');?>',
+            '<?= Yii::app()->createUrl('/advert/getshareform');?>',
+            '<?= Yii::app()->createUrl('/advert/addtofavorit');?>');
     });
-
-    /******************************************************************/
-    $('#favorit_button').click(function(){
-        fbut = $(this);
-
-        $.ajax({
-            url: "<?= Yii::app()->createUrl('/advert/addtofavorit');?>",
-            method: "post",
-            dataType: 'json',
-            data:{
-                n_id: fbut.attr('advert_id')
-            },
-            // обработка успешного выполнения запроса
-            success: function(data){
-                $('#favorit_count').html(data['count']);
-                if(data['status'] == 'add')
-                {
-                    $('#favorit_button').html('В избранном');
-                }
-                else
-                {
-                    $('#favorit_button').html('В избранное');
-                }
-
-            }
-        });
-
-    });
-
-</script>
-
-<script>
-    Galleria.loadTheme('/js/galleria/themes/classic/galleria.classic.js');
-    Galleria.run('#galleria', {
-        width: 684,
-        height: 484,
-        //imageCrop: 'landscape',
-        lightbox: true,
-        //overlayBackground: '#ffffff'
-        showImagenav: true,
-        showinfo: false,
-        carousel: false,
-        thumbPosition: 'center',
-        extend: function() {
-            var gallery = this; // "this" is the gallery instance
-            $('#gallery_fullview').prependTo('.galleria-container');
-
-            $('#gallery_fullview').click(function() {
-                gallery.openLightbox();
-            });
-
-            // Задание стиля для активного превью
-            $('.galleria-image').click(function(){
-                $('.galleria-image').css('border', '#fff solid 2px');
-                $(this).css('border', '#999 solid 2px');
-
-                $('.galleria-images > .galleria-image').css('border', '0px');
-
-            });
-
-        }
-
-    });
-
 
 
     $('.fchange').change(function ()
@@ -768,46 +602,6 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
         changeFilterReload('<?= Yii::app()->createUrl('filter/getdatafilter');?>');
     });
 
-    $(function(){
-        // Закрытие таблицы валют по клику за пределами таблицы
-        $(document).click(function(event) {
-            //valute_symbol
-            //console.log($(event.target).closest("#valute_symbol").length);
-            if($(event.target).closest("#valute_symbol").length)
-            {
-                return;
-            }
-
-            if ($(event.target).closest("#div_valute_change").length)
-            {
-                return;
-            }
-
-            $("#div_valute_change").css('display', 'none');
-
-            if ($(event.target).closest("#abuse_button").length)
-            {
-                return;
-            }
-            if ($(event.target).closest("#abuse_window").length)
-            {
-                return;
-            }
-
-            $("#abuse_window").css('display', 'none');
-
-
-            event.stopPropagation();
-        });
-
-        // Позиционирование таблицы валют
-        $('#div_valute_change').offset({
-            left: $('#valute_symbol').offset().left-125,
-            top: $('#valute_symbol').offset().top + $('#valute_symbol').height() + 5
-        });
-
-
-    });
 
     // Отобразить телефон
     <?
@@ -829,45 +623,3 @@ $this->renderPartial('writeauthor', array('writeauthor'=>$writeauthor));
 </script>
 
 
-<style>
-    #modal_abusecaptcha, #modal_share {
-        width: 300px;
-        height: 310px; /* Рaзмеры дoлжны быть фиксирoвaны */
-        border-radius: 5px;
-        border: 3px #000 solid;
-        background: #fff;
-        position: fixed; /* чтoбы oкнo былo в видимoй зoне в любoм месте */
-        top: 45%; /* oтступaем сверху 45%, oстaльные 5% пoдвинет скрипт */
-        left: 50%; /* пoлoвинa экрaнa слевa */
-        margin-top: -150px;
-        margin-left: -150px; /* тут вся мaгия центрoвки css, oтступaем влевo и вверх минус пoлoвину ширины и высoты сooтветственнo =) */
-        display: none; /* в oбычнoм сoстoянии oкнa не дoлжнo быть */
-        opacity: 0; /* пoлнoстью прoзрaчнo для aнимирoвaния */
-        z-index: 5; /* oкнo дoлжнo быть нaибoлее бoльшем слoе */
-        padding: 20px 10px;
-    }
-
-    #modal_abusecaptcha_close, #modal_share_close {
-        width: 21px;
-        height: 21px;
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        cursor: pointer;
-        display: block;
-    }
-
-    /* Пoдлoжкa */
-    #modal_abusecaptcha_overlay, #modal_share_overlay {
-        z-index: 11; /* пoдлoжкa дoлжнa быть выше слoев элементoв сaйтa, нo ниже слoя мoдaльнoгo oкнa */
-        position: fixed; /* всегдa перекрывaет весь сaйт */
-        background-color: #000; /* чернaя */
-        opacity: 0.8; /* нo немнoгo прoзрaчнa */
-        width: 100%;
-        height: 100%; /* рaзмерoм вo весь экрaн */
-        top: 0;
-        left: 0; /* сверху и слевa 0, oбязaтельные свoйствa! */
-        cursor: pointer;
-        display: none; /* в oбычнoм сoстoянии её нет) */
-    }
-</style>

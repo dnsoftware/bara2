@@ -5,103 +5,11 @@
     Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/uploadfile.css');
     Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/jquery.maskedinput.min.js');
     Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/image_rotator.js');
+
+    Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/notice/add.css');
 ?>
 
 
-<style>
-    .radio-listitem
-    {
-        cursor: pointer; background-color: #dddddd; padding: 1px 2px; margin: 1px; display: inline-block;
-    }
-    .radio-listitem:hover
-    {
-        cursor: pointer; background-color: #fff;
-    }
-
-    .add_hideinput
-    {
-        display: none;
-    }
-
-    .add_hideselector, .add_hidevibortype
-    {
-        display: none;
-    }
-
-    .prop_name
-    {
-        width: 188px;
-        float: left;
-    }
-
-    .prop_block
-    {
-        margin-top: 5px; margin-bottom: 20px;
-    }
-
-    .tbl-prop-name
-    {
-        width: 1px; padding: 0px; margin: 0px;
-    }
-
-    .addnot-field-selected
-    {
-        color: #006600; font-size: 16px; font-weight: bold; cursor: pointer;
-    }
-
-    .mainfileborder
-    {
-        border: #bd362f solid 3px;
-        cursor: pointer;
-    }
-    .otherfileborder
-    {
-        border: #ffffff solid 3px;
-        cursor: pointer;
-    }
-    .form-row
-    {
-        width: 100%; clear: both;
-    }
-    .add-form-label
-    {
-        width: 188px;
-        float: left;
-    }
-    .form-input-text
-    {
-        width: 200px;;
-    }
-    .selrub
-    {
-        width: 220px;
-    }
-    .add-form-select
-    {
-        width: 220px;
-    }
-    .add-input-block
-    {
-        float: left;
-    }
-    .input-field-border
-    {
-        width: auto; float: left;
-    }
-    .input-error-msg
-    {
-        color: #f00; float: left; clear: left;
-    }
-    .input-error-prop
-    {
-        display: table-cell;
-    }
-    .input-error-prop-msg
-    {
-        color: #f00;
-    }
-
-</style>
 
 <?
 $title = "Новое объявления";
@@ -126,14 +34,13 @@ $mycountry_id = Yii::app()->request->cookies->contains('geo_mycountry') ?
 
 <div style="text-align: center;">
 
-    <h1 style="font-size: 16px; margin-bottom: 30px;"><?= $title;?></h1>
-
+    <h1 class="h1-addnot"><?= $title;?></h1>
     <?
     if(Yii::app()->controller->action->id == 'advert_edit'
         && isset($_GET['republic']) && intval($_GET['republic']) == 1)
     {
     ?>
-    <div style="font-size: 14px; color: #f00; margin-bottom: 20px;">
+    <div class="notice-add-actnot">
         Для активации объявления необходимо заполнить все необходимые данные!
     </div>
     <?
@@ -172,9 +79,15 @@ $mycountry_id = Yii::app()->request->cookies->contains('geo_mycountry') ?
         <?
         if(Yii::app()->user->id > 0)
         {
+
+            $user_email = Yii::app()->user->email;
+            if(Yii::app()->controller->action->id == 'advert_edit' && Yii::app()->user->isAdmin() )
+            {
+                $user_email = htmlspecialchars($this->getMainblockValue($model, 'client_email'), ENT_COMPAT);
+            }
         ?>
-            <?= Yii::app()->user->email;?>
-            <input class="form-input-text" type="text" name="mainblock[client_email]" id="client_email" value="<?= Yii::app()->user->email;?>" readonly style="display: none;">
+            <?= $user_email;?>
+            <input class="form-input-text" type="text" name="mainblock[client_email]" id="client_email" value="<?= $user_email;?>" readonly style="display: none;">
         <?
         }
         else
@@ -265,14 +178,14 @@ $mycountry_id = Yii::app()->request->cookies->contains('geo_mycountry') ?
 
 
                         <div id="hand_input_phone" style="<?= $hand_input_phone_style;?>">
-                            <div style="width: 800px;">
-                                <nobr><span style="border-bottom: #000 dotted 1px; cursor: pointer;" id="span_country"><?= $countries_array[$client_phone_c_id];?></span>
+                            <div class="div_hand_input_phone">
+                                <nobr><span id="span_country"><?= $countries_array[$client_phone_c_id];?></span>
 
                                     <select id="select_country_code" name="mainblock[client_phone_c_id]" style="display: none;">
                                         <?
                                         foreach($countries_array as $ckey=>$cval)
                                         {
-                                            ?>
+                                        ?>
                                             <option <?= $this->getSelectedAttr($client_phone_c_id, $ckey);?> value="<?= $ckey;?>"><?= $cval;?></option>
                                         <?
                                         }
@@ -281,7 +194,7 @@ $mycountry_id = Yii::app()->request->cookies->contains('geo_mycountry') ?
 
                                     <?
                                     ?>
-                                    <input class="form-input-text" style="width: 100px;" type="text" name="mainblock[client_phone]" id="client_phone" value="<?= $client_phone;?>">
+                                    <input class="form-input-text" type="text" name="mainblock[client_phone]" id="client_phone" value="<?= $client_phone;?>">
 
                                     <?
                                     $send_check_phone_button_display = 'none';
@@ -296,7 +209,7 @@ $mycountry_id = Yii::app()->request->cookies->contains('geo_mycountry') ?
                                     if(count($user_phones) > 0)
                                     {
                                         ?>
-                                        <span id="select_phone_from_list" style="border-bottom: #000 dotted 1px; cursor: pointer;" >Выбрать телефон из списка</span>
+                                        <span id="select_phone_from_list">Выбрать телефон из списка</span>
                                     <?
                                     }
                                     ?>
@@ -310,10 +223,10 @@ $mycountry_id = Yii::app()->request->cookies->contains('geo_mycountry') ?
                 </tr>
                 <tr>
                     <td >
-                        <div id="send_check_phone_error" style="color: #f00;"></div>
-                        <div id="send_check_phone_ok" style="color: #299e12;"></div>
+                        <div id="send_check_phone_error"></div>
+                        <div id="send_check_phone_ok"></div>
 
-                        <div id="send_check_code" style="border: #999 solid 1px; display: none; padding: 5px;">
+                        <div id="send_check_code">
                             На указанный номер отправлено СМС  с кодом подтверждения<br>
                             Введите его в окно подтверждения и нажмите ОК<br>
                             <input type="text" id="check_code_field">
@@ -341,7 +254,7 @@ $mycountry_id = Yii::app()->request->cookies->contains('geo_mycountry') ?
     <div class="add-input-block">
         <table cellpadding="0" cellspacing="0">
             <tr>
-                <td  style="margin: 0px; padding: 0px;">
+                <td class="td-select_country">
                     <div class="input-field-border" id="input-error-c_id">
 
                         <select class="add-form-select" name="mainblock[c_id]" id="select_country">
@@ -408,7 +321,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
         foreach ($rub_array as $rkey=>$rval)
         {
             ?>
-            <option disabled style="color:#000; font-weight: bold;" value="<?= $rval['parent']->r_id;?>"><?= $rval['parent']->name;?></option>
+            <option class="selrub-opt" disabled value="<?= $rval['parent']->r_id;?>"><?= $rval['parent']->name;?></option>
             <?
             foreach ($rval['childs'] as $ckey=>$cval)
             {
@@ -421,7 +334,6 @@ $r_id = $this->getMainblockValue($model, 'r_id')
         </select>
         </div>
         <div class="input-error-msg"></div>
-
 
         <span onclick="$('.selrub').change();" style="cursor: pointer; text-decoration: underline; display: none;">Обновить</span>
     </div>
@@ -462,21 +374,19 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 */
 ?>
 
-<div style="color: #f00; display: none;" id="div_errors">
+<div id="div_errors">
 
 </div>
 
 
 <? // Блок куда подгружаются данные по свойствам объявы ?>
-<div id="div_ajax_loader_icon" style="clear: both; text-align: center; margin-top: 50px; margin-bottom: 30px; display: none;">
+<div id="div_ajax_loader_icon">
     <img src="/images/ajaxload.gif">
 </div>
 
-<div id="div_props" style="margin: 0px; margin-top: 30px; clear: both">
+<div id="div_props">
 
 </div>
-
-
 
 
 
@@ -504,7 +414,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
     <label id="lbl-title" class="add-form-label"><?= Notice::model()->getAttributeLabel('title');?>:</label>
     <div class="add-input-block">
         <div class="input-field-border" id="input-error-title">
-            <input class="form-input-text" style="width: 600px;" type="text" name="mainblock[title]" id="title" value="<?= htmlspecialchars($this->getMainblockValue($model, 'title'));?>">
+            <input class="form-input-text" type="text" name="mainblock[title]" id="title" value="<?= htmlspecialchars($this->getMainblockValue($model, 'title'));?>">
         </div>
         <div class="input-error-msg"></div>
     </div>
@@ -515,7 +425,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
     <label id="lbl-notice_text" class="add-form-label"><?= Notice::model()->getAttributeLabel('notice_text');?>:</label>
     <div class="add-input-block">
         <div class="input-field-border" id="input-error-notice_text">
-            <textarea style="width: 600px; height: 100px;" name="mainblock[notice_text]" id="notice_text"><?= $this->getMainblockValue($model, 'notice_text');?></textarea>
+            <textarea name="mainblock[notice_text]" id="notice_text"><?= $this->getMainblockValue($model, 'notice_text');?></textarea>
         </div>
         <div class="input-error-msg"></div>
     </div>
@@ -532,7 +442,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
             if($this->getMainblockValue($model, 'cost_nodisplay_tag'))
             {
                 $checked = " checked ";
-                $disabled = " disabled ";
+                $disabled = " readonly ";
             }
 
             $cost = htmlspecialchars($this->getMainblockValue($model, 'cost'), ENT_COMPAT);
@@ -542,8 +452,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
             }
             ?>
 
-            <input <?= $disabled;?> class="form-input-text" type="text" name="mainblock[cost]" id="cost" value="<?= $cost;?>" style="width: 70px;">
-
+            <input <?= $disabled;?> class="form-input-text" type="text" name="mainblock[cost]" id="cost" value="<?= $cost;?>">
 
             <?
             $cost_valuta = $this->getMainblockValue($model, 'cost_valuta');
@@ -568,9 +477,6 @@ $r_id = $this->getMainblockValue($model, 'r_id')
     </div>
 </div>
 
-
-
-
 <script type="text/javascript">
 
     $('#cost_nodisplay_check').click(function(){
@@ -578,14 +484,18 @@ $r_id = $this->getMainblockValue($model, 'r_id')
         if($(this).prop('checked'))
         {
             $('#cost_nodisplay_tag').val(1);
-            $('#cost').prop('disabled', true);
-            $('#cost_valuta').prop('disabled', true);
+            $('#cost').prop('readonly', true);
+            $('#cost').css('background-color', '#eee');
+            $('#cost_valuta').prop('readonly', true);
+            $('#cost_valuta').css('background-color', '#eee');
         }
         else
         {
             $('#cost_nodisplay_tag').val(0);
-            $('#cost').prop('disabled', false);
-            $('#cost_valuta').prop('disabled', false);
+            $('#cost').prop('readonly', false);
+            $('#cost').css('background-color', '#fff');
+            $('#cost_valuta').prop('readonly', false);
+            $('#cost_valuta').css('background-color', '#fff');
         }
     });
 
@@ -778,9 +688,9 @@ $r_id = $this->getMainblockValue($model, 'r_id')
 </script>
 
 
-<div id="status" style="clear: both; font-size: 16px; text-align: center; margin: 10px; margin-top: 50px; margin-bottom: 0px; color: #f00; padding-top: 10px;"></div>
+<div id="status"></div>
 
-<div class="form-row" style="text-align: center;">
+<div class="form-row" id="add_or_save">
     <?
     if($n_id <= 0)
     {
@@ -791,7 +701,7 @@ $r_id = $this->getMainblockValue($model, 'r_id')
         $button_text = "Сохранить";
     }
     ?>
-    <input type="submit" id="submitadvert" name="" value="<?= $button_text;?>" style="font-size: 20px; margin: 10px; background-color: #259c1d; color: #fff; border: #268017 solid 1px; padding-bottom: 2px; border-radius: 3px;">
+    <input type="submit" id="submitadvert" name="" value="<?= $button_text;?>">
 </div>
 
 </form>

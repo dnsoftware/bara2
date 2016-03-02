@@ -1662,6 +1662,17 @@ class AdvertController extends Controller
             return false;
         }
 
+        // Телефон должен соответствовать стране куда подается объявление
+        if(intval($_POST['mainblock']['client_phone_c_id']) != intval($_POST['mainblock']['c_id']) )
+        {
+            $return_array['status'] = 'error';
+            $return_array['message'] = 'Указанный телефон не соответствует стране подачи объявления!';
+            echo json_encode($return_array);
+
+            return false;
+        }
+
+
         $return_array = $this->CheckAndMakeNewData($mainblock_array, $addfield_array);
 
 
@@ -1855,11 +1866,22 @@ class AdvertController extends Controller
 
         $return_array = $this->CheckAndMakeNewData($mainblock_array, $addfield_array);
 
-        if(count($return_array['errors_props']) == 0 && count($return_array['errors']) == 0)
+        // Проверка владельца
+        if(Yii::app()->user->id != $oldadvert->u_id && !Yii::app()->user->isAdmin())
+        {
+            $return_array['other_errors'][] = 'Нарушение прав доступа!';
+        }
+
+        if(count($return_array['errors_props']) == 0
+            && count($return_array['errors']) == 0
+            && count($return_array['other_errors']) == 0 )
         {
             $newmodel = $this->MakeNoticeAttributes($mainblock_array);
-            $newmodel->u_id = Yii::app()->user->id;
 
+            if(!Yii::app()->user->isAdmin())
+            {
+                $newmodel->u_id = Yii::app()->user->id;
+            }
 
             /****************Блок для перевыставления после сохранения*****************/
             if($newmodel->date_expire < (time()+86400*2) )
@@ -1897,6 +1919,7 @@ class AdvertController extends Controller
 
             self::PropsXmlGenerate($newmodel->n_id);
 
+
             $return_array['status'] = 'ok';
             $return_array['message'] = 'Объявление отредактировано!';
 
@@ -1906,8 +1929,16 @@ class AdvertController extends Controller
         }
         else
         {
-            $return_array['status'] = 'error';
-            $return_array['message'] = 'Есть ошибки! Проверьте правильность заполнения полей';
+            if(count($return_array['other_errors']) == 0)
+            {
+                $return_array['status'] = 'error';
+                $return_array['message'] = 'Есть ошибки! Проверьте правильность заполнения полей';
+            }
+            else
+            {
+                $return_array['status'] = 'error';
+                $return_array['message'] = implode("<br>", $return_array['other_errors']);
+            }
             //$return_array['message'] = $_POST['mainblock']['n_id'];
 
             echo json_encode($return_array);
@@ -2332,6 +2363,7 @@ class AdvertController extends Controller
             $newmodel->verify_tag = 1;
             $newmodel->views_count = 0;
             $newmodel->moder_counted_tag = 0;
+            $newmodel->u_id = Yii::app()->user->id;
         }
         else
         {
@@ -2339,7 +2371,6 @@ class AdvertController extends Controller
         }
 
         $newmodel->attributes = $mainblock_array;
-
         $newmodel->date_lastedit = time();
         $expire_period = intval($mainblock_array['expire_period']);
         $newmodel->date_expire = $newmodel->date_add + $expire_period*86400;
@@ -2361,7 +2392,7 @@ class AdvertController extends Controller
         }
         else
         {
-            $newmodel->u_id = Yii::app()->user->id;
+            //$newmodel->u_id = Yii::app()->user->id;
         }
 
         return $newmodel;
@@ -2725,9 +2756,11 @@ Notice::KeywordsGenerate($advert->n_id);
             $subrubrik = Rubriks::model()->findByPk($advert->r_id);
             $rubrik = Rubriks::model()->findByPk($subrubrik->parent_id);
 
+//deb::dump($mainblock['title']);
             // Формирование заголовка в зависимости от шаблона в рубрике
         //deb::dump($this->addfield_data['props_data']);
-            if($subrubrik->title_advert_shablon != '' && $mainblock['old_base_tag'] == 0)
+            if( ($subrubrik->title_advert_shablon != '' && $mainblock['title'] == 0)
+                  || (trim($mainblock['title']) == '' && $mainblock['old_base_tag'] == 1) )
             {
                 $mainblock['title'] = self::MakeTitleByShablon($advert, $subrubrik->title_advert_shablon);
 
@@ -2842,6 +2875,52 @@ Notice::KeywordsGenerate($advert->n_id);
                     || Yii::app()->user->isAdmin()
             )
             {
+
+
+                Yii::app()->clientScript->registerMetaTag($mainblock['title'], null, null,
+                    array(
+                        "property"=>"og:title"
+                    )
+                ) ;
+                Yii::app()->clientScript->registerMetaTag($mainblock['notice_text'], null, null,
+                    array(
+                        "property"=>"og:description"
+                    )
+                ) ;
+                if(isset($this->uploadfiles_array[0]))
+                {
+                    $ogimage = $this->uploadfiles_array[0];
+                    $curr_dir = Notice::getPhotoDir($ogimage);
+                    $part_path = "/".Yii::app()->params['photodir']."/".$curr_dir."/";
+                    $ogimage_link = "http://".$_SERVER['HTTP_HOST'].Notice::getPhotoName($part_path.$ogimage, "_big");
+
+                    /*
+                    Yii::app()->clientScript->registerMetaTag(400, null, null,
+                        array(
+                            "property"=>"og:image:height"
+                        )
+                    ) ;
+                    */
+
+                }
+                else
+                {
+                    $ogimage_link = "http://".$_SERVER['HTTP_HOST']."/images/logo.png";
+                }
+                Yii::app()->clientScript->registerMetaTag($ogimage_link, null, null,
+                    array(
+                        "property"=>"og:image"
+                    )
+                ) ;
+
+
+                Yii::app()->clientScript->registerMetaTag("http://".$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'], null, null,
+                    array(
+                        "property"=>"og:url"
+                    )
+                ) ;
+
+
                 $this->render('viewadvert', array(
                     'mainblock'=>$mainblock,
                     'addfield'=>$addfield,
@@ -3482,7 +3561,7 @@ Notice::KeywordsGenerate($advert->n_id);
                     true);
 
                 $result = BaraholkaMailer::SendSmtpMail(Yii::app()->params['smtp1_connect_data'], array(
-                    'mailto'=>'ddaemon@mail.ru',//Yii::app()->params['adminEmail'],
+                    'mailto'=>Yii::app()->params['adminEmail'],
                     'nameto'=>'Админ',
                     'html_tag'=>true,
                     'subject'=>"Поступило сообщение от пользователя",

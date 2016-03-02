@@ -228,7 +228,16 @@ class UsercabController extends Controller
     {
         $n_id = intval($_GET['n_id']);
 //AdvertController::PropsXmlGenerate($n_id);
-        if($advert = Notice::checkAdvertOwner(Yii::app()->user->id, $n_id))
+        if(Yii::app()->user->isAdmin())
+        {
+            $advert = Notice::model()->findByPk($n_id);
+        }
+        else
+        {
+            $advert = Notice::checkAdvertOwner(Yii::app()->user->id, $n_id);
+        }
+
+        if($advert)
         {
             //deb::dump($advert);
 

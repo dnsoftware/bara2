@@ -1,56 +1,7 @@
-<style>
-    .bpaginator a
-    {
-        padding: 3px 7px 3px 7px;
-        text-decoration: none;
-        display: inline-block;
-        border: #ddd solid 1px;
-        border-left: none;
-        margin: 0;
-        color: #008CC3;
-        font-size: 16px;
-    }
-
-    .bpaginator a:hover
-    {
-        background-color: #ddd;
-    }
-
-    .bpaginator .bpactive
-    {
-        background-color: #ddd;
-    }
-
-    .bpaginator .bpaleft
-    {
-        border-left: #ddd solid 1px;
-    }
-
-    .bpaginator .bpdeactleft
-    {
-        padding: 3px 7px 3px 7px;
-        text-decoration: none;
-        display: inline-block;
-        border: #ddd solid 1px;
-        margin: 0;
-        color: #ddd;
-        font-size: 16px;
-    }
-
-    .bpaginator .bpdeactright
-    {
-        padding: 3px 7px 3px 7px;
-        text-decoration: none;
-        display: inline-block;
-        border: #ddd solid 1px;
-        border-left: none;
-        margin: 0;
-        color: #ddd;
-        font-size: 16px;
-    }
-
-
-</style>
+<?
+$urlasset = Yii::app()->assetManager->publish( Yii::getPathOfAlias('ext.bpaginator.css').'/bpaginator.css');
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.$urlasset);
+?>
 
 <?php
 

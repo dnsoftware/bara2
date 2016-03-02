@@ -36,7 +36,7 @@
                 </select>
             </td>
             <td style="width: 100%; border: #000020 solid 0px;">
-                <input style="width: 100%; border: 1px solid #A4A4A4; min-height: 14px; background-color: #fff;border-radius:2px;margin:0px; padding: 5px;" type="text" name="params[q]" placeholder="Поиск по объявлениям" value="<?= htmlspecialchars($_GET['params']['q']);?>">
+                <input style="width: 100%; border: 1px solid #A4A4A4; min-height: 14px; background-color: #fff;border-radius:2px;margin:0px; padding: 5px;" type="text" name="params[q]" id="searchquery" placeholder="Поиск по объявлениям" value="<?= htmlspecialchars($_GET['params']['q']);?>">
 
             </td>
 
@@ -285,6 +285,8 @@
         }
 
     }
+
+
 
 
 </script>

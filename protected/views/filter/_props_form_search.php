@@ -1,4 +1,10 @@
-<div style="padding: 0px; background-color: #ededed; padding: 5px;">
+<?
+// Стили данного отображения
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/filter/props_form_search.css');
+?>
+
+
+<div id="bpropsfsearch">
     <?
     $select_multi_placeholders = '';
 
@@ -8,7 +14,7 @@
     }
 
     ?>
-    <div id="search_mainblock" style="background-color: #ededed; ">
+    <div id="search_mainblock">
     <?
     $view_block_id = 'main';
     foreach($rubriks_props_array as $rkey=>$rval)
@@ -27,13 +33,13 @@
                 $display_extended = 'block';
             }
             ?>
-            <div style="text-align: right; background-color: #ddd; padding: 5px; margin-top: 5px; ">
+            <div id="bextended">
                 <input type="hidden" name="extended_search_tag" id="extended_search_tag" value="<?= $extended_search_tag;?>" >
 
                 <input type="button" id="extended_button" value="Расширенный поиск">
             </div>
 
-            <div id="search_extend" style="display: <?= $display_extended;?>; margin-top: 10px;">
+            <div id="search_extend" style="display: <?= $display_extended;?>;">
 
             <?
         }
@@ -101,12 +107,11 @@
                 if($rval->vibor_type == 'string')
                 {
                 ?>
-
-                    <div style="display: inline-block; margin-top: -10px;">
+                    <div class="prop-search-string">
                     <nobr>
-                    <input title="<?= $rval['name'];?>, от" placeholder="<?= $rval['name'];?>, от" type="text" name="addfield[<?= $rval['selector'];?>][from]" style="width: 207px; border: 1px solid #A4A4A4; min-height: 14px; background-color: #fff;border-radius:2px;margin:0px; padding: 2px; padding-left: 7px;" value="<?= $_GET['addfield'][$rval['selector']]['from'];?>">
+                    <input class="pss-from" title="<?= $rval['name'];?>, от" placeholder="<?= $rval['name'];?>, от" type="text" name="addfield[<?= $rval['selector'];?>][from]" value="<?= $_GET['addfield'][$rval['selector']]['from'];?>">
 
-                    <input title="<?= $rval['name'];?>, до" placeholder="до" type="text" name="addfield[<?= $rval['selector'];?>][to]" style="width: 207px; border: 1px solid #A4A4A4; min-height: 14px; background-color: #fff;border-radius:2px;margin:0px; padding: 2px; padding-left: 7px;" value="<?= $_GET['addfield'][$rval['selector']]['to'];?>">
+                    <input class="pss-to" title="<?= $rval['name'];?>, до" placeholder="до" type="text" name="addfield[<?= $rval['selector'];?>][to]" value="<?= $_GET['addfield'][$rval['selector']]['to'];?>">
                     </nobr>
                     </div>
                 <?
@@ -468,7 +473,7 @@ deb::dump($to);
                 //deb::dump($props);
                 ?>
                 <br>
-                <div style=" display:inline-block ; border: #ddd solid 0px; padding: 5px; ">
+                <div class="prop-checkbox-list">
                 <b><?= $rval['name'];?></b><br>
                 <?
                 foreach($props as $hkey=>$hval)

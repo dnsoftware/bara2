@@ -4,6 +4,8 @@ Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/sum
 
 Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/filtercontroller.js');
 Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/baraholka.js');
+
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/notice/viewnotice.css');
 ?>
 
 <?
@@ -15,7 +17,7 @@ $this->renderPartial('/filter/_search_form', array(
 ?>
 
 
-<div style="text-align: center; padding-left: 0px; margin-top: 10px; height: 120px; width: 1050px;">
+<div id="horiz_banner">
 <?
 $banner_operator = Yii::app()->params['banners_raspred'][0];
 include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizont.php");
@@ -23,7 +25,7 @@ include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizo
 </div>
 
 
-<div style="margin: 10px 0px 10px 0px">
+<div id="noticebreadcrumb">
     <?
     //deb::dump($breadcrumbs);
     $url_parts = array();

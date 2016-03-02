@@ -11,97 +11,16 @@ Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/js/noui
 Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/nouislider/nouislider.min.js');
 Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/wNumb.js');
 
+// Стили данного отображения
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/filter/index.css');
+
+Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/filter/index.js', CClientScript::POS_END);
+
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/filter/listitemshablons.css');
+
 ?>
 
-<div id="form_search" style="margin-bottom: 15px; ">
-
-
-
-
-<div style="margin: 5px;">
-
-    <!--
-    <div id="pips-values"></div>
-    <br><br><br><br>
-    <div id="pips-values-stepped"></div>
-    <br><br><br><br>
-    <div id="baraslide"></div>
-    <div id="slider-limit-value-min">1</div>
-    <div id="slider-limit-value-max">2</div>
-    -->
-
-<script>
-    /*
-    var range_all_sliders = {
-        'min': [     0 ],
-        '10%': [   500,  500 ],
-        '50%': [  4000, 1000 ],
-        'max': [ 10000 ]
-    };
-
-    var range_baraslide = {
-        'min': [ 0 ],
-        'max': [ 5 ]
-    };
-
-    var pipsValues = document.getElementById('pips-values');
-
-    noUiSlider.create(pipsValues, {
-        range: range_all_sliders,
-        start: 0,
-        pips: {
-            mode: 'values',
-            values: [50, 552, 2251, 3200, 5000, 7080, 9000],
-            density: 4
-        }
-    });
-
-    var pipsValuesStepped = document.getElementById('pips-values-stepped');
-    noUiSlider.create(pipsValuesStepped, {
-        range: range_all_sliders,
-        start: 0,
-        pips: {
-            mode: 'values',
-            values: [50, 552, 4651, 4952, 5000, 7080, 9000],
-            density: 4,
-            stepped: true
-        }
-    });
-
-    var tooltipSlider = document.getElementById('baraslide');
-
-    noUiSlider.create(tooltipSlider, {
-        start: [20, 80],
-        behaviour: 'drag',
-        connect: true,
-        tooltips: [ wNumb({ decimals: 1 }), wNumb({ decimals: 1 }) ],
-        range: {
-            'min': 0,
-            'max': 100
-        }
-    });
-
-    var limitFieldMin = document.getElementById('slider-limit-value-min');
-    var limitFieldMax = document.getElementById('slider-limit-value-max');
-
-    tooltipSlider.noUiSlider.on('update', function( values, handle ){
-//        console.log(wNumb({ decimals: 1 }));
-        //val = Number(values[handle]);
-        (handle ? limitFieldMax : limitFieldMin).innerHTML = Number(values[handle]).toFixed(1);
-    });
-    */
-
-</script>
-
-</div>
-
-
-
-<?
-//deb::dump($query_delta);
-?>
-
-
+<div id="form_search">
 <?
 
 $this->renderPartial('/filter/_search_form', array(
@@ -115,70 +34,70 @@ $this->renderPartial('/filter/_search_form', array(
 ));
 
 ?>
-<div style="margin: 5px; 0px 5px 0px">
-    <?
-    $url_parts = array();
-    $url = '';
-    $url_part_groups = array();
-    $bread_count = count($this->breadcrumbs);
-    $i=0;
-    foreach ($this->breadcrumbs as $bkey=>$bval)
-    {
-        $i++;
-        if($bval['type']=='subrubrik')
+    <div id="breadcrumbs">
+        <?
+        $url_parts = array();
+        $url = '';
+        $url_part_groups = array();
+        $bread_count = count($this->breadcrumbs);
+        $i=0;
+        foreach ($this->breadcrumbs as $bkey=>$bval)
         {
-            $url_parts[$bkey-1] = $bval['transname'];
-            $url_part_groups[$bkey-1] = $bval;
+            $i++;
+            if($bval['type']=='subrubrik')
+            {
+                $url_parts[$bkey-1] = $bval['transname'];
+                $url_part_groups[$bkey-1] = $bval;
+            }
+            else
+            {
+                $url_parts[$bkey] = $bval['transname'];
+                $url_part_groups[$bkey] = $bval;
+            }
+            $url = implode("/", $url_parts);;
+            if($url == 'all')
+            {
+                $url = '';
+            }
+            ?>
+            <a  class="baralink" href="/<?= $url;?>"><?= $bval['name'];?></a>
+            <?
+            if($i != $bread_count)
+            {
+                echo "<span class='baralink'> > </span>";
+            }
         }
-        else
+
+        if($bread_count == 0)
         {
-            $url_parts[$bkey] = $bval['transname'];
-            $url_part_groups[$bkey] = $bval;
+            $url_parts[1] = 'all';
         }
-        $url = implode("/", $url_parts);;
-        if($url == 'all')
+
+        $url_group = $url;
+
+        if($url_part_groups[count($url_part_groups)]['type'] == 'rubrik')
         {
-            $url = '';
+            unset($url_part_groups[count($url_part_groups)]);
+        }
+
+        $url_part_groups_array = array();
+        if(isset($url_part_groups) && count($url_part_groups) > 0)
+        {
+            foreach($url_part_groups as $ukey=>$uval)
+            {
+                $url_part_groups_array[] = $uval['transname'];
+            }
+            $url_group = implode("/", $url_part_groups_array);
         }
         ?>
-        <a  class="baralink" href="/<?= $url;?>"><?= $bval['name'];?></a>
+    </div>
+
+    <div id="topban">
         <?
-        if($i != $bread_count)
-        {
-            echo "<span class='baralink'> > </span>";
-        }
-    }
-
-    if($bread_count == 0)
-    {
-        $url_parts[1] = 'all';
-    }
-
-    $url_group = $url;
-
-    if($url_part_groups[count($url_part_groups)]['type'] == 'rubrik')
-    {
-        unset($url_part_groups[count($url_part_groups)]);
-    }
-
-    $url_part_groups_array = array();
-    if(isset($url_part_groups) && count($url_part_groups) > 0)
-    {
-        foreach($url_part_groups as $ukey=>$uval)
-        {
-            $url_part_groups_array[] = $uval['transname'];
-        }
-        $url_group = implode("/", $url_part_groups_array);
-    }
-    ?>
-</div>
-
-<div style="text-align: center; padding-left: 0px; border: #000099 solid 0px;">
-    <?
-    $banner_operator = Yii::app()->params['banners_raspred'][0];
-    include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizont.php");
-    ?>
-</div>
+        $banner_operator = Yii::app()->params['banners_raspred'][0];
+        include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/top_horizont.php");
+        ?>
+    </div>
 
 
     <div id="search_data">
@@ -188,12 +107,22 @@ $this->renderPartial('/filter/_search_form', array(
 
 </div>
 
+<?
+if($h1_text != '')
+{
+?>
+    <h1><?= $h1_text;?></h1>
+<?
+}
+?>
+
+
 
 <?
 if($display_titul_tag == 0)
 {
 ?>
-<div style="margin-bottom: 15px; text-align: left;">
+<div id="subcats">
 <?
 if(count($rubrik_groups) > 0)
 {
@@ -213,7 +142,7 @@ if(count($rubrik_groups) > 0)
         }
         $href = $allreg_prefix.Yii::app()->createUrl($url_group."/".$rval['transname']/*$rval['path']*/);
         ?>
-        <a style="margin-right: 0px;" class="baralink_plus" href="<?= $href;?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span>
+        <nobr><a class="cat_count" href="<?= $href;?>"><?= $rval['name'];?></a> <span class="notcount" ><?= $rval['cnt'];?></span></nobr>
     <?
     }
 }
@@ -236,8 +165,41 @@ if($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/index.php' )
 
 <table style="" cellpadding="0" cellspacing="0" >
 <tr>
-    <td style="vertical-align: top;  border: #000020 solid 0px; width: 720px; padding: 0;">
-        <table style="">
+    <td id="noticelist">
+
+        <?
+        if(count($search_adverts) > 1)
+        {
+        ?>
+        <div id="bfiltersort">
+            <select id="filtersort">
+                <?
+                foreach(Notice::$sort_codes as $key=>$val)
+                {
+                    $selected = " ";
+                    if($_GET['params']['s'] == $key )
+                    {
+                        $selected = " selected ";
+                    }
+
+
+                    if($key == 'rl' && trim($_GET['params']['q'] == ''))
+                    {
+                        continue;
+                    }
+
+                    ?>
+                    <option value="<?= $key;?>" <?= $selected;?>><?= $val;?></option>
+                <?
+                }
+                ?>
+            </select>
+        </div>
+        <?
+        }
+        ?>
+
+        <table >
         <?
         $k=0;
         foreach($search_adverts as $key=>$val)
@@ -254,15 +216,15 @@ if($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/index.php' )
             }
 
         ?>
-        <tr style="" class="<?= $hidetype;?>">
-            <td style="padding: 0 10px 0 0; margin: 0; width: 140px; height: 105px; vertical-align: middle; text-align: center; border: #000 solid 0px;">
+        <tr class="<?= $hidetype;?>">
+            <td class="itemphoto">
             <?
             if(count($props_array[$key]['photos']) > 0)
             {
                 $transliter = new Supporter();
                 $advert_page_url = "/".$val['town_transname']."/".$rubriks_all_array[$val['r_id']]->transname."/".$transliter->TranslitForUrl($val['title'])."_".$val['daynumber_id'];
             ?>
-                <div style="position: relative;">
+                <div class="bphoto">
                     <?
                     $photoname = Notice::getPhotoName($props_array[$key]['photos'][0], "_medium");
                     $curr_dir = Notice::getPhotoDir($photoname);
@@ -282,11 +244,9 @@ if($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/index.php' )
             }
             ?>
             </td>
-            <td style="vertical-align: top; padding: 0; margin: 0; padding-left: 10px;">
+            <td class="itemdata">
             <?= $props_array[$key]['props_display'];?>
             </td>
-
-
         </tr>
 
         <?
@@ -343,9 +303,9 @@ if($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/index.php' )
 
 
     </td>
-    <td style="vertical-align: top; height: 1000px;  border: #000020 solid 0px; width: 300px; padding: 0">
+    <td id="cell_titultext">
 
-        <div style="margin-bottom: 30px;">
+
         <?
         if($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/index.php')
         {
@@ -354,10 +314,10 @@ if($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/index.php' )
             ));
         }
         ?>
-        </div>
+
 
         <aside>
-            <div style="width: 300px; height: 600px; border: #000020 solid 0px;">
+            <div id="aside_div">
             <?
             $banner_operator = Yii::app()->params['banners_raspred'][1];
             include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/right_300.php");
@@ -372,95 +332,23 @@ if($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/index.php' )
 <?
 if($hidetype == 'titulhide')
 {
-    ?>
-    <span id="razvorot" style="width: 100%; border-bottom: #ddd solid 1px; display: inline-block; margin-bottom: 30px; text-align: center;">
-            <span style="display: inline-block; background-color: #fff; font-size: 16px; margin-bottom: -10px; padding-left: 10px; padding-right: 10px;">
-                <span id="display_otheradverts" style="border-bottom: dashed 1px; cursor: pointer;">Показать еще</span>
-            </span>
+?>
+<span id="razvorot">
+    <span>
+       <span id="display_otheradverts">Показать еще</span>
     </span>
-
+</span>
 <?
 }
 ?>
 
-
-<?
-
-//deb::dump($search_adverts);
-//deb::dump($rubrik_groups);
-
-?>
-<style>
-    .prilip {
-        position: fixed;
-        z-index: 101;
-    }
-    .stop {
-        position: relative;
-    }
-</style>
-
 <script>
-    // document.documentElement.scrollHeight - высота веб-документа;
-    // aside.offsetHeight - высота элемента
-    var aside = document.querySelector('aside'),
-        t0 = aside.getBoundingClientRect().top - document.documentElement.getBoundingClientRect().top,
-        t1 = document.documentElement.scrollHeight - 0 - aside.offsetHeight;
 
-    function asideScroll() {
-        if (window.pageYOffset > t1) {
-            aside.className = 'stop';
-            aside.style.top = t1 - t0 + 'px';
-        } else {
-            aside.className = (t0 < window.pageYOffset ? 'prilip' : '');
-            aside.style.top = '0';
-        }
-    }
-    window.addEventListener('scroll', asideScroll, false);
-</script>
 
-<script>
-    $('.favorit_button, .favoritstar').click(function(){
-        fbut = $(this);
-
-        $.ajax({
-            url: "<?= Yii::app()->createUrl('/advert/addtofavorit');?>",
-            method: "post",
-            dataType: 'json',
-            data:{
-                n_id: fbut.attr('advert_id')
-            },
-            // обработка успешного выполнения запроса
-            success: function(data){
-                $('#favorit_count').html(data['count']);
-                if(data['status'] == 'add')
-                {
-                    //fbut.html('В избранном');
-                    fbut.css('background-image', 'url("/images/favorit_yellow.png")');
-                }
-                else
-                {
-                    //fbut.html('В избранное');
-                    fbut.css('background-image', 'url("/images/favorit.png")');
-                }
-
-            }
-        });
-
-    });
-
-    $('#display_otheradverts').click(function(){
-        if($('.titulhide').css('display') == 'none')
-        {
-            $('.titulhide').css('display', 'table-row');
-            $('#paginator').css('display', 'block');
-            $(this).html('Свернуть');
-        }
-        else
-        {
-            $('.titulhide').css('display', 'none');
-            $(this).html('Развернуть');
-        }
+    $(document).ready(function()
+    {
+        filter_index_init('<?= Yii::app()->createUrl('/advert/addtofavorit');?>',
+                          '<?= Yii::app()->createUrl('/filter/setsortmode');?>');
     });
 
 

@@ -1,0 +1,90 @@
+#current_geoname
+{
+    text-decoration: none; cursor: pointer; color: #008cc3;
+}
+
+#div_current_geoname
+{
+    font-size: 12px;
+}
+
+#geo_region_name
+{
+    width: 335px;
+}
+
+#div_reg_confirm
+{
+    position: absolute;
+    width: 330px;
+    margin-left: 100px;
+    margin-top: 0px;
+    z-index: 1;
+    background-color: #f00;
+    color: #fff;
+    padding: 8px;
+    text-align: center;
+    border-radius: 5px;
+}
+
+.reg_confirm_close
+{
+    float: right;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: -8px;
+    margin-right: -4px;
+    clear: both;
+}
+
+#opr_or_no
+{
+    font-size: 12px;
+}
+
+#vibor_reg
+{
+    margin-bottom: 5px;
+}
+
+#vibor_reg_inner
+{
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#vibor_reg_regname
+{
+    font-weight: bold;
+    font-style: italic;
+}
+
+#reg_confirm_yes
+{
+    cursor: pointer;
+    border-bottom: #fff solid 1px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+
+#reg_confirm_no
+{
+    margin-left: 30px;
+    cursor: pointer;
+    border-bottom: #fff solid 1px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+#your_reg_noopr
+{
+    margin-bottom: 5px;
+}
+
+.ui-autocomplete
+{
+    max-height: 400px; overflow-y: auto; overflow-x: visible;
+    font-size: 12px;
+}

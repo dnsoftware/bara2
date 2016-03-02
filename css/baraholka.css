@@ -1,10 +1,3 @@
-h3
-{
-    font-size: 12px;
-    font-weight: bold;
-}
-
-
 .regselect_arrow
 {
     background: transparent url("/images/arrdown.gif") no-repeat scroll 0px 0px;
@@ -58,13 +51,6 @@ a.hoverunderline
 a:hover.hoverunderline
 {
     text-decoration: underline;
-}
-
-.notcount
-{
-    color: #aaaaaa;
-    font-size: 13px;
-    margin-right: 10px;
 }
 
 .f11
@@ -142,7 +128,11 @@ tr.trbotline td
 
 .favoritstar
 {
-
+    background-position: left center;
+    background-repeat: no-repeat;
+    padding-left: 17px;
+    margin-left: 0;
+    text-decoration: none;
 }
 
 .colphoto
@@ -389,16 +379,6 @@ ul#menu_goriz ul li.iehover ul {
     text-align: left;
 }
 
-.titultext
-{
-    list-style-type: none;
-}
-
-.titulhide
-{
-    display: none;
-}
-
 .smap
 {
     font-size: 11px; color: #aaa;
@@ -412,6 +392,7 @@ ul#menu_goriz ul li.iehover ul {
     height: 150px;
 
 }
+
 .titulrub:hover
 {
     border: #008cc3 solid 1px;

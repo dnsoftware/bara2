@@ -1,4 +1,7 @@
 <?
+Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/main.js', CClientScript::POS_END);
+
+
 header("Content-type: text/html; charset=utf-8");
 ?>
 <?php /* @var $this Controller */ ?>
@@ -73,12 +76,13 @@ header("Content-type: text/html; charset=utf-8");
     Уважаемые посетители! Наш сайт переезжает на новое программное обеспечение. <br>
     В связи с этим в работе сайта могут возникнуть ошибки или неточности. Просьба сообщать нам о них
     <span id="user_message" style="border-bottom: #fff solid 1px; cursor: pointer;">здесь</span></div>
+<?
 /**/
 ?>
 
-<div class="container" id="page" style="border: #000020 solid 0px;">
+<div class="container" id="page">
 	<div id="header">
-        <table cellpadding="0" cellspacing="0" style="margin: 0px; padding: 0px; width: 100%;">
+        <table id="tbl-geolocator" cellpadding="0" cellspacing="0">
 		<tr>
             <td>
             <div id="logo">
@@ -90,17 +94,17 @@ header("Content-type: text/html; charset=utf-8");
                     $main_url = '/';
                 }
                 ?>
-                <a href="<?= $main_url;?>"><img src="/images/logo.png" style="border: #000 solid 0px; margin-top: 7px;"></a>
+                <a href="<?= $main_url;?>"><img alt="Доска бесплатных объявлений от частных лиц - www.baraholka.ru" src="/images/logo.png"></a>
             </div>
             </td>
-            <td style="border: #111 solid 0px; text-align: right; vertical-align: top; margin-top: 0px">
+            <td id="td-topmenu">
 
-            <div style="margin-bottom: 5px; margin-top: 2px; ">
-                <span style="background: url('/images/lastvisit.png'); background-position: left center; background-repeat: no-repeat; padding-left: 23px;">
-                <a href="<?= Yii::app()->createUrl('/user/lastvisit');?>" class="baralink" style="margin-right: 20px;">Недавнее: <span id="lastvisit_count"><?= Notice::GetLastvisitCount();?></span></a></span>
+            <div id="div-topmenu">
+                <span id="span-lastvisit">
+                <a id="a-lastvisit" href="<?= Yii::app()->createUrl('/user/lastvisit');?>" class="baralink" >Недавнее: <span id="lastvisit_count"><?= Notice::GetLastvisitCount();?></span></a></span>
 
-                <span style="background: url('/images/favorit.png'); background-position: left center; background-repeat: no-repeat; padding-left: 18px;">
-                <a href="<?= Yii::app()->createUrl('/user/favorit');?>" class="baralink" style="margin-right: 20px;">Избранное: <span id="favorit_count"><?= Notice::GetFavoritCount();?></span></a></span>
+                <span id="span-favorit">
+                <a id="a-favorit" href="<?= Yii::app()->createUrl('/user/favorit');?>" class="baralink" >Избранное: <span id="favorit_count"><?= Notice::GetFavoritCount();?></span></a></span>
 
                 <?
                 $usernotcount = Notice::GetUserCountAllAdverts(Yii::app()->user->id);
@@ -109,8 +113,8 @@ header("Content-type: text/html; charset=utf-8");
                 if(isset(Yii::app()->user->id) && Yii::app()->user->id > 0)
                 {
                     ?>
-                    <span style="background: url('/images/alladvert-black.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px; border: #000 solid 0px; ">
-                <a href="<?= Yii::app()->createUrl('/usercab/adverts');?>" class="baralink" style="margin-right: 20px; ">Мои объявления: <span id="useradverts_count"><?= $usernotcount;?></span></a></span>
+                    <span id="span-uadvertscount">
+                <a id="a-uadvertscount" href="<?= Yii::app()->createUrl('/usercab/adverts');?>" class="baralink">Мои объявления: <span id="useradverts_count"><?= $usernotcount;?></span></a></span>
                 <?
                 }
                 ?>
@@ -119,7 +123,7 @@ header("Content-type: text/html; charset=utf-8");
             if(Yii::app()->user->isGuest)
             {
             ?>
-                <span style="background: url('/images/loginicon.png'); background-position: left center; background-repeat: no-repeat; padding-left: 20px;"><a class="baralink" href="<?= Yii::app()->createUrl('/user/login');?>" class="baralink">Вход или регистрация</a></span>
+                <span id="span-login"><a class="baralink" href="<?= Yii::app()->createUrl('/user/login');?>" class="baralink">Вход или регистрация</a></span>
             <?
             }
             else
@@ -163,12 +167,8 @@ header("Content-type: text/html; charset=utf-8");
             <br style="height: 1px;">
 
 
-            <div style="float: right; border: #000099 solid 0px;">
-            <a href="/advert/addadvert" style="display: inline-block; padding: 9px 18px; margin-top: -3px; color: #fff; text-decoration: none; background-color: #0D9D0D; font-size: 15px;
--moz-border-radius: 3px;
--webkit-border-radius: 3px;
--khtml-border-radius: 3px;
-border-radius: 3px;">
+            <div id="div-addadvbutton">
+            <a id="a-addadvbutton" href="/advert/addadvert">
                 Добавить объявление
             </a>
             </div>
@@ -191,7 +191,7 @@ border-radius: 3px;">
         && Yii::app()->controller->action->id != 'addpreview')
     {
     ?>
-    <div style="text-align: center; padding-left: 0; margin-top: 10px; height: 120px; width: 1050px; border: #000099 solid 0px;">
+    <div id="banner-block-footer">
         <?
         $banner_operator = Yii::app()->params['banners_raspred'][2];
         include(Yii::getPathOfAlias('webroot')."/banners/".$banner_operator."/bottom_horizont.php");
@@ -204,7 +204,11 @@ border-radius: 3px;">
 
     <div id="footer" style="">
 
-        <a href="/map">карта сайта</a>
+        <div id="div-footer-menu">
+        <a href="/map" class="baralink">Карта сайта</a>
+
+        <span id="user_message"><a class="baralink" style="">Обратная связь</a></span>
+        </div>
 
         <div style="float: right;">
         <!--LiveInternet counter--><script type="text/javascript"><!--
@@ -238,14 +242,8 @@ border-radius: 3px;">
 
 
 
-
-
-
-
-
-
-<div class="form" id="modal_usermessage" style="border: #999 solid 1px; width: 360px; padding: 20px; z-index: 12;">
-    <div id="modal_usermessage_close" style="z-index: 13;">X</div>
+<div class="form" id="modal_usermessage">
+    <div id="modal_usermessage_close">X</div>
 
     <div id="modal_usermessage_content">
 
@@ -257,91 +255,13 @@ border-radius: 3px;">
 <div id="modal_usermessage_overlay"></div>
 
 <script>
+
     $(document).ready(function()
     {
-        $('#user_message').click( function(event){
-            item = $(this);
-            event.preventDefault(); // выключaем стaндaртную рoль элементa
-            $('#modal_usermessage_overlay').fadeIn(400, // снaчaлa плaвнo пoкaзывaем темную пoдлoжку
-                function(){
-
-                    $.ajax({
-                        url: "<?= Yii::app()->createUrl('/advert/getusermessageform');?>",
-                        method: "post",
-                        data:{},
-                        // обработка успешного выполнения запроса
-                        success: function(data){
-                            $('#modal_usermessage_content').html(data);
-                        }
-                    });
-
-                    $('#abuse_window').css('display', 'none');
-
-                    $('#modal_usermessage')
-                        .css('display', 'block') // убирaем у мoдaльнoгo oкнa display: none;
-                        .animate({opacity: 1, top: '50%'}, 200); // плaвнo прибaвляем прoзрaчнoсть oднoвременнo сo съезжaнием вниз
-
-                });
-        });
-
-        /* Зaкрытие мoдaльнoгo oкнa, тут делaем тo же сaмoе нo в oбрaтнoм пoрядке */
-        $('#modal_usermessage_close, #modal_usermessage_overlay').click( function(){ // лoвим клик пo крестику или пoдлoжке
-            $('#modal_usermessage')
-                .animate({opacity: 0, top: '45%'}, 200,  // плaвнo меняем прoзрaчнoсть нa 0 и oднoвременнo двигaем oкнo вверх
-                function(){ // пoсле aнимaции
-                    $(this).css('display', 'none'); // делaем ему display: none;
-                    $('#modal_usermessage_overlay').fadeOut(400); // скрывaем пoдлoжку
-                }
-            );
-        });
-
+        user_message_init('<?= Yii::app()->createUrl('/advert/getusermessageform');?>');
     });
 
 </script>
-
-<style>
-    #modal_usermessage {
-        width: 300px;
-        height: 400px; /* Рaзмеры дoлжны быть фиксирoвaны */
-        border-radius: 5px;
-        border: 3px #000 solid;
-        background: #fff;
-        position: fixed; /* чтoбы oкнo былo в видимoй зoне в любoм месте */
-        top: 45%; /* oтступaем сверху 45%, oстaльные 5% пoдвинет скрипт */
-        left: 50%; /* пoлoвинa экрaнa слевa */
-        margin-top: -150px;
-        margin-left: -150px; /* тут вся мaгия центрoвки css, oтступaем влевo и вверх минус пoлoвину ширины и высoты сooтветственнo =) */
-        display: none; /* в oбычнoм сoстoянии oкнa не дoлжнo быть */
-        opacity: 0; /* пoлнoстью прoзрaчнo для aнимирoвaния */
-        z-index: 5; /* oкнo дoлжнo быть нaибoлее бoльшем слoе */
-        padding: 20px 10px;
-    }
-
-    #modal_usermessage_close, #modal_share_close {
-        width: 21px;
-        height: 21px;
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        cursor: pointer;
-        display: block;
-    }
-
-    /* Пoдлoжкa */
-    #modal_usermessage_overlay, #modal_share_overlay {
-        z-index: 11; /* пoдлoжкa дoлжнa быть выше слoев элементoв сaйтa, нo ниже слoя мoдaльнoгo oкнa */
-        position: fixed; /* всегдa перекрывaет весь сaйт */
-        background-color: #000; /* чернaя */
-        opacity: 0.8; /* нo немнoгo прoзрaчнa */
-        width: 100%;
-        height: 100%; /* рaзмерoм вo весь экрaн */
-        top: 0;
-        left: 0; /* сверху и слевa 0, oбязaтельные свoйствa! */
-        cursor: pointer;
-        display: none; /* в oбычнoм сoстoянии её нет) */
-    }
-</style>
-
 
 
 <?

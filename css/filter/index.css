@@ -1,0 +1,157 @@
+/***** index ****/
+
+#form_search
+{
+    margin: 5px 0 15px 0;
+}
+
+#breadcrumbs
+{
+    margin: 5px 0 5px 5px;
+}
+
+#topban
+{
+    text-align: center;
+    padding-left: 0;
+    border: #000099 solid 0;
+}
+
+#subcats
+{
+    margin-bottom: 15px; text-align: left;
+}
+
+.cat_count
+{
+    color: #008cc3;
+    text-decoration: none;
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+.notcount
+{
+    color: #aaaaaa;
+    font-size: 14px;
+    margin-right: 15px;
+}
+
+#noticelist
+{
+    vertical-align: top;
+    border: #000020 solid 0px;
+    width: 720px; padding: 0;
+}
+
+#bfiltersort
+{
+    width: 100%;
+    margin-bottom: 15px;
+    text-align: right;
+}
+
+#filtersort
+{
+    margin-right: 10px;
+}
+
+.itemphoto
+{
+    padding: 0 10px 0 0;
+    margin: 0;
+    width: 140px;
+    height: 105px;
+    vertical-align: middle;
+    text-align: center;
+    border: #000 solid 0px;
+}
+
+.bphoto
+{
+    position: relative;
+}
+
+.itemdata
+{
+    vertical-align: top;
+    padding: 0;
+    margin: 0;
+    padding-left: 10px;
+}
+
+
+.titultext
+{
+    list-style-type: none;
+}
+
+.titulhide
+{
+    display: none;
+}
+
+.prilip
+{
+    position: fixed;
+    z-index: 101;
+}
+
+.stop
+{
+    position: relative;
+}
+
+#razvorot
+{
+    width: 100%;
+    border-bottom: #ddd solid 1px;
+    display: inline-block;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+#razvorot > span
+{
+    display: inline-block;
+    background-color: #fff;
+    font-size: 16px;
+    margin-bottom: -10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+#display_otheradverts
+{
+    border-bottom: dashed 1px; cursor: pointer;
+}
+
+#aside_div
+{
+    width: 300px;
+    height: 600px;
+    border: #000020 solid 0;
+}
+
+#cell_titultext
+{
+    vertical-align: top;
+    height: 1000px;
+    border: #000020 solid 0;
+    width: 300px;
+    padding: 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

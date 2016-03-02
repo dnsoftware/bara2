@@ -1,13 +1,5 @@
 <?
 
-/*
-public $n_id;
-public $class;
-public $type;
-public $message;
-public $verifyCode;
-*/
-
 
 ?>
 

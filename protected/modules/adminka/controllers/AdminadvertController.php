@@ -358,22 +358,26 @@ class AdminadvertController extends Controller
 
                 // Полный запрос
                 $rubrik_prop_sql = str_replace("r_id", "n.r_id", $rubrik_sql);
-                $sql_full = "SELECT DISTINCT n.*, t.name town_name, t.transname town_transname
+                $sql_full = "SELECT DISTINCT n.n_id
                         FROM ". $connection->tablePrefix . "notice n,
                         ".$from_tables_sql.",
-                        ". $connection->tablePrefix . "towns t
+                        ". $connection->tablePrefix . "towns t,
+                        ". $connection->tablePrefix . "users u
                         WHERE 1 AND $expire_sql
                         $mesto_sql $old_rubrik_sql AND $rubrik_prop_sql AND
                         $where_filter_sql
                         ".$where_n.$q_sql.$daynumber_sql.$user_email_sql."
                         AND n1.n_id = n.n_id
                         AND n.t_id = t.t_id
-                        ORDER BY n.date_add DESC
-                        LIMIT 0, 2000";    // патч по количеству, иначе вылетает изза нехватки памяти
+                        AND n.u_id = u.id
+                        ORDER BY n.date_add DESC " ;
+
+
 
 //deb::dump($sql_full);
 
-                $command = $connection->createCommand($sql_full);
+                $command = $connection->createCommand($sql_full . " LIMIT 0, 2000 "); // патч по количеству, иначе вылетает изза нехватки памяти
+
                 if(isset($_GET['params']['q']) && strlen($_GET['params']['q']) > 0)
                 {
                     $substr = "%".$_GET['params']['q']."%";
@@ -390,7 +394,23 @@ class AdminadvertController extends Controller
                 }
                 $start = ($page - 1)*$col_on_page;
                 $stop = $col_on_page;
-                $sql = $sql_full . " LIMIT $start, $stop";
+
+                $sql = "SELECT DISTINCT n.*, t.name town_name, t.transname town_transname,
+                             u.email useremail
+                        FROM ". $connection->tablePrefix . "notice n,
+                        ".$from_tables_sql.",
+                        ". $connection->tablePrefix . "towns t,
+                        ". $connection->tablePrefix . "users u
+                        WHERE 1 AND $expire_sql
+                        $mesto_sql $old_rubrik_sql AND $rubrik_prop_sql AND
+                        $where_filter_sql
+                        ".$where_n.$q_sql.$daynumber_sql.$user_email_sql."
+                        AND n1.n_id = n.n_id
+                        AND n.t_id = t.t_id
+                        AND n.u_id = u.id
+                        ORDER BY n.date_add DESC
+                        LIMIT $start, $stop";
+
 //deb::dump($col_pages);
                 $start_time = microtime();
 
@@ -418,6 +438,9 @@ class AdminadvertController extends Controller
             {
 
             }
+
+            $rubriks = Rubriks::get_simple_rublist();
+
 
         }
         // Если поиск только по местоположению/рубрике - простой запрос
@@ -447,9 +470,9 @@ class AdminadvertController extends Controller
                 $page = 1;
             }
             $start = ($page - 1)*$col_on_page;
-            $adverts = Notice::model()->with('town')->findAll(
+            $adverts = Notice::model()->with('town')->with('user')->findAll(
                 array(
-                    'select'=>'*, town.name as town_name, town.transname as town_transname',
+                    'select'=>'*, town.name as town_name, town.transname as town_transname, user.email as user_email',
                     'condition'=>' 1 AND '.$expire_sql.
                         $mesto_rub_sql." $old_rubrik_sql AND   ".$rubrik_sql.$q_sql.$daynumber_sql.$user_email_sql,
                     'order'=>'t.date_add DESC',
@@ -463,10 +486,10 @@ class AdminadvertController extends Controller
 
             foreach ($adverts as $akey=>$aval)
             {
-                //deb::dump($aval);
                 $search_adverts[$aval->n_id] = $aval->attributes;
                 $search_adverts[$aval->n_id]['town_name'] = $aval->town['name'];
                 $search_adverts[$aval->n_id]['town_transname'] = $aval->town['transname'];
+                $search_adverts[$aval->n_id]['useremail'] = $aval->user['email'];
 
                 if($rubriks[$aval->r_id]->title_advert_shablon != '' && $aval['old_base_tag'] == 0)
                 {

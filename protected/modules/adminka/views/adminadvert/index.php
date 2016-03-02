@@ -14,6 +14,24 @@ $this->renderPartial('/default/_admin_menu');
 
 ?>
 
+<style>
+    .rb
+    {
+        float: right;
+        font-size: 11px;;
+    }
+
+    .phb
+    {
+        float: left;
+    }
+
+    .eml
+    {
+        font-size: 11px;
+    }
+</style>
+
 <h1 style="margin: 5px; font-size: 16px;">Админка: Работа с объявлениями</h1>
 
 <div>
@@ -105,6 +123,7 @@ $this->renderPartial('/default/_admin_menu');
 
                 <div class="not_desc"><?= $aval['notice_text'];?></div>
 
+                <div class="phb">
                 <?
                 if(count($props_array[$aval['n_id']]['photos']) > 0)
                 {
@@ -115,6 +134,14 @@ $this->renderPartial('/default/_admin_menu');
                 <?
                 }
                 ?>
+                </div>
+
+                <div class="rb">
+                    <div class="eml"><?= $aval['useremail'];?></div>
+                    <div><a target="_blank" href="/usercab/advert_edit/n_id/<?= $aval['n_id'];?>">[редактировать]</a></div>
+                    <div><a target="_blank" href="/adminka/adminadvert/index?mainblock[user_email]=<?= $aval['useremail'];?>">[объявы пользователя]</a></div>
+
+                </div>
 
                 <div id="result_<?= $aval['n_id'];?>">
 
@@ -237,7 +264,7 @@ Yii::app()->clientScript->registerCssFile('/css/abottom_menu.css');
 
 </style>
 
-<div id="stickey_footer">
+<div id="stickey_footer" style="display: none;">
     <div style="">
         <div>Рубрика</div>
 

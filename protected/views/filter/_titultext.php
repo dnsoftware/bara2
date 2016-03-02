@@ -1,4 +1,4 @@
-<div style="margin-top: 10px; margin-left: 20px;">
+<div style="margin-top: 10px; margin-left: 20px; margin-bottom: 30px;">
 <p style="text-align: justify;">
 Барахолка.ру — выгодные сделки одним кликом.
 </p>

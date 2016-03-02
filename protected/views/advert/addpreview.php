@@ -1,10 +1,12 @@
 <?php
 Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/baraholka.js');
 
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/notice/addpreview.css');
+
 ?>
 
 
-<div style="clear: both; font-size: 18px; text-align: center; margin-bottom: 20px;">Предварительный просмотр объявления</div>
+<h1 class="h1-preview">Предварительный просмотр объявления</h1>
 
 
 <?
@@ -17,7 +19,7 @@ $this->renderPartial('_advertpage', array(
     'options'=>$this->options
 ));
 
-
+//deb::dump($mainblock);
 
 if(Yii::app()->user->id > 0)
 {
@@ -122,46 +124,6 @@ else
 <div id="mask"></div>
 
 
-<style>
-
-    #mask {
-        position:absolute;
-        left:0;
-        top:0;
-        z-index:9000;
-        background-color:#000;
-        display:none;
-    }
-    #boxes .window {
-        position:absolute;
-        left:0;
-        top:0px;
-        -top: 40px;
-        width:440px;
-        height:200px;
-        display:none;
-        z-index:9999;
-        padding: 20px;
-        overflow: hidden;
-        text-align: center;
-    }
-    #boxes #dialog {
-        width:375px;
-        height:203px;
-        padding:10px;
-        background-color:#ffffff;
-    }
-    .close {
-        text-align: center;
-        border: #ddd solid 1px; background-color: #dedede; cursor: pointer; padding: 5px;;
-    }
-    .content {
-        padding-top: 35px;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-</style>
-
 <script>
     function SendUserForm()
     {
@@ -228,14 +190,6 @@ else
 </script>
 
 <?
-//deb::dump($uploadfiles_array);
-
-//deb::dump(Yii::app()->session['mainblock']);
-//deb::dump(Yii::app()->session['addfield']);
-
-
-
-
 
 
 

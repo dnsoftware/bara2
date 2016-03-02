@@ -17,6 +17,7 @@ $this->menu=array(
 <h1 style="font-size: 18px; text-align: center; margin-bottom: 20px;"><?php echo UserModule::t("Change password"); ?></h1>
 
 
+
 <table>
     <tr>
         <td style="vertical-align: top; width: 200px;">

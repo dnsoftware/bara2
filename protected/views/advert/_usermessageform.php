@@ -11,9 +11,10 @@ public $verifyCode;
 
 ?>
 
-<div id="div_usermessage_form">
+<div id="div_usermessage_form" style="z-index: 1000;">
 <div style="">
-<form id="usermessage_form" onsubmit="return false;">
+    <div style="margin: 0px; font-size: 16px; text-align: center;">Обратная связь</div>
+<form id="usermessage_form" onsubmit="return false;" style="z-index: 1000;">
 
     <br>
     <input type="text" name="username" placeholder="Ваше имя" style="width: 350px;"><br>

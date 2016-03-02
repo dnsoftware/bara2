@@ -1,0 +1,85 @@
+/********************* _props_form_search *********************/
+
+#bpropsfsearch
+{
+    background-color: #ededed;
+    padding: 5px;
+}
+
+#search_mainblock
+{
+    background-color: #ededed;
+}
+
+#bextended
+{
+    text-align: right;
+    background-color: #ddd;
+    padding: 5px;
+    margin-top: 5px;
+}
+
+#search_extend
+{
+    margin-top: 10px;
+}
+
+.prop-search-string
+{
+    display: inline-block;
+    position: absolute;
+}
+
+.pss-from
+{
+    width: 207px;
+    border: 1px solid #A4A4A4;
+    min-height: 14px;
+    background-color: #fff;
+    border-radius:2px;
+    margin:0;
+    padding: 2px;
+    padding-left: 7px;
+}
+
+.pss-to
+{
+    width: 207px;
+    border: 1px solid #A4A4A4;
+    min-height: 14px;
+    background-color: #fff;
+    border-radius:2px;
+    margin:0;
+    padding: 2px;
+    padding-left: 7px;
+}
+
+.prop-checkbox-list
+{
+    display:inline-block ; border: #ddd solid 0px; padding: 5px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

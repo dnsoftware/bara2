@@ -2399,9 +2399,231 @@ deb::dump($files_array);
             }
         }
 
+    }
 
+
+    public function actionSphinx()
+    {
+        $connection = Yii::app()->db;
+        $connection_sphinx = Yii::app()->db_sphinx;
+
+        // Проверка запущенности демона
+        $res = shell_exec('ps -eo fname | grep searchd');
+        $runsphinx_tag = 0;
+        if(preg_match('|searchd|siU', $res, $match))
+        {
+            $runsphinx_tag = 1;
+        }
+
+        // Подсчет кол-ва активных записей в базе и всех записей в индексе объявлений
+        $count_adverts = 0;
+        $count_adverts = Notice::model()->count('');
+        $sql = "SELECT count(*) cnt
+                FROM ". $connection->tablePrefix . "notice use index (date_expire)
+                WHERE active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0
+                                                 AND date_expire > UNIX_TIMESTAMP(NOW()) ";
+//deb::dump($sql);
+        $command = $connection->createCommand($sql);
+        if($data = $command->queryAll())
+        {
+            $count_adverts = $data[0]['cnt'];
+        }
+
+        $sql = "SELECT COUNT(*) cnt
+                FROM rt_adverts  ";
+        $command = $connection_sphinx->createCommand($sql);
+        $row = $command->queryAll();
+        $index_count = $row[0]['cnt'];
+
+
+        $this->render('sphinx', array(
+            'runsphinx_tag'=>$runsphinx_tag,
+            'count_adverts'=>$count_adverts,
+            'index_count'=>$index_count
+        ));
+    }
+
+    public function actionSphinx_reindex()
+    {
+        $connection = Yii::app()->db;
+        $connection_sphinx = Yii::app()->db_sphinx;
+
+        // Подсчет кол-ва активных записей в базе и всех записей в индексе объявлений
+        $sql = "SELECT min(n_id) min_id, max(n_id) max_id
+                FROM ". $connection->tablePrefix . "notice n
+                WHERE active_tag = 1 AND verify_tag = 1 AND deleted_tag = 0 ";
+//deb::dump($sql);
+        $command=$connection->createCommand($sql);
+        if($data = $command->queryAll())
+        {
+            $min_id = $data[0]['min_id'];
+            $max_id = $data[0]['max_id'];
+        }
+
+        $this->render('sphinx_reindex', array(
+            'min_id'=>$min_id
+        ));
+    }
+
+
+    // Реиндексация объявлений
+    public function actionSphinx_reindex_run()
+    {
+        $block_size = 1000;
+
+        $connection = Yii::app()->db;
+        $connection_sphinx = Yii::app()->db_sphinx;
+        $start_id = strtotime($_POST['start_id']);
+
+        //deb::dump(date(DateTime::W3C));
+        //deb::dump(strtotime(date(DateTime::W3C)));
+        //deb::dump(date(DateTime::W3C, strtotime(date(DateTime::W3C))));
+
+        if($start_id < time())
+        {
+            $sql = "TRUNCATE RTINDEX rt_adverts ";
+            $command = $connection_sphinx->createCommand($sql);
+            $row = $command->query();
+        }
+
+
+        $res = array('status'=>'end');
+        $sql = "SELECT n_id, date_expire
+                FROM ". $connection->tablePrefix . "notice
+                WHERE deleted_tag = 0 AND date_expire > '".$start_id."'
+                ORDER BY date_expire ASC
+                LIMIT 0, ".$block_size;
+        $command = $connection->createCommand($sql);
+        if($rows = $command->queryAll())
+        {
+            foreach($rows as $rkey=>$rval)
+            {
+                Notice::InsertRealtimeIndex($rval['n_id']);
+            }
+
+            $res['status'] = 'process';
+            $res['from_id'] = date(DateTime::W3C, $rval['date_expire']);
+            $res['add_count'] = count($rows);
+        }
+        else
+        {
+            $res['status'] = 'end';
+        }
+
+        echo json_encode($res);
 
     }
+
+
+    public function actionSphinx_search_reindex()
+    {
+        $connection = Yii::app()->db;
+        $connection_sphinx = Yii::app()->db_sphinx;
+
+        $this->render('sphinx_search_reindex', array(
+
+        ));
+    }
+
+    // Реиндексация поисковых фраз
+    public function actionSphinx_search_reindex_run()
+    {
+        $block_size = 1000;
+
+        $connection = Yii::app()->db;
+        $connection_sphinx = Yii::app()->db_sphinx;
+        $start_id = intval($_POST['start_id']);
+
+        //deb::dump(date(DateTime::W3C));
+        //deb::dump(strtotime(date(DateTime::W3C)));
+        //deb::dump(date(DateTime::W3C, strtotime(date(DateTime::W3C))));
+
+        if($start_id == 0)
+        {
+            $sql = "TRUNCATE RTINDEX rt_search_stat ";
+            $command = $connection_sphinx->createCommand($sql);
+            $row = $command->query();
+        }
+
+
+        $res = array('status'=>'end');
+        $sql = "SELECT *
+                FROM ". $connection->tablePrefix . "search_stat
+                WHERE ss_id > $start_id
+                ORDER BY ss_id ASC
+                LIMIT 0, ".$block_size;
+        $command = $connection->createCommand($sql);
+        if($rows = $command->queryAll())
+        {
+            foreach($rows as $rkey=>$rval)
+            {
+                Notice::InsertRtIndexSearch($rval['ss_id']);
+            }
+
+            $res['status'] = 'process';
+            $res['from_id'] = $rval['ss_id'];
+            $res['add_count'] = count($rows);
+        }
+        else
+        {
+            $res['status'] = 'end';
+        }
+
+        echo json_encode($res);
+
+    }
+
+
+
+    // Поисковая статистика
+    public function actionSearchstat()
+    {
+        $connection = Yii::app()->db;
+
+        $sql = "SELECT *
+                FROM ". $connection->tablePrefix . "search_stat
+                ORDER BY count DESC, query
+                LIMIT 0, 100";
+        $command = $connection->createCommand($sql);
+        $statrows = $command->queryAll();
+
+        $sql = "SELECT *
+                FROM
+                ". $connection->tablePrefix . "search_stat s,
+                ". $connection->tablePrefix . "search_log l
+                WHERE s.ss_id = l.ss_id
+                ORDER BY date_add DESC, query
+                LIMIT 0, 100";
+        $command = $connection->createCommand($sql);
+        $logrows = $command->queryAll();
+
+
+        $this->render('searchstat', array(
+            'statrows'=>$statrows,
+            'logrows'=>$logrows
+        ));
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

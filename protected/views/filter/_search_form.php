@@ -1,14 +1,22 @@
-<form id="form_filter" method="post" action="<?= Yii::app()->createUrl('filter/search');?>" _onsubmit="advertFilter('<?= Yii::app()->createUrl('filter/search');?>'); return false;">
+<?
+// Стили данного отображения
+Yii::app()->clientScript->registerCssFile(Yii::app()->request->baseUrl.'/css/filter/search_form.css');
+
+Yii::app()->clientScript->registerScriptFile(Yii::app()->request->baseUrl.'/js/filter/search_form.js', CClientScript::POS_END);
+
+?>
+
+<form id="form_filter" method="post" action="<?= Yii::app()->createUrl('filter/search');?>">
 
         <span myhint="Тестовая кнопка" style="display: none; background-color: #aaaaaa;" onclick="changeFilterReload('<?= Yii::app()->createUrl('filter/getdatafilter');?>')">
             Фильтр
         </span>
 <?
 ?>
-    <table  style="display: inline; width: 100%;">
-        <tr style="background-color: #eee;">
-            <td style="border: #000020 solid 0px; padding: 0px 0px 0px 5px;">
-                <select class="filterselect fchange" name="mainblock[r_id]" id="r_id" style="margin: 0px;">
+    <table id="sform_tbl">
+        <tr>
+            <td>
+                <select class="filterselect fchange" name="mainblock[r_id]" id="r_id">
                     <option value="">--- выберите категорию  ---</option>
                     <?
                     foreach ($rub_array as $rkey=>$rval)
@@ -19,7 +27,7 @@
                             $selected = " selected ";
                         }
                         ?>
-                        <option <?= $selected;?> style="color:#000; font-weight: bold;" value="<?= $rval['parent']->r_id;?>"><?= $rval['parent']->name;?></option>
+                        <option class="fsrub" <?= $selected;?> value="<?= $rval['parent']->r_id;?>"><?= $rval['parent']->name;?></option>
                         <?
                         foreach ($rval['childs'] as $ckey=>$cval)
                         {
@@ -36,12 +44,12 @@
                     ?>
                 </select>
             </td>
-            <td style="width: 100%; border: #000020 solid 0px;">
-                <input style="width: 100%; border: 1px solid #A4A4A4; min-height: 14px; background-color: #fff;border-radius:2px;margin:0px; padding: 5px;" type="text" name="params[q]" placeholder="Поиск по объявлениям" value="<?= htmlspecialchars($_GET['params']['q']);?>">
+            <td id="sform_searchfield">
+                <input type="text" name="params[q]" id="searchquery" placeholder="Поиск по объявлениям" autocomplete="off" value="<?= htmlspecialchars($_GET['params']['q']);?>">
 
             </td>
 
-            <td style="border: #000020 solid 0px; padding-right: 0px;">
+            <td id="td_selectregion">
                 <select class="filterselect" name="mesto_id" id="mesto_id" onchange="displaySearchReg();">
                     <?
                     $data = '';
@@ -88,10 +96,6 @@
                 </select>
 
             </td>
-
-
-
-
             <?
 
             /*
@@ -125,8 +129,9 @@
             <?
             */
             ?>
-            <td style="padding-right: 5px;">
-                <input style=" padding: 3px;" type="submit" name="filter_submit_button" value="Найти">
+            <td id="searchbut">
+                <input type="hidden" name="params[s]" id="sort" value="<?= htmlspecialchars($_GET['params']['s']);?>">
+                <input id="btsubmit" type="submit" name="filter_submit_button" value="Найти">
             </td>
         </tr>
     </table>
@@ -169,82 +174,11 @@
 
 <script>
 
-    $('#div_searchreg_name').offset({
-        left: $('#mesto_id').offset().left-10,
-        top: $('#mesto_id').offset().top-5
-    });//$('#mesto_id').offset().left;
-
-    $('#searchreg_name').autocomplete({
-        position:{my:"left top", at:"left bottom"},
-        minLength: 3,
-        source: function(request, response){
-
-            $.ajax({
-                url: "<?= Yii::app()->createUrl('/filter/getregionlist');?>",
-                method: "post",
-                dataType: "json",
-                // параметры запроса, передаваемые на сервер:
-                data:{
-                    searchstr: request.term
-                },
-                // обработка успешного выполнения запроса
-                success: function(data){
-                    $('#ajax_debug').html(data);
-                    // приведем полученные данные к необходимому формату и передадим в предоставленную функцию response
-                    response($.map(data.reglist, function(item){
-                        console.log(item);
-
-                        return{
-                            label: item.name_ru,
-                            value: item.id
-                        }
-
-                    }));
-
-                }
-
-
-            });
-        },
-        focus: function( event, ui ) {
-            //$('#searchreg_name').val( ui.item.label );
-            return false;
-
-        },
-        select: function(event, ui) {
-            /*ui.item будет содержать выбранный элемент*/
-            //console.log(ui.item);
-            //$('#searchreg_id').val(ui.item.value);
-
-            $.ajax({
-                url: "<?= Yii::app()->createUrl('/filter/mestolistgenerate');?>",
-                method: "post",
-                dataType: "json",
-                // параметры запроса, передаваемые на сервер:
-                data:{
-                    mesto_id: ui.item.value
-                },
-                // обработка успешного выполнения запроса
-                success: function(data){
-                    $('#mesto_id').html(data['data']);
-                    $('#div_searchreg_name').css('display', 'none');
-                }
-            });
-
-
-            return false;
-        }
-
-    });
-
-    function displaySearchReg()
+    $(document).ready(function()
     {
-        if($('#mesto_id').val() == 'other')
-        {
-            $('#div_searchreg_name').css('display', 'block');
-            $('#searchreg_name').focus();
-        }
-
-    }
+        search_form_init('<?= Yii::app()->createUrl('/filter/getregionlist');?>',
+            '<?= Yii::app()->createUrl('/filter/mestolistgenerate');?>',
+            '<?= Yii::app()->createUrl('/filter/getquerylist');?>');
+    });
 
 </script>

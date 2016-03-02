@@ -14,7 +14,8 @@ class RegistrationForm extends User {
     public static $blocked_email_domens = array(
         'outlook.com',
         'hotmail.com',
-        'live.com'
+        'live.com',
+        'live.ru'
     );
 
 
