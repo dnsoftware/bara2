@@ -110,6 +110,41 @@ $user_status = array('1'=>'активирован', '0'=>'неактивен');
 
 
 <?
+//deb::dump(Yii::app()->basePath);
+require_once Yii::app()->basePath . '/extensions/Facebook/autoload.php';
+
+$fb = new Facebook\Facebook([
+    'app_id' => '1078653292174466',
+    'app_secret' => '07b5035b3d475c88bdb1b90418378e69',
+    'default_graph_version' => 'v2.5',
+]);
+
+
+/*
+$fb = new Facebook\Facebook([
+    'app_id' => '1080339912005804',
+    'app_secret' => 'cd7ec5c4d19de3abb42c4b6f2755586b',
+    'default_graph_version' => 'v2.5',
+]);
+*/
+
+$callback = "http://".$_SERVER['HTTP_HOST']."/site/fbcallback";
+
+$helper = $fb->getRedirectLoginHelper();
+
+// для публикации в группах достаточно разрешения publish_actions
+// для публикации на страницах нужны все 3 элемента
+/*
+$permissions = ['user_birthday', 'user_religion_politics', 'user_relationships', 'user_relationship_details', 'user_hometown', 'user_location', 'user_likes', 'user_education_history', 'user_work_history', 'user_website', 'user_managed_groups', 'user_events', 'user_photos', 'user_videos', 'user_friends', 'user_about_me', 'user_status', 'user_games_activity', 'user_tagged_places', 'user_posts', 'read_page_mailboxes', 'rsvp_event', 'email', 'ads_management', 'ads_read', 'read_insights', 'manage_pages', 'publish_pages', 'pages_show_list', 'pages_manage_cta', 'pages_manage_leads', 'publish_actions', 'read_audience_network_insights', 'user_actions.books', 'user_actions.music', 'user_actions.video', 'user_actions.news', 'user_actions.fitness', 'public_profile', 'basic_info'];
+*/
+
+$permissions = ['user_posts'];
+
+$loginUrl = $helper->getLoginUrl($callback, $permissions);
+
+echo '<a href="' . htmlspecialchars($loginUrl) . '">Log in with Facebook!</a>';
+
+
 if(1)
 {
 ?>

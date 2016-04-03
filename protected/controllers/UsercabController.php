@@ -218,7 +218,7 @@ class UsercabController extends Controller
                 'condition'=>'u_id = '.Yii::app()->user->id
             ));
 
-    //        deb::dump($adverts);
+            //deb::dump($adverts);
             $this->render('adverts', array('adverts'=>$adverts));
         }
     }

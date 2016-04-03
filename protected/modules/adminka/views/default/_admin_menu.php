@@ -6,6 +6,9 @@
  * Time: 17:35
  */
 
+
+if(Yii::app()->user->id == 1)
+{
 ?>
 
 <div style="margin: 5px;">
@@ -33,3 +36,13 @@
 <a href="<?= Yii::app()->createUrl('/adminka/support/searchstat');?>">Поисковая статистика</a>
 
 </div>
+
+<?
+}
+else
+{
+?>
+    <a href="<?= Yii::app()->createUrl('/adminka/adminadvert/index');?>">Объявления</a>
+<?
+}
+?>

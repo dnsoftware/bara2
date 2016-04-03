@@ -667,6 +667,72 @@ class SiteController extends Controller
     }
 
 
+    // Callback для получения access token facebook
+    public function actionFbCallback()
+    {
+        require_once Yii::app()->basePath . '/extensions/Facebook/autoload.php';
+
+
+        $fb = new Facebook\Facebook([
+            'app_id' => '1078653292174466',
+            'app_secret' => '07b5035b3d475c88bdb1b90418378e69',
+            'default_graph_version' => 'v2.5',
+        ]);
+
+
+        /*
+        $fb = new Facebook\Facebook([
+            'app_id' => '1080339912005804',
+            'app_secret' => 'cd7ec5c4d19de3abb42c4b6f2755586b',
+            'default_graph_version' => 'v2.5',
+        ]);
+        */
+
+        $helper = $fb->getRedirectLoginHelper();
+        $accessToken = $helper->getAccessToken();
+
+        //$accessToken = 'CAACEdEose0cBACt7ffwCZAnpx8Q3VOXsASiPuSTmVsVdXhG9KyZAL0pSt6XQtZCgyyuGPAvKzNph3nui84C81Iu7NmlcDGZCFLAhrrlyKSLC1jUOs9O7egxU8fTH0qZAsdBkCR1n3Wvp3g3QVva3JSX954gMGbZBw4LEyCr7MuO5jOPb2LweF1Gx4tZBLAo99MSKsUIDoKzUAZDZD';
+
+
+
+        //http://www.baraholka.ru/site/fbcallback?code=AQASMq_n9yp1l4rnYsuFjyTEXpNB0cRzWQvaMr4n_7nxh67Hrw69CgoT0lMhQpXebR0KvxJG-SXAGW1ranrhS1p-lbnUwq9smD3f8rz7rOnbCE2U5Bht0fZrJpcZoWjTCb2S_yTcdidyYAznNGUA_5EUAR6CigInM6q5BWxg2eP7UOEqdxWiY_3uNVnn5S-I7T2ImAePEaJq2gUKNjgtxLkPYMvV0tLaD_kG-YdktmI03sykFEPMsRGfdKISRtDRUpAbBGOWJjHXk5lgimCBvppOp8RugkxFURU52XrrpgJuZipL_-4UYawu040NZUBOHn-YUhEVDrtcIAzY_TtXTIuv&state=21f5204f5f5018f7f44290a08ba279ad#_=_
+
+
+        /*
+        //$response = $fb->post("/{$group_id}/feed", $linkData, $token);
+        $request = new Facebook\FacebookRequest(
+            $fb,
+            $accessToken,
+            'GET',
+            '/me/feed'
+        );
+        $response = $request->execute();
+        $graphObject = $response->getGraphObject();
+deb::dump($graphObject);
+        */
+
+        /*
+        $fr = new \Facebook\FacebookRequest($fb, $accessToken);
+        $fr->getAppSecretProof();
+        $res = $fb->get('/me/feed', $accessToken);
+        deb::dump($res);
+        */
+
+        //$appsecret_proof= hash_hmac('sha256', $accessToken, '07b5035b3d475c88bdb1b90418378e69');
+        //$fa = new \Facebook\FacebookApp('1078653292174466', '07b5035b3d475c88bdb1b90418378e69');
+        //$fr = new \Facebook\FacebookRequest($fa, $accessToken, 'GET', '/me/feed');
+        //$response = $fr->execute();
+        //$graphObject = $response->getGraphObject();
+        //$params['appsecret_proof'] = $fr->getAppSecretProof();
+
+        //$req = $fb->sendRequest('GET', '/100008611967106/feed/', $params, $accessToken);
+
+        deb::dump($accessToken->getValue());
+
+        //$posts = $fb->get('/100008611967106/feed', '');
+        //deb::dump($posts);
+
+    }
 
 
 

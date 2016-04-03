@@ -21,7 +21,18 @@ class AdminkaModule extends CWebModule
 		{
             if (Yii::app()->user->checkAccess('Admin'))
             {
-                return true;
+                // Полный доступ
+                if(Yii::app()->user->id == 1)
+                {
+                    return true;
+                }
+                // доступ модеров только к разделу Объявления
+                else
+                if(Yii::app()->controller->id == 'adminadvert')
+                {
+                    return true;
+                }
+
             }
 		}
 

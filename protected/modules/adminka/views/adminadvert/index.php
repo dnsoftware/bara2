@@ -30,6 +30,11 @@ $this->renderPartial('/default/_admin_menu');
     {
         font-size: 11px;
     }
+
+    .adphoto
+    {
+        cursor: pointer;
+    }
 </style>
 
 <h1 style="margin: 5px; font-size: 16px;">Админка: Работа с объявлениями</h1>
@@ -119,7 +124,7 @@ $this->renderPartial('/default/_admin_menu');
                     $advert_title = '[Просмотр объявления]';
                 }
                 ?>
-                <div class="not_title" id="advtitul_<?= $aval['n_id'];?>"><a target="_blank" class="baralink" href="<?= $advert_page_url;?>"><?= $advert_title;?></a></div>
+                <div class="not_title" id="advtitul_<?= $aval['n_id'];?>"><a target="_blank" class="baralink" href="<?= $advert_page_url;?>"><?= $advert_title;?></a> <span><a target="_blank" href="/usercab/advert_edit/n_id/<?= $aval['n_id'];?>">[редактировать]</a></span></div>
 
                 <div class="not_desc"><?= $aval['notice_text'];?></div>
 
@@ -127,19 +132,21 @@ $this->renderPartial('/default/_admin_menu');
                 <?
                 if(count($props_array[$aval['n_id']]['photos']) > 0)
                 {
-                    $photoname = Notice::getPhotoName($props_array[$aval['n_id']]['photos'][0], "_thumb");
+                    foreach($props_array[$aval['n_id']]['photos'] as $phkey=>$phval)
+                    {
+                    $photoname = Notice::getPhotoName($phval, "_thumb");
+                    $zoomphotoname = Notice::getPhotoName($phval, "_big");
                     $curr_dir = Notice::getPhotoDir($photoname);
                 ?>
-                    <img width="100" src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>">
+                    <img class="adphoto" zoomimg="<?= $zoomphotoname;?>" src="/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>">
                 <?
+                    }
                 }
                 ?>
                 </div>
 
                 <div class="rb">
-                    <div class="eml"><?= $aval['useremail'];?></div>
-                    <div><a target="_blank" href="/usercab/advert_edit/n_id/<?= $aval['n_id'];?>">[редактировать]</a></div>
-                    <div><a target="_blank" href="/adminka/adminadvert/index?mainblock[user_email]=<?= $aval['useremail'];?>">[объявы пользователя]</a></div>
+                    <div class="eml"><a target="_blank" href="/adminka/adminadvert/index?mainblock[user_email]=<?= $aval['useremail'];?>"><?= $aval['useremail'];?></a></div>
 
                 </div>
 
@@ -322,6 +329,9 @@ Yii::app()->clientScript->registerCssFile('/css/abottom_menu.css');
 </div>
 
 
+<div id="div_imgzoom" style="display: block; position: absolute; background-color: #aaa; padding: 2px; ">
+    <img src="" id="imgzoom">
+</div>
 
 
 <script>
@@ -509,6 +519,35 @@ Yii::app()->clientScript->registerCssFile('/css/abottom_menu.css');
         }
     }
 
+    $('.adphoto').mouseover(function(e){
+
+        adphoto = $(this);
+console.log(adphoto.offset().left);
+        zoomimg = '/<?= Yii::app()->params['photodir'];?>'+'/'+$(this).attr('zoomimg').substr(0, 3)+'/'+$(this).attr('zoomimg');
+        //console.log(zoomimg);
+
+        $('#div_imgzoom').offset({top: adphoto.offset().top+adphoto.height(), left: adphoto.offset().left});
+        //console.log(e.pageX);
+        $('#div_imgzoom').css('visibility', 'visible');
+        $('#div_imgzoom').css('display', 'block');
+        $('#imgzoom').attr('src', zoomimg);
+
+        <?
+        //$curr_dir = Notice::getPhotoDir($photoname);
+        ?>
+
+        <?
+        /* '/<?= Yii::app()->params['photodir'];?>/<?= $curr_dir;?>/<?= $photoname;?>';
+        */
+        ?>
+    });
+
+    $('.adphoto').mouseout(function(e){
+        //adphoto = $(this);
+        //$('#div_imgzoom').offset({top: 200, left: 800});
+        $('#div_imgzoom').css('visibility', 'hidden');
+
+    });
 
 </script>
 
